@@ -19,6 +19,3 @@ Thumbs.db
 # Keys
 keys/
 *.pem
-
-# Doc interne (ne pas pousser sur le repo backend dev)
-README.md
