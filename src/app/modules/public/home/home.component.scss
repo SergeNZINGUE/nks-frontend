@@ -1,0 +1,402 @@
+@use 'tokens' as *;
+
+// Largeur de contenu du cadre « DESKTOP HOME HI-FI » du prototype
+$largeur-max: 1240px;
+$bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
+
+.home {
+  padding-bottom: $bottom-nav-height + $sp-4;
+
+  @media (min-width: $bascule) { padding-bottom: $sp-12; }
+
+  // La topbar mobile disparaît dès que l'en-tête desktop prend le relais
+  &__topbar-mobile {
+    @media (min-width: $bascule) { display: none; }
+  }
+
+  &__marque {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    text-decoration: none;
+
+    &-logo { height: 34px; width: auto; flex-shrink: 0; }
+
+    &-texte {
+      font-family: $font-title;
+      font-size: 18px;
+      font-weight: 700;
+      color: $nks-gold;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  &__contenu {
+    width: 100%;
+    max-width: $largeur-max;
+    margin-inline: auto;
+    padding: $sp-8 $sp-4 0;
+
+    @media (min-width: $bascule) { padding: $sp-12 $sp-6 0; }
+  }
+}
+
+// ═══ HERO ════════════════════════════════════════════════════════════════════
+.hero {
+  // Halo doré descendant, repris du prototype
+  background: radial-gradient(120% 70% at 50% 0%, rgba($nks-gold, 0.14), transparent 60%);
+  padding: $sp-8 $sp-4 $sp-10;
+
+  @media (min-width: $bascule) { padding: $sp-16 $sp-6; }
+
+  &__inner {
+    width: 100%;
+    max-width: $largeur-max;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $sp-8;
+
+    // Deux colonnes : accroche à gauche, compteur à droite
+    @media (min-width: $bascule) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      gap: $sp-16;
+    }
+  }
+
+  &__accroche {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-4;
+
+    @media (min-width: $bascule) {
+      align-items: flex-start;
+      flex: 1 1 0;
+      max-width: 620px;
+    }
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 6px $sp-4;
+    border-radius: $radius-full;
+    border: 1px solid rgba($nks-gold, 0.35);
+    background: rgba($nks-gold, 0.08);
+    color: $nks-gold;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+
+  // Le logo est décoratif en desktop : le titre porte déjà la marque
+  &__logo {
+    width: 132px;
+    max-width: 45vw;
+    height: auto;
+    filter: drop-shadow(0 8px 28px rgba($nks-gold, 0.28));
+
+    @media (min-width: $bascule) { display: none; }
+  }
+
+  &__titre {
+    font-family: $font-title;
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1.12;
+    color: $nks-text;
+    margin: 0;
+
+    @media (min-width: 480px)   { font-size: 42px; }
+    @media (min-width: $bascule) { font-size: 58px; }
+
+    &-or { color: $nks-gold; }
+  }
+
+  &__texte {
+    font-size: 15px;
+    line-height: 1.6;
+    color: $nks-text-secondary;
+    margin: 0;
+    max-width: 52ch;
+
+    @media (min-width: $bascule) { font-size: 17px; }
+  }
+
+  &__cta {
+    display: flex;
+    gap: $sp-3;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: $sp-2;
+
+    @media (min-width: $bascule) { justify-content: flex-start; }
+  }
+}
+
+// ═══ COMPTE À REBOURS ════════════════════════════════════════════════════════
+.compteur {
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-gold, 0.18);
+  border-radius: $radius-lg;
+  padding: $sp-6 $sp-5;
+  box-shadow: $shadow-card;
+  text-align: center;
+  flex-shrink: 0;
+
+  @media (min-width: $bascule) { padding: $sp-8 $sp-6; }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $nks-text-secondary;
+    margin: 0 0 $sp-4;
+  }
+
+  &__blocs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
+  }
+
+  &__bloc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 52px;
+  }
+
+  &__valeur {
+    font-family: $font-title;
+    font-size: 30px;
+    font-weight: 900;
+    color: $nks-gold;
+    line-height: 1;
+
+    @media (min-width: $bascule) { font-size: 38px; }
+  }
+
+  &__unite {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: $nks-text-secondary;
+    margin-top: 6px;
+  }
+
+  // Séparateur « : » entre les blocs, comme dans le prototype
+  &__sep {
+    font-family: $font-title;
+    font-size: 24px;
+    color: rgba($nks-gold, 0.4);
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+}
+
+// ═══ BLOCS DE SECTION ════════════════════════════════════════════════════════
+.bloc {
+  margin-bottom: $sp-10;
+
+  &__entete {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $sp-4;
+    margin-bottom: $sp-4;
+  }
+
+  &__titre {
+    font-family: $font-body;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $nks-gold;
+    margin: 0;
+  }
+
+  &__lien {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover { color: $nks-gold; }
+  }
+}
+
+// ═══ CANDIDATS ═══════════════════════════════════════════════════════════════
+.candidats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $sp-3;
+
+  @media (min-width: 600px)    { grid-template-columns: repeat(3, 1fr); }
+  @media (min-width: $bascule) { grid-template-columns: repeat(4, 1fr); gap: $sp-5; }
+}
+
+.candidat {
+  background: $nks-bg-surface;
+  border-radius: $radius-lg;
+  padding: $sp-4;
+  text-align: center;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-2;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  }
+
+  &__lien {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-2;
+  }
+
+  &__avatar {
+    width: 62px;
+    height: 62px;
+    font-size: 20px;
+    border: 2px solid rgba($nks-gold, 0.3);
+  }
+
+  &__nom {
+    font-size: 14px;
+    font-weight: 600;
+    color: $nks-text;
+    margin: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    margin: 0;
+  }
+
+  &__code { color: $nks-gold; font-family: monospace; }
+  &__rang { color: $nks-text-secondary; }
+
+  &__voter { margin-top: $sp-2; }
+}
+
+// ═══ SOIRÉES + CLASSEMENT ════════════════════════════════════════════════════
+.duo {
+  display: grid;
+  gap: $sp-6;
+
+  @media (min-width: $bascule) {
+    grid-template-columns: 1fr 1fr;
+    gap: $sp-8;
+  }
+}
+
+.soiree {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+  background: $nks-bg-surface;
+  border-radius: $radius-md;
+  padding: $sp-4;
+  margin-bottom: $sp-3;
+
+  // Pastille date jour/mois, reprise du prototype
+  &__date {
+    flex-shrink: 0;
+    width: 54px;
+    height: 54px;
+    border-radius: $radius-md;
+    background: rgba($nks-gold, 0.1);
+    border: 1px solid rgba($nks-gold, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__jour {
+    font-family: $font-title;
+    font-size: 20px;
+    font-weight: 900;
+    color: $nks-gold;
+    line-height: 1;
+  }
+
+  &__mois {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: $nks-text-secondary;
+    margin-top: 2px;
+  }
+
+  &__infos { flex: 1; min-width: 0; }
+
+  &__nom {
+    font-size: 14px;
+    font-weight: 600;
+    color: $nks-text;
+    margin: 0 0 3px;
+  }
+
+  &__lieu {
+    font-size: 12px;
+    color: $nks-text-secondary;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.classement {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: $nks-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+    padding: $sp-3 $sp-4;
+
+    & + & { border-top: 1px solid rgba($nks-text, 0.06); }
+  }
+
+  &__rang { font-size: 18px; width: 28px; flex-shrink: 0; }
+
+  &__nom {
+    flex: 1;
+    font-size: 14px;
+    color: $nks-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__score {
+    font-family: $font-title;
+    font-size: 15px;
+    color: $nks-gold;
+    flex-shrink: 0;
+  }
+}

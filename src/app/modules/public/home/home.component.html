@@ -1,0 +1,193 @@
+<div class="page home">
+
+  <!-- En-tête desktop (masqué sous 900px) -->
+  <app-site-header />
+
+  <!-- Topbar mobile (masquée à partir de 900px) -->
+  <header class="topbar home__topbar-mobile">
+    <a routerLink="/" class="home__marque" aria-label="Night Karaoke Stars — accueil">
+      <img src="assets/logos/nks.png" alt="" class="home__marque-logo" />
+      <span class="home__marque-texte">NKS</span>
+    </a>
+    <div class="topbar__actions">
+      <a routerLink="/login" class="btn btn--secondary btn--sm">Connexion</a>
+    </div>
+  </header>
+
+  <!-- LOADING -->
+  @if (loading) {
+    <div class="home__loading">
+      <div class="skeleton" style="height:200px; margin:16px;"></div>
+      <div class="skeleton" style="height:120px; margin:16px;"></div>
+    </div>
+  }
+
+  @if (!loading) {
+    <!-- ═══ HERO — deux colonnes en desktop, empilé en mobile ═══ -->
+    <section class="hero">
+      <div class="hero__inner">
+        <!-- Colonne gauche : accroche -->
+        <div class="hero__accroche">
+          @if (edition) {
+            <span class="hero__badge">★ ÉDITION {{ edition.annee }}</span>
+          }
+          <img src="assets/logos/nks.png" alt="" class="hero__logo" />
+          <h1 class="hero__titre">
+            Night Karaoke <span class="hero__titre-or">Stars</span>
+          </h1>
+          <!-- Même logique que le CTA juste en dessous : le message doit correspondre
+               à ce qui est réellement possible de faire là, maintenant. -->
+          @if (voteActif) {
+            <p class="hero__texte">
+              L'édition {{ edition?.annee }} de la grande compétition karaoké de
+              Ouagadougou bat son plein. Votez pour vos favoris, suivez le
+              classement en direct et réservez vos soirées.
+            </p>
+          } @else if (inscriptionsOuvertes) {
+            <p class="hero__texte">
+              L'édition {{ edition?.annee }} de la grande compétition karaoké de
+              Ouagadougou revient — les inscriptions sont ouvertes. Tentez votre
+              chance, déposez votre candidature et rejoignez les prochains
+              candidats de Night Karaoke Stars.
+            </p>
+          } @else {
+            <p class="hero__texte">
+              L'édition {{ edition?.annee }} de la grande compétition karaoké de
+              Ouagadougou se prépare. Les votes et le classement ouvriront avec
+              le lancement de la compétition — en attendant, découvrez les
+              candidats et suivez les prochaines soirées.
+            </p>
+          }
+          <div class="hero__cta">
+            <!-- "Voter" n'a de sens que si une phase a réellement voteActif=true.
+                 Hors de ça (édition en préparation, entre deux phases…), le CTA
+                 principal doit pousser l'action réellement disponible : la
+                 candidature si la fenêtre d'inscription est ouverte, sinon un
+                 simple lien de découverte — jamais un bouton "Voter" mort. -->
+            @if (voteActif) {
+              <a routerLink="/galerie" class="btn btn--primary btn--lg">Voter maintenant ✦</a>
+            } @else if (inscriptionsOuvertes) {
+              <a routerLink="/inscription" class="btn btn--primary btn--lg">Devenir candidat ✦</a>
+            } @else {
+              <a routerLink="/galerie" class="btn btn--primary btn--lg">Découvrir les candidats</a>
+            }
+            <!-- Même principe : "Voir le classement" n'a de sens que s'il existe déjà
+                 un classement (des points ont été attribués). En préparation/présélection,
+                 rien n'a encore été noté — le lien pointerait vers une page vide. -->
+            @if (classement.length) {
+              <a routerLink="/classement" class="btn btn--secondary btn--lg">Voir le classement</a>
+            }
+          </div>
+        </div>
+        <!-- Colonne droite : compte à rebours -->
+        @if (compteARebourdActif) {
+          <aside class="compteur">
+            <p class="compteur__label">{{ compteARebourdLibelle }}</p>
+            <div class="compteur__blocs">
+              <div class="compteur__bloc">
+                <span class="compteur__valeur">{{ countdown.jours | number:'2.0-0' }}</span>
+                <span class="compteur__unite">JOURS</span>
+              </div>
+              <span class="compteur__sep" aria-hidden="true">:</span>
+              <div class="compteur__bloc">
+                <span class="compteur__valeur">{{ countdown.heures | number:'2.0-0' }}</span>
+                <span class="compteur__unite">HRS</span>
+              </div>
+              <span class="compteur__sep" aria-hidden="true">:</span>
+              <div class="compteur__bloc">
+                <span class="compteur__valeur">{{ countdown.minutes | number:'2.0-0' }}</span>
+                <span class="compteur__unite">MINS</span>
+              </div>
+              <span class="compteur__sep" aria-hidden="true">:</span>
+              <div class="compteur__bloc">
+                <span class="compteur__valeur">{{ countdown.secondes | number:'2.0-0' }}</span>
+                <span class="compteur__unite">SECS</span>
+              </div>
+            </div>
+          </aside>
+        }
+      </div>
+    </section>
+    <!-- PARTENAIRES -->
+    <app-partners-strip organisateurLogo="assets/logos/la-terrasse.png"
+      organisateurNom="La Terrasse" />
+    <div class="home__contenu">
+      <!-- ═══ CANDIDATS POPULAIRES ═══ -->
+      @if (candidats.length) {
+        <section class="bloc">
+          <div class="bloc__entete">
+            <h2 class="bloc__titre">Candidats populaires</h2>
+            <a routerLink="/galerie" class="bloc__lien">Voir tout →</a>
+          </div>
+          <div class="candidats">
+            @for (c of candidats; track c; let i = $index) {
+              <article class="candidat">
+                <a [routerLink]="['/candidat', c.id]" class="candidat__lien">
+                  <div class="avatar candidat__avatar">{{ initiales(c) }}</div>
+                  <h3 class="candidat__nom">{{ c.prenom }} {{ c.nom }}</h3>
+                  <p class="candidat__meta">
+                    <span class="candidat__code">{{ c.codeCandidat }}</span>
+                    <span class="candidat__rang">🏆 Rang #{{ i + 1 }}</span>
+                  </p>
+                </a>
+                <a [routerLink]="['/voter', c.id]" class="btn btn--primary btn--sm candidat__voter">
+                  Voter ✦
+                </a>
+              </article>
+            }
+          </div>
+        </section>
+      }
+      <!-- ═══ SOIRÉES + CLASSEMENT — côte à côte en desktop ═══ -->
+      <div class="duo">
+        @if (soirees.length) {
+          <section class="bloc">
+            <div class="bloc__entete">
+              <h2 class="bloc__titre">Soirées à venir</h2>
+              <a routerLink="/billetterie" class="bloc__lien">Tout voir →</a>
+            </div>
+            @for (s of soirees; track s) {
+              <article class="soiree">
+                <div class="soiree__date" aria-hidden="true">
+                  <span class="soiree__jour">{{ s.dateHeure | date:'dd' }}</span>
+                  <span class="soiree__mois">{{ s.dateHeure | date:'MMM':'':'fr' | uppercase }}</span>
+                </div>
+                <div class="soiree__infos">
+                  <h3 class="soiree__nom">{{ s.nom }}</h3>
+                  <p class="soiree__lieu">📍 {{ s.lieu }} · {{ s.dateHeure | date:'HH\'h\'mm' }}</p>
+                </div>
+                <a [routerLink]="['/billetterie', 'reserver', s.id]" class="btn btn--primary btn--sm">
+                  Réserver
+                </a>
+              </article>
+            }
+          </section>
+        }
+        @if (classement.length) {
+          <section class="bloc">
+            <div class="bloc__entete">
+              <h2 class="bloc__titre">Classement live</h2>
+              <a routerLink="/classement" class="bloc__lien">Tout voir →</a>
+            </div>
+            <ol class="classement">
+              @for (item of classement; track item; let i = $index) {
+                <li class="classement__ligne">
+                  <span class="classement__rang" aria-hidden="true">
+                    {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1) }}
+                  </span>
+                  <span class="classement__nom">
+                    {{ item.candidat.prenom }} {{ item.candidat.nom }}
+                  </span>
+                  <b class="classement__score">{{ item.totalPoints | number:'1.1-1' }}</b>
+                </li>
+              }
+            </ol>
+          </section>
+        }
+      </div>
+    </div>
+  }
+
+  <app-site-footer />
+  <app-bottom-nav active="home" />
+</div>

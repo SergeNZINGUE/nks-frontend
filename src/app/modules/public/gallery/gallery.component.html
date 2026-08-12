@@ -1,0 +1,91 @@
+<app-site-header />
+
+<div class="page gallery">
+
+  <app-topbar title="Galerie des candidats" backLink="/" backLabel="Retour à l'accueil" />
+
+  <!-- FILTRES -->
+  <div class="gallery__filters">
+    @for (s of statutOptions; track s) {
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="filtreStatut === s.value"
+        (click)="onFiltreChange(s.value)"
+      >{{ s.label }}</button>
+    }
+  </div>
+
+  <!-- COMPTEUR -->
+  @if (!loading && !erreur) {
+    <p class="gallery__count text-muted">
+      {{ totalElements }} candidat{{ totalElements > 1 ? 's' : '' }}
+    </p>
+  }
+
+  <!-- LOADING -->
+  @if (loading) {
+    <div class="gallery__grid" role="status" aria-label="Chargement des candidats">
+      @for (_ of [1,2,3,4]; track _) {
+        <div class="skeleton" style="height:180px; border-radius:12px;" aria-hidden="true"></div>
+      }
+    </div>
+  }
+
+  <!-- ERREUR -->
+  @if (!loading && erreur) {
+    <div class="gallery__erreur" role="alert">
+      <p class="gallery__erreur-icone" aria-hidden="true">🔌</p>
+      <p>{{ erreur }}</p>
+      <button type="button" class="btn btn--ghost" (click)="charger()">Réessayer</button>
+    </div>
+  }
+
+  <!-- VIDE -->
+  @if (!loading && !erreur && candidats.length === 0) {
+    <div class="gallery__erreur">
+      <p class="gallery__erreur-icone" aria-hidden="true">🎤</p>
+      <p>Aucun candidat pour ce filtre.</p>
+    </div>
+  }
+
+  <!-- GRILLE -->
+  @if (!loading && !erreur) {
+    <div class="gallery__grid">
+      @for (c of candidats; track c) {
+        <a
+          [routerLink]="['/candidat', c.id]"
+          class="gallery-card card"
+          >
+          <div class="avatar gallery-card__avatar">
+            @if (c.photoUrl) {
+              <img [src]="c.photoUrl" [alt]="c.prenom + ' ' + c.nom" />
+            } @else {
+              {{ initiales(c) }}
+            }
+          </div>
+          <span class="gallery-card__code text-gold">{{ c.codeCandidat }}</span>
+          <span class="gallery-card__name">{{ c.prenom }} {{ c.nom }}</span>
+          <span class="badge badge--actif gallery-card__badge">★ ACTIF</span>
+          <span class="gallery-card__chanson text-muted">🎵 {{ c.chansonPreselection }}</span>
+          <div class="gallery-card__actions">
+            <a [routerLink]="['/candidat', c.id]" class="btn btn--secondary btn--sm" (click)="$event.stopPropagation()">Voir</a>
+            @if (phaseActiveId) {
+              <a [routerLink]="['/voter', c.id]" class="btn btn--primary btn--sm" (click)="$event.stopPropagation()">✦</a>
+            }
+          </div>
+        </a>
+      }
+    </div>
+  }
+
+  <!-- CHARGER PLUS -->
+  @if (hasMore && !loading && !erreur) {
+    <div class="gallery__load-more">
+      <button class="btn btn--ghost" (click)="chargerPlus()" [disabled]="loadingMore">
+        {{ loadingMore ? 'Chargement...' : 'Charger plus' }}
+      </button>
+    </div>
+  }
+
+  <app-bottom-nav active="galerie" />
+</div>

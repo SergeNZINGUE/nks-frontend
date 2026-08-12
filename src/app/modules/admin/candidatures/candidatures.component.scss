@@ -1,0 +1,338 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.page {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+  padding-bottom: $sp-12;
+}
+
+.filtres {
+  display: flex;
+  gap: $sp-2;
+  flex-wrap: wrap;
+  padding: $sp-4;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.chip {
+  background: rgba($nks-text, 0.05);
+  border: 1px solid rgba($nks-text, 0.1);
+  color: $nks-text;
+  padding: $sp-2 $sp-4;
+  border-radius: $radius-full;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: $font-body;
+  min-height: 36px;
+
+  &--active {
+    border-color: $nks-gold;
+    color: $nks-gold;
+    background: rgba($nks-gold, 0.08);
+  }
+}
+
+.skeletons {
+  padding: $sp-5;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.sk {
+  height: 100px;
+  background: rgba($nks-text, 0.06);
+  border-radius: $radius-md;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
+
+.gap-banner {
+  margin: $sp-5 $sp-5 0;
+  max-width: 960px;
+  margin-inline: auto;
+  background: rgba($nks-gold, 0.08);
+  border: 1px solid rgba($nks-gold, 0.3);
+  border-radius: $radius-md;
+  padding: $sp-3 $sp-4;
+  font-size: 13px;
+  color: $nks-text-secondary;
+  line-height: 1.5;
+}
+
+.banner {
+  margin: $sp-5;
+  padding: $sp-4;
+  border-radius: $radius-md;
+  font-size: 14px;
+
+  &--err {
+    background: rgba($nks-error, 0.12);
+    border: 1px solid rgba($nks-error, 0.3);
+    color: $nks-error;
+  }
+}
+
+.table {
+  padding: 0 $sp-5 $sp-10;
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+.empty {
+  text-align: center;
+  color: rgba($nks-text, 0.4);
+  padding: $sp-10;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 84px 1fr 120px 140px auto;
+  align-items: center;
+  gap: $sp-3;
+  padding: $sp-3 $sp-4;
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-text, 0.08);
+  border-radius: $radius-md;
+  margin-bottom: $sp-2;
+
+  // Empilé sous 768px : la grille tabulaire n'a pas de sens sur mobile
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    gap: $sp-1;
+  }
+
+  &--head {
+    background: transparent;
+    border: none;
+    padding: 0 $sp-4;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba($nks-text, 0.45);
+
+    @media (max-width: 767px) { display: none; }
+  }
+
+  &__code {
+    font-family: $font-title;
+    color: $nks-gold;
+    font-size: 13px;
+  }
+
+  &__nom {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+
+    small {
+      font-weight: 400;
+      font-size: 11px;
+      color: $nks-text-secondary;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__date {
+    font-size: 12px;
+    color: rgba($nks-text, 0.6);
+  }
+
+  &__actions {
+    display: flex;
+    gap: $sp-2;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    @media (max-width: 767px) { justify-content: flex-start; margin-top: $sp-2; }
+  }
+}
+
+.lien-inline {
+  background: none;
+  border: none;
+  padding: 0;
+  color: $nks-gold;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: $font-body;
+}
+
+.text-muted { color: rgba($nks-text, 0.45); }
+
+// ── Dossier (modale) ──────────────────────────────────────────────────────
+.modal--dossier { max-width: 560px; text-align: left; }
+
+.dossier {
+  &__champ {
+    font-size: 13px;
+    color: rgba($nks-text, 0.85);
+    margin-bottom: $sp-3;
+    line-height: 1.6;
+
+    strong { color: $nks-text; }
+    p { margin: 4px 0 0; color: rgba($nks-text, 0.7); }
+  }
+
+  &__motivation p {
+    border-left: 2px solid rgba($nks-gold, 0.3);
+    padding-left: $sp-3;
+  }
+
+  &__reject-reason { color: $nks-error; }
+  &__video-meta { margin: 4px 0 0; }
+}
+
+.modal__photo {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: $radius-md;
+  margin-bottom: $sp-3;
+  display: block;
+}
+
+.modal__loading { color: $nks-text-secondary; font-size: 13px; margin-bottom: $sp-3; }
+
+.lien-inline {
+  background: none;
+  border: none;
+  padding: 0;
+  color: $nks-gold;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: $font-body;
+}
+
+.text-muted { color: rgba($nks-text, 0.45); }
+
+.badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-en_attente { background: rgba($nks-warning, 0.15); color: $nks-warning; border: 1px solid rgba($nks-warning, 0.3); }
+.badge-active     { background: rgba($nks-success, 0.15); color: $nks-success; border: 1px solid rgba($nks-success, 0.3); }
+.badge-rejetee    { background: rgba($nks-error, 0.15);   color: $nks-error;   border: 1px solid rgba($nks-error, 0.3); }
+.badge-validee    { background: rgba($nks-info, 0.15);    color: $nks-info;    border: 1px solid rgba($nks-info, 0.3); }
+
+.btn {
+  padding: $sp-2 $sp-4;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: $font-body;
+  border: none;
+  min-height: 40px;
+
+  &--ok {
+    background: rgba($nks-success, 0.15);
+    border: 1px solid rgba($nks-success, 0.3);
+    color: $nks-success;
+    &:hover:not(:disabled) { background: rgba($nks-success, 0.25); }
+  }
+
+  &--err {
+    background: rgba($nks-error, 0.15);
+    border: 1px solid rgba($nks-error, 0.3);
+    color: $nks-error;
+    &:hover:not(:disabled) { background: rgba($nks-error, 0.25); }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1px solid rgba($nks-text, 0.2);
+    color: $nks-text;
+  }
+
+  &--sm { padding: $sp-1 $sp-3; min-height: 32px; font-size: 12px; }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-4;
+  padding: $sp-5 0;
+  color: $nks-text-secondary;
+  font-size: 13px;
+
+  @media (min-width: 768px) { grid-column: 1 / -1; }
+
+  button {
+    background: transparent;
+    border: 1px solid rgba($nks-text, 0.15);
+    color: $nks-text;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-sm;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+  }
+}
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  z-index: 100;
+}
+
+.modal {
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-gold, 0.3);
+  border-radius: $radius-lg;
+  padding: $sp-6;
+  width: 100%;
+  max-width: 480px;
+
+  h2 {
+    color: $nks-gold;
+    font-family: $font-title;
+    margin-bottom: $sp-4;
+    font-size: 16px;
+  }
+
+  &__textarea {
+    width: 100%;
+    background: rgba($nks-text, 0.05);
+    border: 1px solid rgba($nks-text, 0.15);
+    border-radius: $radius-sm;
+    color: $nks-text;
+    padding: $sp-3;
+    font-size: 14px;
+    font-family: $font-body;
+    resize: vertical;
+
+    &:focus { outline: none; border-color: $nks-gold; }
+  }
+
+  &__err { color: $nks-error; font-size: 12px; margin: 6px 0; }
+
+  &__actions {
+    display: flex;
+    gap: $sp-3;
+    justify-content: flex-end;
+    margin-top: $sp-4;
+  }
+}

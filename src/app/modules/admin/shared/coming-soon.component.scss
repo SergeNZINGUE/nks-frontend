@@ -1,0 +1,48 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.coming-soon {
+  min-height: calc(100dvh - 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: $sp-16 $sp-5;
+  color: $nks-text;
+
+  &__icon {
+    font-size: 48px;
+    margin-bottom: $sp-4;
+    opacity: 0.6;
+  }
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    color: $nks-gold;
+    margin: 0 0 $sp-2;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: $nks-text-secondary;
+    max-width: 440px;
+    line-height: 1.6;
+    margin: 0 0 $sp-5;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: $sp-2 $sp-4;
+    border-radius: $radius-full;
+    background: rgba($nks-warning, 0.12);
+    border: 1px solid rgba($nks-warning, 0.3);
+    color: $nks-warning;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}

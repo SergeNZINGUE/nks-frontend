@@ -1,0 +1,64 @@
+<div class="videos-page">
+
+  <app-topbar title="Mes vidéos" icon="🎬" backLink="/mon-espace" backLabel="Retour à mon espace" />
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (!isLoading && erreur) {
+    <div class="empty-state">
+      <p class="empty-icon">⚠️</p>
+      <p>{{ erreur }}</p>
+    </div>
+  }
+
+  <!-- Vide -->
+  @if (!isLoading && !erreur && videos.length === 0) {
+    <div class="empty-state">
+      <p class="empty-icon">🎬</p>
+      <p>Aucune vidéo enregistrée.</p>
+      <p class="empty-hint">Ta vidéo de présélection apparaîtra ici après soumission.</p>
+    </div>
+  }
+
+  <!-- Liste -->
+  @if (!isLoading && videos.length > 0) {
+    <div class="videos-list">
+      @for (v of videos; track v) {
+        <div class="video-card">
+          <!-- Thumbnail -->
+          <div class="video-thumb">
+            @if (v.urlThumbnail) {
+              <img [src]="v.urlThumbnail" [alt]="v.titreChanson" />
+            }
+            @if (!v.urlThumbnail) {
+              <span class="thumb-placeholder">🎵</span>
+            }
+            <span class="duration">{{ dureeFormatee(v.dureeSecondes) }}</span>
+          </div>
+          <!-- Infos -->
+          <div class="video-info">
+            <p class="video-title">{{ v.titreChanson }}</p>
+            <p class="video-date">{{ v.dateUpload | date:'dd/MM/yyyy' }}</p>
+            <span class="badge badge--{{ statutClass(v.statut) }}">{{ statutLabel(v.statut) }}</span>
+          </div>
+          <!-- Lien -->
+          @if (v.statut === 'DISPONIBLE' && v.urlStreaming) {
+            <a [href]="v.urlStreaming" target="_blank" class="video-link" title="Voir la vidéo">▶</a>
+          }
+          @if (v.statut === 'DISPONIBLE' && !v.urlStreaming) {
+            <span class="video-link video-link--indispo" title="Lien de lecture pas encore disponible">⏳</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>

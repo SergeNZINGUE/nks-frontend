@@ -1,0 +1,27 @@
+<header class="site-header">
+  <div class="site-header__inner">
+
+    <a routerLink="/" class="site-header__marque" aria-label="Night Karaoke Stars — accueil">
+      <img src="assets/logos/nks.png" alt="" class="site-header__logo" />
+      <span class="site-header__sigle">NKS</span>
+    </a>
+
+    <nav class="site-header__nav" aria-label="Navigation principale">
+      @for (l of liens; track l) {
+        <a
+          [routerLink]="l.route"
+          routerLinkActive="site-header__lien--actif"
+          [routerLinkActiveOptions]="{ exact: l.exact }"
+        class="site-header__lien">{{ l.libelle }}</a>
+      }
+    </nav>
+
+    <div class="site-header__actions">
+      <a routerLink="/login" class="site-header__connexion">Connexion</a>
+      @if (inscriptionsOuvertes) {
+        <a routerLink="/inscription" class="btn btn--primary btn--sm">S'inscrire</a>
+      }
+    </div>
+
+  </div>
+</header>

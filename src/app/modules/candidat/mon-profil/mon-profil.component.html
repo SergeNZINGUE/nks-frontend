@@ -1,0 +1,86 @@
+<div class="profil-page">
+
+  <app-topbar title="Mon profil" icon="👤" backLink="/mon-espace" backLabel="Retour à mon espace" />
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      <div class="skeleton skeleton--avatar"></div>
+      <div class="skeleton skeleton--line"></div>
+      <div class="skeleton skeleton--line short"></div>
+      <div class="skeleton skeleton--textarea"></div>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="content">
+      <!-- Toast succès -->
+      @if (successMsg) {
+        <div class="toast toast--success">{{ successMsg }}</div>
+      }
+      @if (erreur) {
+        <div     class="toast toast--error">⚠️ {{ erreur }}</div>
+      }
+      <!-- Avatar + upload -->
+      <div class="avatar-section">
+        <div class="avatar-wrap">
+          <div class="avatar">
+            @if (photoPreview) {
+              <img [src]="photoPreview" alt="Photo" />
+            }
+            @if (!photoPreview) {
+              <span>{{ initiales }}</span>
+            }
+          </div>
+          <label class="avatar-edit" [class.loading]="isUploadingPhoto">
+            @if (!isUploadingPhoto) {
+              <span>📷</span>
+            }
+            @if (isUploadingPhoto) {
+              <span class="spinner"></span>
+            }
+            <input type="file" accept="image/jpeg,image/png" (change)="onPhotoChange($event)" [disabled]="isUploadingPhoto" />
+          </label>
+        </div>
+        @if (profil) {
+          <div>
+            <h2 class="profil-name">{{ profil.prenom }} {{ profil.nom }}</h2>
+            <span class="code-chip">{{ profil.codeCandidat }}</span>
+          </div>
+        }
+      </div>
+      <!-- Formulaire biographie -->
+      <form [formGroup]="form" (ngSubmit)="sauvegarder()" class="bio-form">
+        <div class="form-group">
+          <label for="bio">Biographie <small>(max 2000 caractères)</small></label>
+          <textarea id="bio" formControlName="biographie" rows="8" maxlength="2000"
+            placeholder="Présente-toi : passion pour le chant, expérience scénique, style musical…">
+          </textarea>
+          <div class="mots-counter" [class.limit]="biographieCaracteres > 1800">
+            {{ biographieCaracteres }} / 2000 caractères
+          </div>
+          @if (form.get('biographie')?.hasError('maxlength')) {
+            <span class="form-error">
+              Trop long — maximum 2000 caractères.
+            </span>
+          }
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="isSaving || form.invalid">
+          @if (!isSaving) {
+            <span>💾 Enregistrer</span>
+          }
+          @if (isSaving) {
+            <span><span class="spinner spinner--inline"></span> Sauvegarde…</span>
+          }
+        </button>
+      </form>
+      <!-- Infos readonly -->
+      @if (profil) {
+        <div class="info-card">
+          <div class="info-row"><span>Chanson</span><strong>{{ profil.chansonPreselection }}</strong></div>
+          <div class="info-row"><span>Statut</span><strong>{{ profil.statutProfil }}</strong></div>
+        </div>
+      }
+    </div>
+  }
+</div>

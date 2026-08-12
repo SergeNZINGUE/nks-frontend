@@ -1,0 +1,96 @@
+<div class="tickets-page">
+
+  <app-topbar title="Mes tickets" icon="🎟" backLink="/billetterie" backLabel="Retour à la billetterie" />
+
+  <!-- GAP-03 Notice -->
+  <div class="gap-notice">
+    🔧 <strong>QR codes en démonstration</strong> — l'endpoint OTP backend sera branché une fois implémenté (GAP-03).
+  </div>
+
+  <!-- Recherche par téléphone — CdC §3.6.2 (accès sans compte) -->
+  <div class="recherche-tel">
+    <label for="tel">Retrouve tes tickets avec ton numéro de téléphone</label>
+    <div class="recherche-tel__row">
+      <input
+        id="tel"
+        type="tel"
+        inputmode="numeric"
+        [formControl]="telephoneCtrl"
+        placeholder="Ex : 70000000"
+        (keyup.enter)="rechercher()"
+        />
+      <button class="btn btn--primary" (click)="rechercher()" [disabled]="isLoading">
+        @if (!isLoading) {
+          <span>🔍 Rechercher</span>
+        }
+        @if (isLoading) {
+          <span>⏳…</span>
+        }
+      </button>
+    </div>
+    @if (telephoneCtrl.invalid && telephoneCtrl.touched) {
+      <span class="form-error">
+        Numéro invalide — 8 chiffres attendus.
+      </span>
+    }
+  </div>
+
+  <!-- Skeleton -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      @for (i of [1,2]; track i) {
+        <div class="skeleton skeleton--card"></div>
+      }
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (!isLoading && erreur) {
+    <div class="empty-state">
+      <p class="empty-icon">🔌</p>
+      <p>{{ erreur }}</p>
+      <a routerLink="/billetterie" class="btn btn--ghost">← Billetterie</a>
+    </div>
+  }
+
+  <!-- Vide -->
+  @if (!isLoading && !erreur && rechercheEffectuee && reservations.length === 0) {
+    <div class="empty-state">
+      <p class="empty-icon">🎵</p>
+      <p>Aucun ticket trouvé pour ce numéro.</p>
+      <a routerLink="/billetterie" class="btn btn--primary">Réserver une soirée</a>
+    </div>
+  }
+
+  <!-- Liste tickets -->
+  @if (!isLoading && reservations.length > 0) {
+    <div class="tickets-list">
+      @for (r of reservations; track r) {
+        <div class="ticket-card">
+          <div class="ticket-card__header">
+            <div class="ticket-card__info">
+              <h3>{{ r.nomReservant }}</h3>
+              <span class="places">{{ r.nbPlaces }} place{{ r.nbPlaces > 1 ? 's' : '' }}</span>
+            </div>
+            <span class="badge badge--{{ statutClass(r.statut) }}">{{ statutLabel(r.statut) }}</span>
+          </div>
+          <!-- QR code (visible si réservation confirmée) -->
+          @if (r.statut === 'CONFIRMEE' && r.qrUuid) {
+            <div class="qr-section">
+              <p class="qr-label">Présente ce QR code à l'entrée</p>
+              <img [src]="qrPlaceholderUrl(r.qrUuid)" alt="QR Code ticket" class="qr-img" />
+              <code class="qr-uuid">{{ r.qrUuid }}</code>
+            </div>
+          }
+          <!-- Attente confirmation -->
+          @if (r.statut === 'PENDING') {
+            <div class="pending-notice">
+              ⏳ En attente de confirmation du paiement Mobile Money.
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>

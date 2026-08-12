@@ -1,0 +1,123 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.dash {
+  padding: $sp-5;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.page-header {
+  margin-bottom: $sp-5;
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    color: $nks-text;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    margin: 0;
+  }
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: $nks-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: $sp-6 0 $sp-3;
+}
+
+.skeletons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $sp-3;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(4, 1fr); }
+}
+
+.sk {
+  height: 100px;
+  background: rgba($nks-text, 0.06);
+  border-radius: $radius-md;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
+
+.banner--err {
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  background: rgba($nks-error, 0.1);
+  border: 1px solid rgba($nks-error, 0.3);
+  color: $nks-error;
+}
+
+.banner--info {
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  background: rgba($nks-gold, 0.08);
+  border: 1px solid rgba($nks-gold, 0.3);
+  color: $nks-text;
+
+  a {
+    color: $nks-gold;
+    font-weight: 700;
+    margin-left: $sp-1;
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $sp-3;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(4, 1fr); }
+}
+
+.kpi {
+  border-radius: $radius-md;
+  padding: $sp-4;
+  border: 1px solid rgba($nks-text, 0.08);
+  background: $nks-bg-surface;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: $nks-text-secondary;
+    margin-bottom: $sp-2;
+  }
+
+  &__val {
+    font-family: $font-title;
+    font-size: 22px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+
+    span { font-size: 12px; font-weight: 400; color: $nks-text-secondary; }
+
+    @media (max-width: 380px) { font-size: 18px; }
+  }
+
+  &--gold    { &::before { background: $nks-gold; }    .kpi__val { color: $nks-gold; } }
+  &--success { &::before { background: $nks-success; } .kpi__val { color: $nks-success; } }
+  &--warning { &::before { background: $nks-warning; } .kpi__val { color: $nks-warning; } }
+  &--error   { &::before { background: $nks-error; }   .kpi__val { color: $nks-error; } }
+  &--info    { &::before { background: $nks-info; }    .kpi__val { color: $nks-info; } }
+}

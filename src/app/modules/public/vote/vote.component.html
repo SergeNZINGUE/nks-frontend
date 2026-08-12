@@ -1,0 +1,128 @@
+<app-site-header />
+
+<div class="page vote-page">
+
+  <app-topbar title="Voter" icon="🗳️" backLink="/galerie" backLabel="Retour à la galerie" />
+
+  <div class="vote-shell">
+
+    @if (loading) {
+      <div class="vote-carte">
+        <div class="skeleton" style="height:80px; border-radius:12px;"></div>
+      </div>
+    }
+
+    <!-- SUCCÈS -->
+    @if (success) {
+      <div class="vote-carte vote-success">
+        <div class="vote-success__icon">✅</div>
+        <h2>Vote enregistré</h2>
+        @if (redirectionEnCours) {
+          <p>
+            Redirection vers le paiement sécurisé LigdiCash…
+          </p>
+        }
+        @if (!redirectionEnCours) {
+          <p>
+            Vous allez recevoir une demande de paiement sur votre téléphone.
+          </p>
+        }
+        <p class="vote-success__montant">{{ success.montantTotal | number:'1.0-0' }} FCFA</p>
+        @if (success.urlPaiement) {
+          <a
+            [href]="success.urlPaiement"
+            class="btn btn--primary btn--full btn--lg">
+            Ouvrir la page de paiement ✦
+          </a>
+        }
+        <a [routerLink]="['/candidat', candidat?.id]" class="btn btn--secondary btn--full">
+          ← Retour au profil
+        </a>
+      </div>
+    }
+
+    @if (!loading && !success) {
+      <!-- MINI CANDIDAT -->
+      @if (candidat) {
+        <div class="vote-carte vote-candidat">
+          <div class="avatar vote-candidat__avatar">{{ initiales() }}</div>
+          <div class="vote-candidat__info">
+            <span class="vote-candidat__code">{{ candidat.codeCandidat }}</span>
+            <span class="vote-candidat__nom">{{ candidat.prenom }} {{ candidat.nom }}</span>
+            <span class="vote-candidat__chanson">🎵 {{ candidat.chansonPreselection }}</span>
+          </div>
+        </div>
+      }
+      <!-- AUCUNE PHASE ACTIVE -->
+      @if (!phaseId) {
+        <div class="vote-carte vote-inactif">
+          <p>Le vote n'est pas ouvert en ce moment.</p>
+        </div>
+      }
+      <!-- FORMULAIRE VOTE -->
+      @if (phaseId) {
+        <form [formGroup]="form" (ngSubmit)="submit()" class="vote-carte vote-form">
+          <p class="vote-form__label">Combien de votes ?</p>
+          <div class="vote-options">
+            @for (opt of voteOptions; track opt) {
+              <button
+                type="button"
+                class="vote-option"
+                [class.vote-option--active]="form.value.nbVotes === opt.nb"
+                [attr.aria-pressed]="form.value.nbVotes === opt.nb"
+                (click)="selectOption(opt.nb)"
+                >
+                <span class="vote-option__nb">{{ opt.label }}</span>
+                <span class="vote-option__prix">{{ opt.prix }}</span>
+              </button>
+            }
+          </div>
+          <!-- TOTAL -->
+          <div class="vote-total">
+            <span class="vote-total__libelle">Total · {{ form.value.nbVotes }} votes</span>
+            <span class="vote-total__montant">{{ totalFormate }}</span>
+          </div>
+          <!-- TÉLÉPHONE -->
+          <div class="form-field">
+            <label class="form-field__label" for="vote-tel">Numéro de téléphone</label>
+            <div class="vote-tel">
+              <span class="vote-tel__indicatif" aria-hidden="true">+226</span>
+              <input
+                id="vote-tel"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                class="input-field vote-tel__champ"
+                formControlName="telephone"
+                placeholder="06 00 00 00"
+                >
+            </div>
+            <span class="form-field__hint">Ce numéro sera débité pour le paiement.</span>
+          </div>
+          <!-- SÉCURITÉ -->
+          <p class="vote-security">
+            🔒 Paiement sécurisé — LigdiCash.
+            <span class="vote-security__detail">
+              L'opérateur (Orange Money, Moov Money) se choisit à l'étape suivante.
+            </span>
+          </p>
+          <!-- ERREUR -->
+          @if (error) {
+            <div class="vote-error" role="alert">{{ error }}</div>
+          }
+          <!-- SUBMIT -->
+          <button
+            type="submit"
+            class="btn btn--primary btn--full btn--lg"
+            [disabled]="form.invalid || submitting"
+            >
+            {{ submitting ? '⣾ Traitement…' : '✦ Payer ' + totalFormate + ' ✦' }}
+          </button>
+        </form>
+      }
+    }
+
+  </div>
+
+  <app-bottom-nav active="galerie" />
+</div>

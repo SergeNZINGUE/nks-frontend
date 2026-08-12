@@ -1,0 +1,145 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.page {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+  padding-bottom: $sp-12;
+}
+
+.content {
+  padding: $sp-6 $sp-5;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.loading { color: $nks-text-secondary; font-size: 14px; }
+
+.edition-tag {
+  font-size: 13px;
+  color: $nks-text-secondary;
+  margin-bottom: $sp-5;
+
+  strong { color: $nks-text; }
+}
+
+.banner {
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  margin-bottom: $sp-4;
+
+  &--ok  { background: rgba($nks-success, 0.08); border: 1px solid rgba($nks-success, 0.25); color: $nks-success; }
+  &--err { background: rgba($nks-error, 0.1);    border: 1px solid rgba($nks-error, 0.3);    color: $nks-error; }
+}
+
+.notif-form {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    font-weight: 600;
+  }
+
+  input,
+  textarea,
+  .select {
+    background: rgba($nks-text, 0.05);
+    border: 1px solid rgba($nks-text, 0.1);
+    border-radius: $radius-sm;
+    padding: $sp-3;
+    color: $nks-text;
+    // 16px minimum : en dessous, iOS zoome automatiquement au focus
+    font-size: 16px;
+    font-family: $font-body;
+    resize: vertical;
+    width: 100%;
+
+    &:focus { outline: none; border-color: $nks-gold; }
+  }
+}
+
+.input--err { border-color: rgba($nks-error, 0.5) !important; }
+
+.select option { background: $nks-bg-surface; }
+
+.field-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $sp-2;
+}
+
+.hint-err   { font-size: 12px; color: $nks-error; }
+.char-count { font-size: 12px; color: $nks-text-secondary; }
+.char-over  { color: $nks-error !important; font-weight: 700; }
+
+.canal-group {
+  display: flex;
+  gap: $sp-3;
+  flex-wrap: wrap;
+}
+
+.canal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: $sp-3 $sp-5;
+  border-radius: $radius-md;
+  border: 1px solid rgba($nks-text, 0.12);
+  background: rgba($nks-text, 0.04);
+  color: $nks-text-secondary;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  min-height: 44px;
+  transition: all 0.2s;
+
+  &--on {
+    background: rgba($nks-gold, 0.12);
+    border-color: rgba($nks-gold, 0.4);
+    color: $nks-gold;
+    font-weight: 600;
+  }
+
+  // L'input est masqué : on relaie son focus clavier sur le libellé
+  &:focus-within {
+    outline: 3px solid $nks-gold-light;
+    outline-offset: 2px;
+  }
+}
+
+.btn {
+  padding: $sp-3 $sp-6;
+  border-radius: $radius-sm;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: $font-body;
+  cursor: pointer;
+  border: none;
+  align-self: flex-start;
+  min-height: 48px;
+
+  &--primary {
+    background: $nks-gold;
+    color: #000;
+    &:hover:not(:disabled) { background: $nks-gold-hover; }
+  }
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  @media (max-width: 480px) { align-self: stretch; width: 100%; }
+}

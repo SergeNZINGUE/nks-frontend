@@ -1,0 +1,71 @@
+<app-site-header />
+
+<div class="soirees-page">
+
+  <app-topbar title="Billetterie" icon="🎤" backLink="/" backLabel="Retour à l'accueil" />
+
+  <!-- Skeleton -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton skeleton--card"></div>
+      }
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (!isLoading && erreur) {
+    <div class="empty-state">
+      <p class="empty-icon">🔌</p>
+      <p>{{ erreur }}</p>
+    </div>
+  }
+
+  <!-- Liste vide -->
+  @if (!isLoading && !erreur && soirees.length === 0) {
+    <div class="empty-state">
+      <p class="empty-icon">🎵</p>
+      <p>Aucune soirée programmée pour le moment.</p>
+    </div>
+  }
+
+  <!-- Liste des soirées -->
+  @if (!isLoading && soirees.length > 0) {
+    <div class="soirees-list">
+      @for (s of soirees; track s) {
+        <article class="soiree-card"
+          [class.card--terminee]="s.statut === 'TERMINEE'"
+          [class.card--annulee]="s.statut === 'ANNULEE'">
+          <div class="soiree-card__header">
+            <h2 class="soiree-card__nom">{{ s.nom }}</h2>
+            <span class="badge badge--{{ statutClass(s.statut) }}">{{ statutLabel(s.statut) }}</span>
+          </div>
+          <div class="soiree-card__meta">
+            <span class="meta-item">📍 {{ s.lieu }}</span>
+            <span class="meta-item">🗓 {{ s.dateHeure | date:'EEEE d MMMM yyyy, HH:mm':'':'fr' }}</span>
+            <span class="meta-item">🪑 {{ s.capaciteMax }} places max</span>
+          </div>
+          @if (s.adresse) {
+            <div class="soiree-card__adresse">{{ s.adresse }}</div>
+          }
+          <div class="soiree-card__actions">
+            @if (s.statut === 'PLANIFIEE') {
+              <a
+                [routerLink]="['/billetterie/reserver', s.id]"
+                class="btn btn--primary">
+                🎟 Réserver ma place
+              </a>
+            }
+            @if (s.statut !== 'PLANIFIEE') {
+              <span class="btn btn--disabled">
+                {{ s.statut === 'TERMINEE' ? 'Soirée terminée' : 'Réservations fermées' }}
+              </span>
+            }
+            <a routerLink="/billetterie/mes-tickets" class="btn btn--ghost">Mes tickets</a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+</div>

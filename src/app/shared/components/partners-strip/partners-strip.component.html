@@ -1,0 +1,43 @@
+@if (!chargement && (partenaires.length || organisateurLogo())) {
+  <section class="partners"
+    aria-labelledby="partners-titre">
+    <h2 id="partners-titre" class="partners__titre">Ils soutiennent NKS</h2>
+    <!-- Organisateur : mis en avant, hors du flux défilant -->
+    @if (organisateurLogo()) {
+      <div class="partners__organisateur">
+        <span class="partners__organisateur-mention">Organisé par</span>
+        <img [src]="organisateurLogo()" [alt]="organisateurNom()" class="partners__organisateur-logo" />
+      </div>
+    }
+    <!-- Bandeau défilant -->
+    @if (partenaires.length) {
+      <div class="partners__viewport">
+        <ul class="partners__piste"
+          [style.--duree]="dureeAnimation"
+          [attr.aria-label]="partenaires.length + ' partenaires'">
+          <!-- La seconde moitié de la piste est un doublon visuel : masquée aux
+          lecteurs d'écran et retirée du parcours clavier. -->
+          @for (p of piste; track suivrePiste(i, p); let i = $index) {
+            <li
+              class="partners__item"
+              [attr.aria-hidden]="i >= partenaires.length ? 'true' : null">
+              <a class="partners__lien"
+                [href]="p.siteWebUrl || null"
+                [attr.target]="p.siteWebUrl ? '_blank' : null"
+                [attr.rel]="p.siteWebUrl ? 'noopener noreferrer' : null"
+                [attr.tabindex]="i >= partenaires.length || !p.siteWebUrl ? -1 : null"
+                [attr.title]="p.nom">
+                @if (logoDisponible(p)) {
+                  <img
+                    [src]="p.logoUrl" [alt]="p.nom" loading="lazy" (error)="onLogoManquant(p)" />
+                } @else {
+                  <span class="partners__nom">{{ p.nom }}</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+}

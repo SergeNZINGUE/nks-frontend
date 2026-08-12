@@ -1,0 +1,306 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.page {
+  padding: $sp-5;
+  max-width: 960px;
+  margin-inline: auto;
+  color: $nks-text;
+  font-family: $font-body;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $sp-3;
+  flex-wrap: wrap;
+  margin-bottom: $sp-4;
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    margin: 0;
+    max-width: 480px;
+  }
+}
+
+.edition-info {
+  padding: $sp-3 0;
+  font-size: 13px;
+  color: $nks-text-secondary;
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  flex-wrap: wrap;
+
+  strong { color: $nks-text; }
+}
+
+.card {
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-text, 0.08);
+  border-radius: $radius-md;
+  padding: $sp-4;
+  margin-bottom: $sp-4;
+
+  &__title {
+    font-family: $font-title;
+    font-size: 16px;
+    color: $nks-gold;
+    margin: 0 0 $sp-4;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+
+  &--inline {
+    margin-top: $sp-3;
+    padding-top: $sp-3;
+    border-top: 1px dashed rgba($nks-text, 0.1);
+  }
+}
+
+.form__row {
+  display: flex;
+  gap: $sp-3;
+  flex-wrap: wrap;
+
+  .field { flex: 2; min-width: 160px; }
+  .field--sm { flex: 1; min-width: 100px; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $nks-text-secondary;
+  }
+
+  input, select {
+    background: $nks-bg-primary;
+    border: 1px solid rgba($nks-text, 0.15);
+    border-radius: $radius-sm;
+    padding: $sp-3;
+    font-size: 14px;
+    color: $nks-text;
+    min-height: 44px;
+    font-family: $font-body;
+
+    &:focus { outline: 2px solid $nks-gold; outline-offset: 1px; }
+  }
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  font-size: 13px;
+  color: $nks-text-secondary;
+
+  input { width: 16px; height: 16px; }
+}
+
+.field-error { font-size: 13px; color: $nks-error; }
+.field-hint { font-size: 12px; color: $nks-text-secondary; margin: 0; }
+
+.format-tag {
+  font-family: $font-body;
+  font-size: 11px;
+  font-weight: 600;
+  color: $nks-text-secondary;
+  background: rgba($nks-text, 0.06);
+  padding: 2px $sp-2;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+.form__actions {
+  display: flex;
+  gap: $sp-3;
+}
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+}
+
+.sk {
+  height: 130px;
+  background: rgba($nks-text, 0.06);
+  border-radius: $radius-md;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: start;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: $sp-16 $sp-5;
+  color: $nks-text-secondary;
+
+  @media (min-width: 768px) { grid-column: 1 / -1; }
+}
+
+.phase-card {
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-text, 0.08);
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $sp-3;
+    padding: $sp-4;
+    border-bottom: 1px solid rgba($nks-text, 0.06);
+  }
+
+  &__nom {
+    font-family: $font-title;
+    font-size: 16px;
+    color: $nks-gold;
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+  }
+
+  &__dates {
+    font-size: 12px;
+    color: $nks-text-secondary;
+    margin-top: 4px;
+  }
+
+  &__body { padding: $sp-3 $sp-4; }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $sp-3;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $sp-2;
+    flex-wrap: wrap;
+  }
+}
+
+.badge {
+  padding: 4px $sp-3;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &--EN_ATTENTE { background: rgba($nks-border, 0.4);      color: $nks-text-secondary; }
+  &--EN_COURS   { background: rgba($nks-success, 0.15);    color: $nks-success; }
+  &--TERMINEE   { background: rgba($nks-error, 0.12);      color: $nks-error; }
+
+  // Statut de l'édition (distinct du statut de phase ci-dessus, malgré des
+  // valeurs textuelles parfois identiques — préfixé pour éviter toute confusion).
+  &--edition-EN_PREPARATION { background: rgba($nks-gold, 0.12);    color: $nks-gold; }
+  &--edition-EN_COURS       { background: rgba($nks-success, 0.15); color: $nks-success; }
+  &--edition-TERMINEE       { background: rgba($nks-error, 0.12);   color: $nks-error; }
+  &--edition-ARCHIVEE       { background: rgba($nks-border, 0.4);   color: $nks-text-secondary; }
+}
+
+.ponderation {
+  display: flex;
+  gap: $sp-4;
+  flex-wrap: wrap;
+  margin-bottom: $sp-3;
+}
+
+.pond-item {
+  font-size: 13px;
+  color: $nks-text-secondary;
+
+  strong { color: $nks-text; }
+}
+
+.vote-status {
+  font-size: 13px;
+  font-weight: 600;
+  color: $nks-text-secondary;
+
+  &--on { color: $nks-success; }
+}
+
+.btn {
+  padding: $sp-2 $sp-4;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: $font-body;
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: 40px;
+  transition: background 0.2s;
+
+  &--ok {
+    background: rgba($nks-success, 0.15);
+    color: $nks-success;
+    border-color: rgba($nks-success, 0.3);
+    &:hover:not(:disabled) { background: rgba($nks-success, 0.25); }
+  }
+
+  &--err {
+    background: rgba($nks-error, 0.15);
+    color: $nks-error;
+    border-color: rgba($nks-error, 0.3);
+    &:hover:not(:disabled) { background: rgba($nks-error, 0.25); }
+  }
+
+  &--primary {
+    background: $nks-gold;
+    color: $nks-bg-primary;
+    &:hover:not(:disabled) { background: rgba($nks-gold, 0.85); }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $nks-text-secondary;
+    border-color: rgba($nks-text, 0.15);
+    &:hover:not(:disabled) { color: $nks-text; }
+  }
+
+  &--sm {
+    padding: $sp-1 $sp-3;
+    min-height: 32px;
+    font-size: 12px;
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}

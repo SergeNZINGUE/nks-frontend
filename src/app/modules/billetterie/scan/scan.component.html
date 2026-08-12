@@ -1,0 +1,113 @@
+<div class="scan-page">
+
+  <app-topbar title="Scan QR Ticket" icon="📷" backLink="/" backLabel="Retour à l'accueil" />
+
+  <div class="scan-container">
+
+    <!-- Résultat scan -->
+    @if (resultat) {
+      <div class="resultat resultat--{{ resultatClass }}">
+        <div class="resultat__icon">{{ resultatIcon }}</div>
+        <div class="resultat__texte">{{ resultatTexte }}</div>
+        @if (resultat.nomSpectateur) {
+          <div class="resultat__detail">
+            <span>Nom</span> <strong>{{ resultat.nomSpectateur }}</strong>
+          </div>
+        }
+        @if (resultat.nbPlaces) {
+          <div class="resultat__detail">
+            <span>Places</span> <strong>{{ resultat.nbPlaces }}</strong>
+          </div>
+        }
+        @if (resultat.timestampPremierScan && resultat.resultat === 'DEJA_UTILISE') {
+          <div class="resultat__detail">
+            <span>Premier scan</span> <strong>{{ resultat.timestampPremierScan | date:'dd/MM/yyyy HH:mm' }}</strong>
+          </div>
+        }
+        <button class="btn btn--ghost btn--full" (click)="nouveauScan()">
+          🔄 Nouveau scan
+        </button>
+      </div>
+    }
+
+    <!-- Formulaire saisie UUID -->
+    @if (!resultat) {
+      <div>
+        <div class="scan-instructions">
+          <p>Sélectionne la soirée, puis scanne le QR code ou saisis son UUID.</p>
+        </div>
+        @if (erreur) {
+          <div class="toast toast--error">⚠️ {{ erreur }}</div>
+        }
+        @if (chargementSoirees) {
+          <div class="scan-instructions">Chargement des soirées…</div>
+        }
+        @if (!chargementSoirees && soirees.length === 0) {
+          <div class="toast toast--error">
+            ⚠️ Aucune soirée planifiée ou en cours — le scan est impossible.
+          </div>
+        }
+        @if (soirees.length > 0) {
+          <form [formGroup]="form" (ngSubmit)="scanner()" class="scan-form">
+            <div class="form-group">
+              <label for="soireeId">Soirée *</label>
+              <select id="soireeId" formControlName="soireeId" (change)="onSoireeChange()">
+                @for (s of soirees; track s) {
+                  <option [value]="s.id">
+                    {{ s.nom }} — {{ s.dateHeure | date:'dd/MM HH:mm' }}
+                  </option>
+                }
+              </select>
+              @if (form.get('soireeId')?.invalid && form.get('soireeId')?.touched) {
+                <span class="form-error">
+                  Soirée requise.
+                </span>
+              }
+            </div>
+            <!-- Compteur d'entrées — CdC §3.6.3 -->
+            @if (nbEntrees !== null) {
+              <div class="scan-instructions">
+                👥 Entrées comptabilisées : <strong>{{ nbEntrees }}</strong>
+              </div>
+            }
+            <div class="form-group">
+              <label for="qrUuid">UUID du ticket *</label>
+              <input
+                id="qrUuid"
+                type="text"
+                formControlName="qrUuid"
+                placeholder="Ex. a3f2e1d0-4b5c-6789-abcd-ef0123456789"
+                autocomplete="off"
+                autofocus
+                />
+              @if (form.get('qrUuid')?.hasError('required') && form.get('qrUuid')?.touched) {
+                <span class="form-error">
+                  UUID requis.
+                </span>
+              }
+              @if (form.get('qrUuid')?.hasError('pattern') && form.get('qrUuid')?.touched) {
+                <span class="form-error">
+                  Format UUID invalide (8-4-4-4-12 caractères hexadécimaux).
+                </span>
+              }
+            </div>
+            <button type="submit" class="btn btn--primary btn--full"
+              [disabled]="form.invalid || isScanning">
+              @if (!isScanning) {
+                <span>🔍 Valider le ticket</span>
+              }
+              @if (isScanning) {
+                <span>⏳ Vérification…</span>
+              }
+            </button>
+          </form>
+        }
+        <div class="camera-notice">
+          📷 La caméra de scan sera intégrée au Sprint 5 avec la bibliothèque ZXing.
+        </div>
+      </div>
+    }
+
+  </div>
+
+</div>

@@ -1,0 +1,205 @@
+@use 'tokens' as *;
+
+// Ces styles étaient auparavant déclarés dans un bloc `styles: []` inline.
+// Angular compile les styles inline en CSS (inlineStyleLanguage non configuré,
+// défaut « css ») : les variables SCSS n'étaient donc jamais interpolées et les
+// déclarations concernées étaient rejetées par le navigateur.
+
+:host { display: block; }
+
+.login-page {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: $sp-4;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 45% at 50% 0%, rgba($nks-gold, 0.16), transparent 70%),
+    radial-gradient(1px 1px at 20% 25%, rgba($nks-text, 0.5), transparent),
+    radial-gradient(1px 1px at 78% 18%, rgba($nks-text, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 65% 62%, rgba($nks-gold-light, 0.6), transparent),
+    radial-gradient(1px 1px at 12% 72%, rgba($nks-text, 0.35), transparent),
+    radial-gradient(1px 1px at 90% 80%, rgba($nks-text, 0.4), transparent),
+    $nks-bg-primary;
+}
+
+.login-glow {
+  position: absolute;
+  top: -180px;
+  left: 50%;
+  translate: -50% 0;
+  width: 520px;
+  height: 360px;
+  background: radial-gradient(closest-side, rgba($nks-gold, 0.22), transparent 75%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-5;
+  padding: $sp-8 $sp-6;
+  background: linear-gradient(180deg, rgba($nks-bg-card, 0.95), rgba($nks-bg-surface, 0.95));
+  border: 1px solid rgba($nks-gold, 0.22);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card, $shadow-gold;
+  animation: login-rise 0.5s ease both;
+}
+
+@keyframes login-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-brands {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-4;
+
+  &__logo {
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+
+    &--nks { height: 60px; }
+    &--terrasse {
+      height: 52px;
+      border-radius: 50%;
+      background: $nks-text;
+      padding: 3px;
+    }
+  }
+
+  &__sep {
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(180deg, transparent, rgba($nks-gold, 0.5), transparent);
+  }
+}
+
+.login-title {
+  font-family: $font-title;
+  font-size: 24px;
+  font-weight: 400;
+  color: $nks-gold-light;
+  text-align: center;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.login-title__underline {
+  display: block;
+  width: 56px;
+  height: 2px;
+  margin-top: -$sp-3;
+  background: linear-gradient(90deg, transparent, $nks-gold, transparent);
+  border-radius: $radius-full;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: $nks-text-secondary;
+    text-transform: uppercase;
+  }
+
+  &__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__icon {
+    position: absolute;
+    left: $sp-3;
+    width: 18px;
+    height: 18px;
+    color: $nks-text-secondary;
+    pointer-events: none;
+  }
+
+  &__control .input-field {
+    padding-left: $sp-10;
+  }
+
+  &__control:has(.form-field__toggle) .input-field {
+    padding-right: $sp-10;
+  }
+
+  &__toggle {
+    position: absolute;
+    right: $sp-2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: $radius-sm;
+    color: $nks-text-secondary;
+    cursor: pointer;
+    transition: color 0.15s;
+
+    svg { width: 18px; height: 18px; }
+    &:hover { color: $nks-gold; }
+  }
+
+  &__error {
+    font-size: 12px;
+    color: $nks-error;
+  }
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-3;
+  background: rgba($nks-error, 0.1);
+  border: 1px solid rgba($nks-error, 0.3);
+  border-radius: $radius-md;
+  color: $nks-error;
+  font-size: 14px;
+
+  svg { width: 18px; height: 18px; flex-shrink: 0; }
+}
+
+.login-submit {
+  margin-top: $sp-2;
+}
+
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: login-spin 0.7s linear infinite;
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}

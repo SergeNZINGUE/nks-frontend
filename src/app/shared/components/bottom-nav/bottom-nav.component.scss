@@ -1,0 +1,42 @@
+@use 'tokens' as *;
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: $bottom-nav-height;
+  background: $nks-bg-primary;
+  border-top: 1px solid $nks-border;
+  display: flex;
+  align-items: stretch;
+  z-index: 200;
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: $nks-text-secondary;
+    transition: color 0.2s;
+
+    &--active {
+      color: $nks-gold;
+    }
+  }
+
+  &__icon  { font-size: 20px; line-height: 1; }
+  &__label { font-size: 10px; font-weight: 600; }
+
+  // Au-delà de 900 px la navigation passe dans l'en-tête horizontal
+  // (app-site-header) : le prototype desktop n'a pas de barre du bas.
+  //
+  // Cette règle DOIT rester en fin de bloc : Sass émet une media query
+  // imbriquée à sa position dans le source, donc un `display: flex` déclaré
+  // plus bas dans la même règle l'écraserait silencieusement.
+  @media (min-width: 900px) { display: none; }
+}

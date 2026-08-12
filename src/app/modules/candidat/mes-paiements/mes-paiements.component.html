@@ -1,0 +1,127 @@
+<div class="paiements-page">
+
+  <app-topbar title="Paiements" icon="💳" backLink="/mon-espace" backLabel="Retour à mon espace" />
+
+  <!-- Chargement -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      <div class="skeleton skeleton--card"></div>
+      <div class="skeleton skeleton--card"></div>
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (!isLoading && erreur && !candidature) {
+    <div class="empty-state">
+      <p class="empty-icon">🔌</p>
+      <p>{{ erreur }}</p>
+      <a routerLink="/mon-espace" class="btn btn--ghost">← Mon espace</a>
+    </div>
+  }
+
+  @if (!isLoading && candidature) {
+    <!-- Statut de la candidature -->
+    <section class="info-section">
+      <h2 class="section-title">Ma candidature</h2>
+      <div class="info-card">
+        <div class="info-row">
+          <span>Code candidat</span>
+          <strong>{{ candidature.codeCandidat }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Statut</span>
+          <strong class="badge badge--{{ statutClass(candidature.statut) }}">
+            {{ statutLabel(candidature.statut) }}
+          </strong>
+        </div>
+      </div>
+    </section>
+    <!-- Paiement confirmé / en cours -->
+    @if (paiementInitie) {
+      <div class="alert alert--success">
+        ✅ Paiement initié. Valide la demande Mobile Money reçue sur ton téléphone.
+        @if (urlPaiement) {
+          <a [href]="urlPaiement" target="_blank" rel="noopener" class="alert__link">
+            Rouvrir la page de paiement →
+          </a>
+        }
+      </div>
+    }
+    <!-- Formulaire de paiement — uniquement si EN_ATTENTE_PAIEMENT -->
+    @if (paiementRequis && !paiementInitie) {
+      <section class="paiement-section">
+        <h2 class="section-title">Régler mes frais d'inscription</h2>
+        <div class="alert alert--warning">
+          ⚠️ Ta candidature a été acceptée. Règle tes frais d'inscription par Mobile Money
+          pour activer ton profil public.
+        </div>
+        @if (erreur) {
+          <div class="alert alert--danger">⚠️ {{ erreur }}</div>
+        }
+        <form [formGroup]="form" (ngSubmit)="payer()" class="paiement-form">
+          <div class="form-group">
+            <label for="montant">Montant des frais d'inscription (FCFA) *</label>
+            <input id="montant" type="number" formControlName="montant" min="1"
+              placeholder="Montant communiqué par le comité d'organisation" />
+            <span class="form-hint">
+              Le montant est fixé par le comité d'organisation. Il figure dans le SMS
+              et l'e-mail de validation de ta candidature.
+            </span>
+            @if (form.get('montant')?.invalid && form.get('montant')?.touched) {
+              <span class="form-error">
+                Montant requis (supérieur à 0).
+              </span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="telephone">Numéro Mobile Money *</label>
+            <input id="telephone" type="tel" inputmode="numeric" formControlName="telephone"
+              placeholder="Ex : 70000000" />
+            @if (form.get('telephone')?.invalid && form.get('telephone')?.touched) {
+              <span class="form-error">
+                Numéro invalide — 8 chiffres attendus.
+              </span>
+            }
+          </div>
+          <button type="submit" class="btn btn--primary btn--full" [disabled]="isPaying">
+            @if (!isPaying) {
+              <span>💳 Payer par Mobile Money</span>
+            }
+            @if (isPaying) {
+              <span>⏳ Initiation du paiement…</span>
+            }
+          </button>
+        </form>
+      </section>
+    }
+    <!-- Aucun paiement requis -->
+    @if (!paiementRequis && !paiementInitie) {
+      <div class="empty-state">
+        <p class="empty-icon">✅</p>
+        @if (candidature.statut === 'ACTIVE') {
+          <p>
+            Tes frais d'inscription sont réglés — ton profil est actif.
+          </p>
+        }
+        @if (candidature.statut === 'EN_ATTENTE') {
+          <p>
+            Ta candidature est en cours d'examen. Aucun paiement n'est requis pour l'instant.
+          </p>
+        }
+        @if (candidature.statut === 'REJETEE') {
+          <p>
+            Ta candidature a été rejetée. Aucun paiement n'est requis.
+          </p>
+        }
+      </div>
+    }
+    <!-- Limitation connue -->
+    <div class="gap-notice">
+      🔧 <strong>Historique des transactions indisponible</strong> — le backend ne
+      propose pas d'endpoint permettant à un candidat de lister ses propres paiements
+      (<code>GET /paiements</code> est réservé aux administrateurs). Chaque transaction
+      fait l'objet d'une confirmation par SMS et e-mail.
+    </div>
+  }
+
+</div>

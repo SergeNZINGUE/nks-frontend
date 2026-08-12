@@ -1,0 +1,89 @@
+<app-site-header />
+
+<div class="page profile">
+
+  <app-topbar [title]="candidat ? candidat.codeCandidat + ' — ' + candidat.prenom + ' ' + candidat.nom : 'Profil candidat'"
+    backLink="/galerie" backLabel="Retour à la galerie" />
+
+  <!-- LOADING -->
+  @if (loading) {
+    <div style="padding:16px">
+      <div class="skeleton" style="height:120px; border-radius:12px; margin-bottom:12px;"></div>
+      <div class="skeleton" style="height:80px; border-radius:12px;"></div>
+    </div>
+  }
+
+  <!-- ERREUR -->
+  @if (error) {
+    <div class="profile__error">
+      <p class="text-error">{{ error }}</p>
+      <a routerLink="/galerie" class="btn btn--secondary">← Retour à la galerie</a>
+    </div>
+  }
+
+  @if (candidat && !loading) {
+    <!-- HERO -->
+    <div class="profile__hero">
+      <div class="avatar profile__avatar">
+        @if (candidat.photoUrl) {
+          <img [src]="candidat.photoUrl" [alt]="candidat.prenom + ' ' + candidat.nom" />
+        } @else {
+          {{ initiales() }}
+        }
+      </div>
+      <h2 class="profile__name">{{ candidat.prenom }} {{ candidat.nom }}</h2>
+      <span class="text-gold profile__code">Code : {{ candidat.codeCandidat }}</span>
+      <span class="badge badge--actif">★ {{ candidat.statutProfil }}</span>
+    </div>
+    <!-- VOTES -->
+    @if (votes) {
+      <div class="card card--gold-border profile__votes">
+        <div class="profile__votes-count text-gold">🗳️ {{ votes.total | number }} votes</div>
+        <div class="profile__votes-detail text-muted">
+          Payants : {{ votes.votesPayants | number }} ·
+          Sociaux : {{ votes.votesSociaux | number }} ·
+          Sur place : {{ votes.votesSurPlace | number }}
+        </div>
+      </div>
+    }
+    <!-- CTA VOTER -->
+    @if (phaseActiveId) {
+      <div class="profile__vote-cta">
+        <a [routerLink]="['/voter', candidat.id]" class="btn btn--primary btn--full btn--lg">
+          ✦ Voter pour {{ candidat.codeCandidat }} ✦
+        </a>
+      </div>
+    }
+    <!-- À PROPOS -->
+    @if (candidat.biographie) {
+      <div class="profile__section">
+        <p class="section-label">À propos</p>
+        <p class="profile__bio">{{ candidat.biographie }}</p>
+      </div>
+    }
+    <!-- CHANSON -->
+    <div class="profile__section">
+      <p class="section-label">Chanson de présélection</p>
+      <p class="text-gold">🎵 {{ candidat.chansonPreselection }}</p>
+    </div>
+    <!-- HISTORIQUE PHASES -->
+    @if (scores.length) {
+      <div class="profile__section">
+        <p class="section-label">Historique des phases</p>
+        <div class="phase-history">
+          @for (s of scores; track s) {
+            <div class="phase-history__item card">
+              <span class="phase-history__label">{{ phaseLabel(s) }}</span>
+              <span class="phase-history__score text-gold">{{ s.totalPoints | number:'1.1-1' }} pts</span>
+              <span class="badge" [class]="'badge--' + (s.statut === 'QUALIFIE' ? 'success' : s.statut === 'ELIMINE' ? 'error' : 'warning')">
+                {{ statutLabel(s.statut) }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+
+  <app-bottom-nav active="galerie" />
+</div>

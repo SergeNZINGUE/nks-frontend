@@ -1,0 +1,805 @@
+@use 'tokens' as t;
+
+// Alias locaux pour lisibilité
+$bg:      t.$nks-bg-primary;
+$surface: t.$nks-bg-surface;
+$border:  t.$nks-border;
+$text:    t.$nks-text;
+$muted:   t.$nks-text-secondary;
+$gold:    t.$nks-gold;
+
+// Largeur de contenu alignée sur celle de l'accueil
+$largeur-max: 1240px;
+$bascule: 900px;
+
+// ── Layout global ──────────────────────────────────────────────────────────
+.inscription-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: $bg;
+  padding-bottom: 100px;
+
+  @media (min-width: $bascule) { padding-bottom: t.$sp-16; }
+
+  &__topbar-mobile {
+    @media (min-width: $bascule) { display: none; }
+  }
+}
+
+// ── Hero ───────────────────────────────────────────────────────────────────
+// Même halo doré descendant que le hero de l'accueil : l'inscription est la
+// continuité directe du CTA « Devenir candidat », pas une page de formulaire
+// détachée de la marque.
+.inscription-hero {
+  background: radial-gradient(120% 70% at 50% 0%, rgba(t.$nks-gold, 0.14), transparent 60%);
+  padding: t.$sp-8 t.$sp-4 t.$sp-6;
+
+  @media (min-width: $bascule) { padding: t.$sp-16 t.$sp-6 t.$sp-10; }
+
+  &__inner {
+    width: 100%;
+    max-width: $largeur-max;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: t.$sp-3;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 6px t.$sp-4;
+    border-radius: t.$radius-full;
+    border: 1px solid rgba(t.$nks-gold, 0.35);
+    background: rgba(t.$nks-gold, 0.08);
+    color: $gold;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+
+  &__titre {
+    font-family: t.$font-title;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.15;
+    color: $text;
+    margin: 0;
+
+    @media (min-width: 600px)   { font-size: 40px; }
+    @media (min-width: $bascule) { font-size: 52px; }
+
+    &-or {
+      color: $gold;
+      text-shadow: 0 0 28px rgba(t.$nks-gold, 0.45);
+    }
+  }
+
+  &__accroche {
+    margin: 0;
+    max-width: 46ch;
+    color: $muted;
+    font-size: 15px;
+
+    @media (min-width: $bascule) { font-size: 17px; }
+  }
+}
+
+// ── Grille inscription ─────────────────────────────────────────────────────
+// Desktop : progression et critères à gauche (colonne fixe), formulaire à
+// droite. Le candidat garde les conditions d'éligibilité sous les yeux
+// pendant toute la saisie.
+.inscription-layout {
+  width: 100%;
+  max-width: $largeur-max;
+  margin-inline: auto;
+
+  @media (min-width: $bascule) {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: t.$sp-12;
+    padding-inline: t.$sp-6;
+    align-items: start;
+  }
+}
+
+.inscription-aside {
+  @media (min-width: $bascule) {
+    position: sticky;
+    top: t.$sp-8;
+    display: flex;
+    flex-direction: column;
+    gap: t.$sp-6;
+  }
+}
+
+// ── Critères d'éligibilité ─────────────────────────────────────────────────
+.criteres {
+  display: none;
+
+  // Masqué en mobile : la même information est déjà rappelée à chaque étape,
+  // et l'écran doit rester consacré au champ en cours.
+  @media (min-width: $bascule) {
+    display: block;
+    padding: t.$sp-5;
+    border-radius: t.$radius-lg;
+    background: $surface;
+    border: 1px solid $border;
+  }
+
+  &__titre {
+    font-family: t.$font-title;
+    font-size: 15px;
+    color: $gold;
+    margin: 0 0 t.$sp-3;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: t.$sp-5;
+    display: flex;
+    flex-direction: column;
+    gap: t.$sp-2;
+    font-size: 13px;
+    color: $muted;
+
+    li::marker { color: $gold; }
+  }
+
+  &__note {
+    margin: t.$sp-4 0 0;
+    padding-top: t.$sp-3;
+    border-top: 1px solid $border;
+    font-size: 12px;
+    line-height: 1.5;
+    color: $muted;
+  }
+}
+
+// ── Stepper ─────────────────────────────────────────────────────────────────
+.stepper {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 16px 8px;
+  overflow-x: auto;
+  gap: 4px;
+
+  // Desktop : vertical, chaque étape sur sa ligne. Les libellés cessent
+  // d'être tronqués à 10 px comme en mobile.
+  @media (min-width: $bascule) {
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: visible;
+    gap: 0;
+    padding: 0;
+  }
+
+  // <button> depuis la correction d'accessibilité : réinitialisation du style natif
+  &__item {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 56px;
+    cursor: default;
+
+    @media (min-width: $bascule) {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      gap: t.$sp-4;
+      padding: t.$sp-3 0;
+      text-align: left;
+      position: relative;
+
+      // Trait de liaison entre les pastilles, comme un fil de progression
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: calc(50% + 20px);
+        width: 2px;
+        height: calc(100% - 40px);
+        background: $border;
+      }
+
+      &--done:not(:last-child)::after { background: $gold; }
+    }
+
+    // Les étapes déjà franchies sont les seules cliquables
+    &:not(:disabled) { cursor: pointer; }
+    &:disabled { opacity: 1; } // pas de grisage : l'étape reste lisible
+
+    &--done {
+      cursor: pointer;
+      .stepper__dot {
+        background: $gold;
+        border-color: $gold;
+        color: $bg;
+      }
+      .stepper__label { color: $gold; }
+    }
+
+    &--active {
+      .stepper__dot {
+        border-color: $gold;
+        color: $gold;
+        box-shadow: 0 0 0 3px rgba(t.$nks-gold, 0.2);
+      }
+      .stepper__label { color: $text; font-weight: 600; }
+    }
+  }
+
+  &__dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid $border;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    background: $bg;
+    flex-shrink: 0;
+    transition: all 0.2s;
+
+    @media (min-width: $bascule) {
+      width: 40px;
+      height: 40px;
+      font-size: 15px;
+      // z-index : la pastille passe au-dessus du trait de liaison
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &__label {
+    font-size: 10px;
+    color: $muted;
+    text-align: center;
+    white-space: nowrap;
+    transition: color 0.2s;
+
+    @media (min-width: $bascule) {
+      font-size: 14px;
+      text-align: left;
+      white-space: normal;
+    }
+  }
+}
+
+// ── Progress bar ─────────────────────────────────────────────────────────────
+.progress-bar {
+  height: 3px;
+  background: $border;
+  margin: 0 16px 8px;
+  border-radius: 2px;
+
+  // Le stepper vertical porte déjà la progression sur desktop
+  @media (min-width: $bascule) { display: none; }
+
+  &__fill {
+    height: 100%;
+    background: $gold;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+}
+
+// ── Alerte ─────────────────────────────────────────────────────────────────
+.alert {
+  margin: 8px 16px;
+  padding: 12px 16px;
+  border-radius: t.$radius-md;
+  font-size: 14px;
+
+  &--danger {
+    background: rgba(255, 75, 75, 0.1);
+    border: 1px solid rgba(255, 75, 75, 0.3);
+    color: t.$nks-error;
+  }
+}
+
+// ── Contenu étape ──────────────────────────────────────────────────────────
+.step-content {
+  flex: 1;
+  padding: 16px;
+
+  section { display: flex; flex-direction: column; gap: 16px; }
+
+  // Desktop : le formulaire devient une carte posée sur le fond, ce qui lui
+  // donne le même poids visuel que les cartes de l'accueil.
+  @media (min-width: $bascule) {
+    padding: t.$sp-8;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: t.$radius-lg;
+    box-shadow: t.$shadow-card;
+
+    section { gap: t.$sp-5; }
+  }
+}
+
+.step-title {
+  font-family: t.$font-title;
+  font-size: 20px;
+  color: $gold;
+  margin: 0 0 4px;
+
+  @media (min-width: $bascule) { font-size: 26px; }
+}
+
+.step-hint {
+  color: $muted;
+  font-size: 13px;
+  margin: -8px 0 4px;
+}
+
+// ── Formulaire ─────────────────────────────────────────────────────────────
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+
+    small {
+      font-weight: 400;
+      color: $muted;
+      margin-left: 4px;
+    }
+  }
+
+  input, textarea {
+    background: $bg;
+    border: 1px solid $border;
+    border-radius: t.$radius-md;
+    // 14px vertical : hauteur de champ ~48px, au-dessus de la cible tactile
+    // minimale de 44px (WCAG 2.5.5)
+    padding: 14px;
+    color: $text;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      border-color: $gold;
+      box-shadow: 0 0 0 3px rgba(t.$nks-gold, 0.15);
+    }
+    &.ng-invalid.ng-touched { border-color: t.$nks-error; }
+    &::placeholder { color: $muted; }
+  }
+
+  textarea { resize: vertical; min-height: 140px; font-family: inherit; }
+
+  // input[type=date] : l'icône native est quasi invisible sur fond sombre par défaut
+  // (gris terne du thème clair du navigateur) — recolorée en doré et agrandie pour que
+  // le calendrier soit visible et identifiable comme tel au premier coup d'œil.
+  .input-date {
+    cursor: pointer;
+
+    &::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.85;
+      // filter: invert() -> icône blanche, puis teinte dorée via sepia+hue-rotate
+      // (les navigateurs ne permettent pas de recolorer directement l'icône native).
+      filter: invert(76%) sepia(44%) saturate(496%) hue-rotate(358deg) brightness(93%) contrast(92%);
+      width: 20px;
+      height: 20px;
+
+      &:hover { opacity: 1; }
+    }
+  }
+}
+
+.form-error { font-size: 12px; color: t.$nks-error; }
+.form-hint  { font-size: 12px; color: $muted; }
+
+.mots-counter {
+  font-size: 12px;
+  color: $muted;
+  text-align: right;
+
+  &--limit { color: t.$nks-warning; }
+}
+
+// ── Upload zone ─────────────────────────────────────────────────────────────
+.upload-zone {
+  position: relative;
+  border: 2px dashed $border;
+  border-radius: t.$radius-lg;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(t.$nks-gold, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: $gold;
+    background: rgba(t.$nks-gold, 0.07);
+    box-shadow: t.$shadow-gold;
+
+    .upload-icon { transform: scale(1.08); }
+  }
+
+  &--done {
+    border-color: t.$nks-success;
+    border-style: solid;
+    background: rgba(t.$nks-success, 0.06);
+  }
+
+  &--video { min-height: 140px; }
+
+  .upload-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+}
+
+.photo-preview {
+  width: 100%;
+  height: 200px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: $muted;
+  padding: 24px;
+  pointer-events: none;
+
+  .upload-icon {
+    font-size: 40px;
+    transition: transform 0.2s ease;
+  }
+  p { font-size: 14px; margin: 0; }
+  .file-name { font-size: 13px; color: $text; word-break: break-all; text-align: center; }
+}
+
+.upload-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 8px 0;
+
+  &.uploading { color: $gold; }
+  &.done      { color: t.$nks-success; }
+  &.error     { color: t.$nks-error; }
+}
+
+// ── Info box ───────────────────────────────────────────────────────────────
+.info-box {
+  background: $surface;
+  border-left: 3px solid $gold;
+  border-radius: 0 t.$radius-md t.$radius-md 0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  p { margin: 0; font-size: 13px; color: $muted; }
+  strong { color: $text; }
+}
+
+// ── Récapitulatif ──────────────────────────────────────────────────────────
+.recap-card {
+  background: $surface;
+  border-radius: t.$radius-lg;
+  border: 1px solid $border;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.recap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid $border;
+  font-size: 14px;
+
+  &:last-child { border-bottom: none; }
+
+  span    { color: $muted; }
+  strong  { color: $text; max-width: 60%; text-align: right; word-break: break-word; }
+  .status-ok { color: t.$nks-success; }
+}
+
+// ── Montant ────────────────────────────────────────────────────────────────
+.amount-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(t.$nks-gold, 0.08);
+  border: 1px solid rgba(t.$nks-gold, 0.3);
+  border-radius: t.$radius-md;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  color: $text;
+
+  .amount {
+    font-family: t.$font-title;
+    font-size: 22px;
+    color: $gold;
+  }
+}
+
+// ── Opérateurs ─────────────────────────────────────────────────────────────
+.operator-group {
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  legend {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+    margin-bottom: 10px;
+  }
+}
+
+.operator-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: $surface;
+  border: 2px solid $border;
+  border-radius: t.$radius-md;
+  cursor: pointer;
+  font-size: 15px;
+  color: $text;
+  margin-bottom: 10px;
+  transition: border-color 0.2s, background 0.2s;
+
+  input[type="radio"] { display: none; }
+  .operator-logo { font-size: 22px; }
+
+  &--selected {
+    border-color: $gold;
+    background: rgba(t.$nks-gold, 0.06);
+  }
+}
+
+.paiement-hint {
+  font-size: 13px;
+  color: $muted;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+// ── Nav bas ────────────────────────────────────────────────────────────────
+.step-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: $bg;
+  border-top: 1px solid $border;
+  z-index: 100;
+
+  .btn {
+    flex: 1;
+    max-width: 200px;
+    padding: 14px 20px;
+    font-size: 15px;
+    &--submit { max-width: 100%; }
+  }
+}
+
+// ── Spinner ────────────────────────────────────────────────────────────────
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(t.$nks-gold, 0.3);
+  border-top-color: $gold;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+
+  &--inline {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Écran succès ───────────────────────────────────────────────────────────
+// Moment de récompense : c'est le seul écran du parcours où le candidat n'a
+// rien à faire. Il porte donc le halo doré, comme le hero.
+.success-screen {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: t.$sp-10 t.$sp-4;
+  background: $bg;
+  overflow: hidden;
+
+  &__halo {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(90% 60% at 50% 30%, rgba(t.$nks-gold, 0.16), transparent 65%);
+    pointer-events: none;
+  }
+
+  &__carte {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: t.$sp-5;
+    padding: t.$sp-10 t.$sp-6;
+    text-align: center;
+    background: $surface;
+    border: 1px solid rgba(t.$nks-gold, 0.25);
+    border-radius: t.$radius-lg;
+    box-shadow: t.$shadow-card;
+  }
+
+  &__titre {
+    font-family: t.$font-title;
+    font-size: 28px;
+    font-weight: 900;
+    color: $text;
+    margin: 0;
+
+    @media (min-width: 600px) { font-size: 34px; }
+  }
+
+  .success-icon {
+    font-size: 40px;
+    line-height: 1;
+    width: 76px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: $gold;
+    background: rgba(t.$nks-gold, 0.1);
+    border: 1px solid rgba(t.$nks-gold, 0.35);
+    box-shadow: t.$shadow-gold;
+  }
+
+  // Le code candidat est l'information à retenir : il domine l'écran.
+  .code-candidat {
+    display: flex;
+    flex-direction: column;
+    gap: t.$sp-2;
+    margin: 0;
+
+    &__libelle {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: $muted;
+    }
+
+    &__valeur {
+      font-family: t.$font-title;
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      color: $gold;
+      text-shadow: 0 0 28px rgba(t.$nks-gold, 0.45);
+    }
+  }
+
+  // Suite du parcours en 3 temps : lève l'incertitude sur « et maintenant ? »
+  .suite {
+    list-style: none;
+    margin: 0;
+    padding: t.$sp-5 0 0;
+    border-top: 1px solid $border;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: t.$sp-4;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $muted;
+
+    li { display: flex; align-items: flex-start; gap: t.$sp-3; }
+
+    &__num {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(t.$nks-gold, 0.12);
+      border: 1px solid rgba(t.$nks-gold, 0.35);
+      color: $gold;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  }
+
+  .btn { width: 100%; max-width: 300px; }
+}
+
+// ── Tablette ───────────────────────────────────────────────────────────────
+// Bornée à 899px : au-delà, la grille à deux colonnes prend le relais et ces
+// largeurs de 560px l'écraseraient.
+@media (min-width: 640px) and (max-width: 899px) {
+  .step-content  { max-width: 560px; margin: 0 auto; padding: 24px; }
+  .step-nav      { max-width: 560px; left: 50%; transform: translateX(-50%); border-radius: t.$radius-lg t.$radius-lg 0 0; }
+  .stepper       { max-width: 560px; margin: 0 auto; }
+  .progress-bar  { max-width: 560px; margin: 0 auto 8px; }
+}
+
+// ── Desktop : barre d'actions alignée sur la colonne du formulaire ─────────
+@media (min-width: $bascule) {
+  .step-nav {
+    position: static;
+    max-width: $largeur-max;
+    margin: t.$sp-6 auto 0;
+    padding-inline: t.$sp-6;
+    background: none;
+    border-top: none;
+    // Décalage de la colonne latérale + gouttière : les boutons se placent
+    // sous le formulaire, pas sous le stepper.
+    padding-left: calc(280px + #{t.$sp-12} + #{t.$sp-6});
+  }
+}

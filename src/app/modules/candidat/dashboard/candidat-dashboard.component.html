@@ -1,0 +1,157 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+Dashboard — Espace Candidat NKS
+═══════════════════════════════════════════════════════════════════ -->
+
+<div class="dashboard-page">
+
+  <!-- Topbar -->
+  <app-topbar title="Mon espace" backLink="/" backLabel="Retour à l'accueil"
+    [logout]="true" (logoutClick)="deconnecter()" />
+
+  <!-- ── Loading ──────────────────────────────────────────────── -->
+  @if (isLoading) {
+    <div class="skeleton-wrapper">
+      <div class="skeleton skeleton--banner"></div>
+      <div class="skeleton-grid">
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Erreur (backend off) ─────────────────────────────────── -->
+  @if (!isLoading && !candidature) {
+    <div class="empty-state">
+      <p class="empty-icon">🔌</p>
+      <p>Impossible de charger ta candidature.</p>
+      <p class="empty-hint">Vérifie que le serveur est actif.</p>
+      <button class="btn btn--ghost" routerLink="/">Retour à l'accueil</button>
+    </div>
+  }
+
+  <!-- ── Contenu principal ─────────────────────────────────────── -->
+  @if (!isLoading && candidature) {
+    <!-- Bannière profil -->
+    <div class="profil-banner" [class.banner--alerte]="candidature.statut === 'EN_ATTENTE_PAIEMENT'">
+      <div class="avatar">
+        @if (profil?.photoUrl) {
+          <img [src]="profil!.photoUrl!" alt="Photo profil" />
+        }
+        @if (!profil?.photoUrl) {
+          <span>{{ initiales }}</span>
+        }
+      </div>
+      <div class="profil-info">
+        <h1>{{ candidature.prenom }} {{ candidature.nom }}</h1>
+        <span class="code-badge">{{ candidature.codeCandidat }}</span>
+        <span class="badge badge--{{ statutClass }}">{{ statutLabel }}</span>
+      </div>
+    </div>
+    <!-- Alerte paiement en attente -->
+    @if (candidature.statut === 'EN_ATTENTE_PAIEMENT') {
+      <div class="alert alert--warning">
+        ⚠️ Ton paiement d'inscription est en attente. Finalise-le pour activer ta candidature.
+        <a routerLink="/mon-espace/paiements" class="alert__link">Voir les paiements →</a>
+      </div>
+    }
+    <!-- Alerte candidature rejetée -->
+    @if (candidature.statut === 'REJETEE') {
+      <div class="alert alert--danger">
+        ❌ Candidature rejetée — <em>{{ candidature.motifRejet ?? 'aucun motif précisé' }}</em>
+      </div>
+    }
+    <!-- Grille de navigation -->
+    <nav class="nav-grid">
+      <a routerLink="/mon-espace/profil" class="nav-card">
+        <span class="nav-card__icon">👤</span>
+        <span class="nav-card__label">Mon profil</span>
+        <span class="nav-card__arrow">›</span>
+      </a>
+      <a routerLink="/mon-espace/videos" class="nav-card">
+        <span class="nav-card__icon">🎬</span>
+        <span class="nav-card__label">Mes vidéos</span>
+        <span class="nav-card__arrow">›</span>
+      </a>
+      <a routerLink="/mon-espace/paiements" class="nav-card">
+        <span class="nav-card__icon">💳</span>
+        <span class="nav-card__label">Paiements</span>
+        <span class="nav-card__arrow">›</span>
+      </a>
+      <a routerLink="/galerie" class="nav-card">
+        <span class="nav-card__icon">🌍</span>
+        <span class="nav-card__label">Galerie publique</span>
+        <span class="nav-card__arrow">›</span>
+      </a>
+    </nav>
+    <!-- Scores par phase -->
+    @if (scores.length > 0) {
+      <section class="scores-section">
+        <h2 class="section-title">Mes scores</h2>
+        <div class="score-summary">
+          <div class="score-stat">
+            <span class="score-stat__value">{{ totalPoints }}</span>
+            <span class="score-stat__label">Points total</span>
+          </div>
+          @if (meilleurRang) {
+            <div class="score-stat">
+              <span class="score-stat__value">#{{ meilleurRang }}</span>
+              <span class="score-stat__label">Meilleur rang</span>
+            </div>
+          }
+        </div>
+        <div class="scores-table">
+          <div class="scores-table__header">
+            <span>Phase</span>
+            <span>Votes</span>
+            <span>Jury</span>
+            <span>Total</span>
+            <span>Statut</span>
+          </div>
+          @for (s of scores; track s; let i = $index) {
+            <div class="scores-table__row">
+              <span>Phase {{ i + 1 }}</span>
+              <span>{{ s.pointsVotes }}</span>
+              <span>{{ s.pointsJury }}</span>
+              <span class="score-total">{{ s.totalPoints }}</span>
+              <span class="badge" [class.badge--success]="s.statut === 'QUALIFIE'"
+                [class.badge--danger]="s.statut === 'ELIMINE'"
+                [class.badge--warning]="s.statut === 'EN_ATTENTE'">
+                {{ s.statut }}
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+    <!-- Infos candidature -->
+    <section class="info-section">
+      <h2 class="section-title">Ma candidature</h2>
+      <div class="info-card">
+        <div class="info-row">
+          <span>Email</span>
+          <strong>{{ candidature.email }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Téléphone</span>
+          <strong>{{ candidature.telephone }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Soumise le</span>
+          <strong>{{ candidature.dateSoumission | date:'dd/MM/yyyy' }}</strong>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Bouton déconnexion bas de page -->
+  @if (!isLoading) {
+    <div class="logout-section">
+      <button class="btn btn--ghost btn--danger-ghost" (click)="deconnecter()">
+        🚪 Se déconnecter
+      </button>
+    </div>
+  }
+
+</div>

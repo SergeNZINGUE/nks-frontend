@@ -1,0 +1,46 @@
+// ─── Design Tokens NKS Night Karaoke Stars ───────────────────────────────────
+// Source : NKS_FIGMA_READY_MVP_SPEC.md
+
+// Palette
+$nks-bg-primary:    #0D0D1E;
+$nks-bg-surface:    #1A1A2E;
+$nks-bg-card:       #252540;
+$nks-border:        #3A3A5C;
+$nks-text:          #FFFFFF;
+$nks-text-secondary:#C8C8D0;
+$nks-gold:          #C9A227;
+$nks-gold-hover:    #A07E1B;
+$nks-gold-light:    #E8C04A;
+$nks-success:       #27AE60;
+$nks-warning:       #F39C12;
+$nks-error:         #E74C3C;
+$nks-info:          #3498DB;
+
+// Typography
+$font-body:   'Inter', system-ui, sans-serif;
+$font-title:  'Cinzel Decorative', 'Playfair Display SC', serif;
+
+// Spacing (base 4px)
+$sp-1: 4px;
+$sp-2: 8px;
+$sp-3: 12px;
+$sp-4: 16px;
+$sp-5: 20px;
+$sp-6: 24px;
+$sp-8: 32px;
+$sp-10: 40px;
+$sp-12: 48px;
+$sp-16: 64px;
+
+// Radius
+$radius-sm:  6px;
+$radius-md:  12px;
+$radius-lg:  20px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+$shadow-gold: 0 0 20px rgba(201, 162, 39, 0.3);
+
+// Bottom nav
+$bottom-nav-height: 64px;

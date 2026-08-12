@@ -1,0 +1,454 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+Écran : Inscription candidat — stepper 4 étapes
+Le paiement n'a PAS lieu ici : CdC §3.1.2 impose soumission → examen
+administrateur → notification → puis paiement depuis l'espace candidat.
+═══════════════════════════════════════════════════════════════════ -->
+
+<app-site-header />
+
+<!-- ── Succès ─────────────────────────────────────────────────────── -->
+@if (soumissionReussie) {
+  <div class="success-screen">
+    <div class="success-screen__halo" aria-hidden="true"></div>
+    <div class="success-screen__carte">
+      <div class="success-icon" aria-hidden="true">✦</div>
+      <h1 class="success-screen__titre">Candidature soumise</h1>
+      <p class="code-candidat">
+        <span class="code-candidat__libelle">Votre code candidat est</span>
+        <strong class="code-candidat__valeur">{{ codeCandidat }}</strong>
+      </p>
+      <ol class="suite">
+        <li><span class="suite__num">1</span> Le comité d'organisation examinera votre dossier.</li>
+        <li><span class="suite__num">2</span> Vous reçevrez la réponse par SMS/e-mail.</li>
+        <li><span class="suite__num">3</span> Si vous êtes retenu, les frais d'inscription devrons être réglés depuis votre espace personnel pour validar votre candidature.</li>
+      </ol>
+      <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
+    </div>
+  </div>
+}
+
+<!-- ── Inscriptions fermées ───────────────────────────────────────── -->
+@if (!soumissionReussie && !chargementEdition && !inscriptionsOuvertes) {
+  <div class="success-screen">
+    <div class="success-screen__halo" aria-hidden="true"></div>
+    <div class="success-screen__carte">
+      <div class="success-icon" aria-hidden="true">✦</div>
+      <h1 class="success-screen__titre">Inscriptions closes</h1>
+      <p>La période d'inscription pour cette édition est terminée. Rendez vous à la prochaine édition.</p>
+      <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
+    </div>
+  </div>
+}
+
+<!-- ── Formulaire stepper ─────────────────────────────────────────── -->
+@if (!soumissionReussie && (chargementEdition || inscriptionsOuvertes)) {
+  <div class="inscription-page">
+    <!-- Topbar mobile uniquement : l'en-tête desktop prend le relais -->
+    <app-topbar class="inscription-page__topbar-mobile"
+      [title]="'S\'inscrire — NKS ' + annee"
+      backLink="/" backLabel="Retour à l'accueil" />
+    <!-- ── Hero ─────────────────────────────────────────────────────── -->
+    <header class="inscription-hero">
+      <div class="inscription-hero__inner">
+        <span class="inscription-hero__badge">★ ÉDITION {{ annee }}</span>
+        <h1 class="inscription-hero__titre">
+          Deviens la prochaine <span class="inscription-hero__titre-or">Star</span>
+        </h1>
+        <p class="inscription-hero__accroche">
+          Quatre étapes, moins de dix minutes. Ta scène t'attend à La Terrasse.
+        </p>
+      </div>
+    </header>
+    <div class="inscription-layout">
+      <!-- ── Colonne latérale : progression + réassurance ────────────── -->
+      <aside class="inscription-aside">
+        <nav class="stepper" aria-label="Étapes d'inscription">
+          @for (label of ETAPES; track label; let i = $index) {
+            <button
+              type="button"
+              class="stepper__item"
+              [class.stepper__item--active]="step === i + 1"
+              [class.stepper__item--done]="step > i + 1"
+              [disabled]="i + 1 >= step"
+              [attr.aria-current]="step === i + 1 ? 'step' : null"
+              [attr.aria-label]="'Étape ' + (i + 1) + ' : ' + label"
+              (click)="allerEtape(i + 1)"
+              >
+              <span class="stepper__dot" aria-hidden="true">
+                @if (step <= i + 1) {
+                  <span>{{ i + 1 }}</span>
+                }
+                @if (step > i + 1) {
+                  <span>✓</span>
+                }
+              </span>
+              <span class="stepper__label">{{ label }}</span>
+            </button>
+          }
+        </nav>
+        <!-- Barre de progression -->
+        <div class="progress-bar"
+          role="progressbar"
+          [attr.aria-valuenow]="step"
+          aria-valuemin="1"
+          [attr.aria-valuemax]="TOTAL_STEPS"
+          [attr.aria-label]="'Étape ' + step + ' sur ' + TOTAL_STEPS">
+          <div
+            class="progress-bar__fill"
+            [style.width.%]="((step - 1) / (TOTAL_STEPS - 1)) * 100"
+          ></div>
+        </div>
+        <!-- Conditions d'éligibilité : visibles avant l'effort de saisie -->
+        <div class="criteres">
+          <h2 class="criteres__titre">Ce qu'il te faut</h2>
+          <ul>
+            <li>Avoir 20 ans révolus</li>
+            <li>Une photo de profil (JPG/PNG, 5 Mo max)</li>
+            <li>Une vidéo MP4 de {{ VIDEO_DUREE_MIN_S }} à {{ VIDEO_DUREE_MAX_S }} secondes</li>
+            <li>Être abonné aux pages NKS (capture d'écran)</li>
+          </ul>
+          <p class="criteres__note">
+            Les frais ne sont réglés qu'après validation de ta candidature.
+          </p>
+        </div>
+      </aside>
+      <!-- ── Colonne principale : formulaire ─────────────────────────── -->
+      <main class="step-content">
+        <!-- Erreur globale -->
+        @if (erreur) {
+          <div class="alert alert--danger" role="alert">
+            ⚠️ {{ erreur }}
+          </div>
+        }
+        <!-- ── Étape 1 : Infos personnelles ─────────────────────────── -->
+        @if (step === 1) {
+          <section [formGroup]="step1">
+            <h2 class="step-title">Tes informations</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prenom">Prénom *</label>
+                <input id="prenom" type="text" formControlName="prenom"
+                  placeholder="Ex: Mariam" autocomplete="given-name" />
+                @if (hasError(step1, 'prenom', 'required')) {
+                  <span class="form-error">Champ requis</span>
+                }
+                @if (hasError(step1, 'prenom', 'minlength')) {
+                  <span class="form-error">Min. 2 caractères</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="nom">Nom *</label>
+                <input id="nom" type="text" formControlName="nom"
+                  placeholder="Ex: Ouédraogo" autocomplete="family-name" />
+                @if (hasError(step1, 'nom', 'required')) {
+                  <span class="form-error">Champ requis</span>
+                }
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="dateNaissance">Date de naissance * <small>(min. 20 ans)</small></label>
+              <input id="dateNaissance" type="date" class="input-date" formControlName="dateNaissance"
+                [max]="dateNaissanceMax" autocomplete="bday" (click)="ouvrirSelecteurDate($event)" />
+              @if (hasError(step1, 'dateNaissance', 'required')) {
+                <span class="form-error">Champ requis</span>
+              }
+              @if (hasError(step1, 'dateNaissance', 'ageMinimum')) {
+                <span class="form-error">
+                  Vous devez avoir au moins 20 ans.
+                </span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="telephone">Téléphone *</label>
+              <input id="telephone" type="tel" formControlName="telephone"
+                placeholder="Ex: 70000000" autocomplete="tel" inputmode="numeric" />
+              <span class="form-hint">Numéro Burkina Faso (8 chiffres)</span>
+              @if (hasError(step1, 'telephone', 'required')) {
+                <span class="form-error">Champ requis</span>
+              }
+              @if (hasError(step1, 'telephone', 'pattern')) {
+                <span class="form-error">Format invalide</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input id="email" type="email" formControlName="email"
+                placeholder="exemple@email.com" autocomplete="email" />
+              @if (hasError(step1, 'email', 'required')) {
+                <span class="form-error">Champ requis</span>
+              }
+              @if (hasError(step1, 'email', 'email')) {
+                <span class="form-error">Email invalide</span>
+              }
+            </div>
+          </section>
+        }
+        <!-- ── Étape 2 : Photo profil ─────────────────────────────────── -->
+        @if (step === 2) {
+          <section [formGroup]="step2">
+            <h2 class="step-title">Votre photo</h2>
+            <p class="step-hint">JPG ou PNG — maximum 5 Mo</p>
+            <div class="upload-zone" [class.upload-zone--done]="photoState === 'done'">
+              <!-- Aperçu photo -->
+              @if (photoPreview) {
+                <div class="photo-preview">
+                  <img [src]="photoPreview" alt="Aperçu photo" />
+                </div>
+              }
+              <!-- Placeholder -->
+              @if (!photoPreview) {
+                <div class="upload-placeholder">
+                  <span class="upload-icon">📷</span>
+                  <p>Choisir une photo</p>
+                </div>
+              }
+              <!-- Input (accessible partout dans la zone) -->
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                (change)="onPhotoChange($event)"
+                class="upload-input"
+                [disabled]="photoState === 'uploading'"
+                />
+            </div>
+            <!-- État upload -->
+            @if (photoState === 'uploading') {
+              <div class="upload-status uploading">
+                <div class="spinner"></div> Upload en cours…
+              </div>
+            }
+            @if (photoState === 'done') {
+              <div class="upload-status done">
+                ✅ Photo uploadée — {{ formatSize(photoResult?.tailleOctets ?? 0) }}
+              </div>
+            }
+            @if (photoState === 'error') {
+              <div class="upload-status error">
+                ❌ Échec — réessaie
+              </div>
+            }
+            @if (step2.get('photoUploaded')?.touched && step2.get('photoUploaded')?.invalid) {
+              <span
+                class="form-error"
+                >
+                Photo requise
+              </span>
+            }
+          </section>
+        }
+        <!-- ── Étape 3 : Vidéo présélection ──────────────────────────── -->
+        @if (step === 3) {
+          <section [formGroup]="step3">
+            <h2 class="step-title">Votre vidéo de présélection</h2>
+            <p class="step-hint">
+              Format MP4 — durée entre {{ VIDEO_DUREE_MIN_S }} et {{ VIDEO_DUREE_MAX_S }} secondes — maximum 100 Mo
+            </p>
+            <div class="upload-zone upload-zone--video" [class.upload-zone--done]="videoState === 'done'">
+              <div class="upload-placeholder">
+                <span class="upload-icon">🎬</span>
+                @if (!videoFileName) {
+                  <p>Choisir une vidéo MP4</p>
+                }
+                @if (videoFileName) {
+                  <p class="file-name">{{ videoFileName }}</p>
+                }
+              </div>
+              <input
+                type="file"
+                accept="video/mp4"
+                (change)="onVideoChange($event)"
+                class="upload-input"
+                [disabled]="videoState === 'uploading'"
+                />
+            </div>
+            @if (videoState === 'uploading') {
+              <div class="upload-status uploading">
+                <div class="spinner"></div> Upload en cours… (peut prendre quelques minutes)
+              </div>
+            }
+            @if (videoState === 'done') {
+              <div class="upload-status done">
+                ✅ Vidéo uploadée — {{ formatSize(videoResult?.tailleOctets ?? 0) }}
+                · durée {{ videoDureeSecondes }} s
+              </div>
+            }
+            @if (videoState === 'error') {
+              <div class="upload-status error">
+                ❌ Échec — réessaie
+              </div>
+            }
+            <div class="info-box">
+              <p>🎤 Chante <strong>a cappella ou avec fond musical</strong>.</p>
+              <p>📱 Cadre vertical conseillé. Éclairage soigné.</p>
+            </div>
+            @if (step3.get('videoUploaded')?.touched && step3.get('videoUploaded')?.invalid) {
+              <span
+                class="form-error"
+                >
+                Vidéo requise
+              </span>
+            }
+          </section>
+        }
+        <!-- ── Étape 4 : Présentation ─────────────────────────────────── -->
+        @if (step === 4) {
+          <section [formGroup]="step4">
+            <h2 class="step-title">Votre présentation</h2>
+            <div class="form-group">
+              <label for="chanson">Chanson de présélection *</label>
+              <input id="chanson" type="text" formControlName="chansonPreselection"
+                placeholder="Ex: Nuit Africaine — Ismaël Lô" />
+              @if (hasError(step4, 'chansonPreselection', 'required')) {
+                <span class="form-error">
+                  Indiquez la chanson que vous allez interprété.
+                </span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="motivation">Motivation * <small>(max 200 mots)</small></label>
+              <textarea
+                id="motivation"
+                formControlName="motivation"
+                rows="8"
+                placeholder="Pourquoi veux-tu participer au Night Karaoke Stars ?"
+              ></textarea>
+              <div class="mots-counter" [class.mots-counter--limit]="motivationMots > 190">
+                {{ motivationMots }} / 200 mots
+              </div>
+              @if (hasError(step4, 'motivation', 'required')) {
+                <span class="form-error">Champ requis</span>
+              }
+              @if (hasError(step4, 'motivation', 'maxMots')) {
+                <span class="form-error">
+                  Maximum 200 mots — vous en avez {{ motivationMots }}.
+                </span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Capture d'abonnement Facebook / TikTok *</label>
+              <p class="step-hint">
+                Abonnez-vous aux pages NKS, faites une capture d'écran et déposez-la ici.
+                JPG ou PNG — maximum 5 Mo.
+              </p>
+              <div class="upload-zone" [class.upload-zone--done]="captureState === 'done'">
+                @if (capturePreview) {
+                  <div class="photo-preview">
+                    <img [src]="capturePreview" alt="Aperçu de la capture d'abonnement" />
+                  </div>
+                }
+                @if (!capturePreview) {
+                  <div class="upload-placeholder">
+                    <span class="upload-icon" aria-hidden="true">📱</span>
+                    <p>Choisir une capture d'écran</p>
+                  </div>
+                }
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  (change)="onCaptureChange($event)"
+                  class="upload-input"
+                  aria-label="Capture d'abonnement Facebook ou TikTok"
+                  [disabled]="captureState === 'uploading'"
+                  />
+              </div>
+              @if (captureState === 'uploading') {
+                <div class="upload-status uploading" role="status">
+                  <div class="spinner" aria-hidden="true"></div> Envoi en cours…
+                </div>
+              }
+              @if (captureState === 'done') {
+                <div class="upload-status done" role="status">
+                  ✅ Capture envoyée — {{ formatSize(captureResult?.tailleOctets ?? 0) }}
+                </div>
+              }
+              @if (captureState === 'error') {
+                <div class="upload-status error" role="alert">
+                  ❌ Échec — réessaie
+                </div>
+              }
+              @if (step4.get('captureUploaded')?.touched && step4.get('captureUploaded')?.invalid) {
+                <span
+                  class="form-error"
+                  >
+                  Capture requise — la preuve d'abonnement est obligatoire.
+                </span>
+              }
+            </div>
+            <!-- Récapitulatif avant envoi -->
+            <div class="recap-card">
+              <div class="recap-row">
+                <span>Candidat</span>
+                <strong>{{ step1.value.prenom }} {{ step1.value.nom }}</strong>
+              </div>
+              <div class="recap-row">
+                <span>Email</span>
+                <strong>{{ step1.value.email }}</strong>
+              </div>
+              <div class="recap-row">
+                <span>Photo</span>
+                <strong class="status-ok">✅ {{ formatSize(photoResult?.tailleOctets ?? 0) }}</strong>
+              </div>
+              <div class="recap-row">
+                <span>Vidéo</span>
+                <strong class="status-ok">✅ {{ videoDureeSecondes }} s</strong>
+              </div>
+              <div class="recap-row">
+                <span>Capture d'abonnement</span>
+                <strong [class.status-ok]="captureState === 'done'">
+                  {{ captureState === 'done' ? '✅ Envoyée' : '— manquante' }}
+                </strong>
+              </div>
+            </div>
+            <p class="paiement-hint">
+              Les frais d'inscription seront réglés depuis votre espace personnel <strong>après validation
+            de votre candidature</strong> par le comité d'organisation.
+          </p>
+        </section>
+      }
+    </main>
+  </div>
+  <!-- ── Navigation bas ────────────────────────────────────────────── -->
+  <footer class="step-nav">
+    @if (step > 1) {
+      <button
+        type="button"
+        class="btn btn--ghost"
+        (click)="precedent()"
+        [disabled]="isSubmitting"
+        >
+        ← Précédent
+      </button>
+    }
+    @if (step === 1) {
+      <span></span>
+      }<!-- spacer -->
+      @if (step < TOTAL_STEPS) {
+        <button
+          type="button"
+          class="btn btn--primary"
+          (click)="suivant()"
+          [disabled]="photoState === 'uploading' || videoState === 'uploading'"
+          >
+          Suivant →
+        </button>
+      }
+      @if (step === TOTAL_STEPS) {
+        <button
+          type="button"
+          class="btn btn--primary btn--submit"
+          (click)="soumettre()"
+          [disabled]="isSubmitting"
+          >
+          @if (!isSubmitting) {
+            <span>📤 Soumettre ma candidature</span>
+          }
+          @if (isSubmitting) {
+            <span>
+              <span class="spinner spinner--inline"></span> Traitement…
+            </span>
+          }
+        </button>
+      }
+    </footer>
+  </div>
+}

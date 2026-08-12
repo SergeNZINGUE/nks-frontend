@@ -1,0 +1,139 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.partners {
+  // Fond légèrement plus clair que la page : détache le bandeau du hero
+  background: $nks-bg-surface;
+  border-block: 1px solid rgba($nks-gold, 0.12);
+  padding: $sp-10 0 $sp-8;
+
+  @media (min-width: 900px) { padding: $sp-12 0 $sp-10; }
+  overflow: hidden;
+
+  &__titre {
+    font-family: $font-body;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: $nks-gold;
+    text-align: center;
+    margin: 0 0 $sp-8;
+  }
+
+  // ── Organisateur ──────────────────────────────────────────────────────────
+  &__organisateur {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-2;
+    margin-bottom: $sp-5;
+
+    &-mention {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: $nks-text-secondary;
+    }
+
+    &-logo {
+      height: 96px;
+      width: auto;
+      // Le logo La Terrasse a un anneau noir : un léger halo le détache du fond
+      filter: drop-shadow(0 0 12px rgba($nks-gold, 0.18));
+
+      @media (min-width: 768px) { height: 120px; }
+    }
+  }
+
+  // ── Bandeau défilant ──────────────────────────────────────────────────────
+  &__viewport {
+    position: relative;
+
+    // Fondu sur les bords : les logos entrent et sortent sans coupe nette
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  &__piste {
+    --duree: 30s;
+
+    display: flex;
+    align-items: center;
+    gap: $sp-16;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: max-content;
+    animation: partners-defilement var(--duree) linear infinite;
+
+    // Pause au survol et dès qu'un logo reçoit le focus clavier
+    &:hover,
+    &:focus-within { animation-play-state: paused; }
+  }
+
+  &__item { flex-shrink: 0; }
+
+  &__lien {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 88px;
+    padding: 0 $sp-3;
+
+    img {
+      max-height: 88px;
+      max-width: 230px;
+      width: auto;
+      object-fit: contain;
+      // Niveaux de gris par défaut : évite le conflit avec la charte or/noir
+      filter: grayscale(1);
+      opacity: 0.65;
+      transition: filter 0.25s ease, opacity 0.25s ease;
+    }
+
+    &:hover img,
+    &:focus-visible img {
+      filter: grayscale(0);
+      opacity: 1;
+    }
+  }
+
+  // Repli quand le logo est indisponible : le nom devient la signature
+  &__nom {
+    font-family: $font-title;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba($nks-gold, 0.7);
+    white-space: nowrap;
+    transition: color 0.25s ease;
+
+    .partners__lien:hover &,
+    .partners__lien:focus-visible & { color: $nks-gold; }
+  }
+}
+
+@keyframes partners-defilement {
+  from { transform: translateX(0); }
+  // -50% : la piste est dupliquée, on revient donc exactement au point de départ
+  to   { transform: translateX(-50%); }
+}
+
+// Respect des préférences système : plus d'animation, le bandeau devient
+// une liste défilable à la main. Le contenu reste intégralement accessible.
+@media (prefers-reduced-motion: reduce) {
+  .partners__viewport {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .partners__piste {
+    animation: none;
+    width: auto;
+    padding-inline: $sp-4;
+  }
+}

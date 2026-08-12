@@ -1,0 +1,69 @@
+@use 'tokens' as *;
+
+.ranking {
+  &__update { padding: $sp-2 $sp-4; font-size: 12px; }
+  &__list   { padding: $sp-3 $sp-4; display: flex; flex-direction: column; gap: $sp-2; }
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  padding: $sp-3 $sp-4;
+  text-decoration: none;
+  border: 1px solid $nks-border;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: $nks-gold; }
+
+  // Podium — spec §7.6 : les 3 premiers sont traités à part, chacun avec sa
+  // teinte (or / argent / bronze). Le reste du classement reste compact.
+  &--top {
+    border-color: rgba($nks-gold, 0.4);
+    background: rgba($nks-gold, 0.05);
+    padding: $sp-4;
+  }
+
+  &--rang1 {
+    border-color: $nks-gold;
+    background: rgba($nks-gold, 0.15);
+    box-shadow: $shadow-gold;
+
+    .ranking-item__name { font-size: 17px; }
+  }
+
+  // Argent et bronze : teintes neutres, jamais dorées, pour que la 1re place
+  // reste la seule à porter la couleur de marque.
+  &--rang2 {
+    border-color: rgba(#C0C0C0, 0.5);
+    background: rgba(#C0C0C0, 0.08);
+  }
+
+  &--rang3 {
+    border-color: rgba(#CD7F32, 0.5);
+    background: rgba(#CD7F32, 0.1);
+  }
+
+  &__rank  { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+  &__info  { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  &__code  { font-size: 11px; font-weight: 700; }
+  &__name  { font-size: 15px; font-weight: 600; color: $nks-text; }
+  &__score { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+}
+
+// ── Desktop ─────────────────────────────────────────────────────────────────
+// Le classement reste une colonne lisible : l'étirer sur 1280 px éloignerait
+// le rang du score. Spec §13.2 (top 3 empilé, puis lignes compactes).
+@media (min-width: 900px) {
+  .ranking {
+    &__update,
+    &__list,
+    &__empty {
+      width: 100%;
+      max-width: 780px;
+      margin-inline: auto;
+    }
+
+    &__update { text-align: center; }
+  }
+}

@@ -1,0 +1,51 @@
+<app-site-header />
+
+<div class="page ranking">
+  <app-topbar title="Classement en temps réel" icon="🏆" backLink="/" backLabel="Retour à l'accueil" />
+
+  @if (!loading) {
+    <p class="ranking__update text-muted">
+      Mis à jour à {{ lastUpdate | date:'HH:mm:ss' }}
+    </p>
+  }
+
+  @if (loading) {
+    <div style="padding:16px">
+      @for (_ of [1,2,3,4,5]; track _) {
+        <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px;"></div>
+      }
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="ranking__list">
+      @for (item of classement; track item; let i = $index) {
+        <a
+          [routerLink]="['/candidat', item.candidat.id]"
+          class="ranking-item card"
+          [class.ranking-item--top]="i < 3"
+          [class.ranking-item--rang1]="i === 0"
+          [class.ranking-item--rang2]="i === 1"
+          [class.ranking-item--rang3]="i === 2"
+          >
+          <span class="ranking-item__rank">{{ rankIcon(i) }}</span>
+          <div class="ranking-item__info">
+            <span class="ranking-item__code text-gold">{{ item.candidat.codeCandidat }}</span>
+            <span class="ranking-item__name">{{ item.candidat.prenom }} {{ item.candidat.nom }}</span>
+          </div>
+          <div class="ranking-item__score">
+            <span class="text-gold" style="font-size:20px;font-weight:800;">{{ item.totalPoints | number:'1.1-1' }}</span>
+            <span class="text-muted" style="font-size:11px;">pts</span>
+          </div>
+        </a>
+      }
+      @if (!classement.length) {
+        <div style="text-align:center;padding:32px;">
+          <p class="text-muted">Aucun classement disponible pour le moment.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <app-bottom-nav active="classement" />
+</div>

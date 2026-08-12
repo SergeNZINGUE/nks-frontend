@@ -1,0 +1,296 @@
+@use 'tokens' as t;
+
+$bg:      t.$nks-bg-primary;
+$surface: t.$nks-bg-surface;
+$card:    t.$nks-bg-card;
+$border:  t.$nks-border;
+$text:    t.$nks-text;
+$muted:   t.$nks-text-secondary;
+$gold:    t.$nks-gold;
+
+.dashboard-page {
+  min-height: 100dvh;
+  background: $bg;
+  padding-bottom: 80px;
+}
+
+// ── Topbar ─────────────────────────────────────────────────────────────────
+.topbar {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid $border;
+  gap: 12px;
+
+  &__back   { color: $gold; font-size: 20px; text-decoration: none; }
+  &__title  { flex: 1; font-family: t.$font-title; color: $gold; font-size: 16px; }
+  &__logout { background: none; border: none; color: $muted; font-size: 13px; cursor: pointer; padding: 6px; }
+}
+
+// ── Skeleton ───────────────────────────────────────────────────────────────
+.skeleton-wrapper { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+.skeleton {
+  background: linear-gradient(90deg, $surface 25%, $card 50%, $surface 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: t.$radius-md;
+
+  &--banner { height: 120px; }
+  &--card   { height: 80px; }
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ── Empty state ────────────────────────────────────────────────────────────
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: $muted;
+
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-hint { font-size: 13px; margin-top: 4px; }
+  .btn        { margin-top: 24px; }
+}
+
+// ── Profil banner ──────────────────────────────────────────────────────────
+.profil-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px;
+  background: $surface;
+  border-bottom: 1px solid $border;
+
+  &.banner--alerte { background: rgba(t.$nks-warning, 0.06); }
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba($gold, 0.15);
+  border: 2px solid $gold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: t.$font-title;
+  font-size: 22px;
+  color: $gold;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.profil-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  h1 { font-size: 18px; font-weight: 700; color: $text; margin: 0; }
+}
+
+.code-badge {
+  display: inline-block;
+  font-family: t.$font-title;
+  font-size: 12px;
+  color: $gold;
+  background: rgba($gold, 0.1);
+  border: 1px solid rgba($gold, 0.3);
+  border-radius: t.$radius-full;
+  padding: 2px 10px;
+  letter-spacing: 0.05em;
+}
+
+// ── Alertes ────────────────────────────────────────────────────────────────
+.alert {
+  margin: 12px 16px;
+  padding: 12px 16px;
+  border-radius: t.$radius-md;
+  font-size: 13px;
+  line-height: 1.5;
+
+  &--warning {
+    background: rgba(t.$nks-warning, 0.1);
+    border: 1px solid rgba(t.$nks-warning, 0.3);
+    color: t.$nks-warning;
+  }
+  &--danger {
+    background: rgba(t.$nks-error, 0.1);
+    border: 1px solid rgba(t.$nks-error, 0.3);
+    color: t.$nks-error;
+  }
+
+  &__link {
+    display: block;
+    margin-top: 6px;
+    color: inherit;
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+// ── Nav grid ───────────────────────────────────────────────────────────────
+.nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 16px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-lg;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+
+  &:hover, &:active {
+    border-color: $gold;
+    background: rgba($gold, 0.04);
+  }
+
+  &__icon  { font-size: 28px; }
+  &__label { font-size: 13px; font-weight: 600; color: $text; }
+  &__arrow {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    color: $muted;
+    font-size: 18px;
+  }
+}
+
+// ── Scores ─────────────────────────────────────────────────────────────────
+.scores-section {
+  padding: 0 16px 16px;
+}
+
+.section-title {
+  font-family: t.$font-title;
+  font-size: 16px;
+  color: $gold;
+  margin: 20px 0 12px;
+}
+
+.score-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.score-stat {
+  flex: 1;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-md;
+  padding: 16px;
+  text-align: center;
+
+  &__value { display: block; font-family: t.$font-title; font-size: 28px; color: $gold; }
+  &__label { display: block; font-size: 11px; color: $muted; margin-top: 4px; }
+}
+
+.scores-table {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-md;
+  overflow: hidden;
+  font-size: 13px;
+
+  &__header, &__row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+    padding: 10px 14px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__header {
+    background: $card;
+    color: $muted;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__row {
+    border-top: 1px solid $border;
+    color: $text;
+  }
+
+  .score-total { font-weight: 700; color: $gold; }
+}
+
+// ── Info candidature ───────────────────────────────────────────────────────
+.info-section { padding: 0 16px 16px; }
+
+.info-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-md;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid $border;
+  font-size: 14px;
+
+  &:last-child { border-bottom: none; }
+  span     { color: $muted; }
+  strong   { color: $text; }
+}
+
+// ── Badge ──────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: t.$radius-full;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--success { background: rgba(t.$nks-success, 0.15); color: t.$nks-success; }
+  &--warning { background: rgba(t.$nks-warning, 0.15); color: t.$nks-warning; }
+  &--danger  { background: rgba(t.$nks-error, 0.15); color: t.$nks-error; }
+  &--default { background: rgba(255, 255, 255, 0.08); color: $muted; }
+}
+
+// ── Logout ─────────────────────────────────────────────────────────────────
+.logout-section {
+  padding: 8px 16px 32px;
+  text-align: center;
+
+  .btn--danger-ghost {
+    color: t.$nks-error;
+    border-color: rgba(t.$nks-error, 0.3);
+    &:hover { background: rgba(t.$nks-error, 0.08); }
+  }
+}
+
+// ── Desktop ────────────────────────────────────────────────────────────────
+@media (min-width: 640px) {
+  .nav-grid { grid-template-columns: repeat(4, 1fr); }
+  .scores-section, .info-section, .logout-section { max-width: 640px; margin: 0 auto; }
+}

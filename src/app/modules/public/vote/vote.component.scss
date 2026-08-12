@@ -1,0 +1,184 @@
+@use 'tokens' as *;
+
+// Colonne centrée : le prototype cadre le vote dans une carte étroite,
+// lisible aussi bien en 375 px qu'en 1440 px.
+.vote-shell {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: $sp-4 $sp-4 calc(#{$bottom-nav-height} + #{$sp-8});
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+
+  @media (min-width: 900px) {
+    padding: $sp-10 $sp-4 $sp-16;
+    gap: $sp-5;
+  }
+}
+
+.vote-carte {
+  background: $nks-bg-surface;
+  border: 1px solid $nks-border;
+  border-radius: $radius-lg;
+  padding: $sp-5;
+}
+
+// ── Candidat ciblé ──────────────────────────────────────────────────────────
+.vote-candidat {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+
+  &__avatar { width: 48px; height: 48px; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+
+  &__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+  &__code    { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: $nks-gold; }
+  &__nom     { font-weight: 600; color: $nks-text; }
+  &__chanson { font-size: 12px; color: $nks-text-secondary; }
+}
+
+.vote-inactif {
+  text-align: center;
+  color: $nks-text-secondary;
+
+  p { margin: 0; }
+}
+
+// ── Formulaire ──────────────────────────────────────────────────────────────
+.vote-form {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+
+  &__label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $nks-text-secondary;
+  }
+}
+
+.vote-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $sp-3;
+}
+
+.vote-option {
+  // 44 px minimum : cible tactile accessible (WCAG 2.5.5)
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: $sp-3;
+  border: 1px solid $nks-border;
+  border-radius: $radius-md;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+
+  &__nb   { font-size: 15px; font-weight: 700; }
+  &__prix { font-size: 13px; color: $nks-text-secondary; }
+
+  &:hover { border-color: rgba($nks-gold, 0.5); }
+
+  &--active {
+    border-color: $nks-gold;
+    background: rgba($nks-gold, 0.1);
+
+    .vote-option__prix { color: $nks-gold; }
+  }
+}
+
+.vote-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $sp-3;
+  padding: $sp-4;
+  border-radius: $radius-md;
+  background: rgba($nks-gold, 0.07);
+  border: 1px solid rgba($nks-gold, 0.22);
+
+  &__libelle { font-size: 13px; color: $nks-text-secondary; }
+
+  &__montant {
+    font-family: $font-title;
+    font-size: 24px;
+    font-weight: 800;
+    color: $nks-gold;
+    white-space: nowrap;
+  }
+}
+
+// ── Téléphone avec indicatif fixe ───────────────────────────────────────────
+.vote-tel {
+  display: flex;
+  align-items: stretch;
+
+  &__indicatif {
+    display: flex;
+    align-items: center;
+    padding: 0 $sp-3;
+    border: 1px solid $nks-border;
+    border-right: none;
+    border-radius: $radius-md 0 0 $radius-md;
+    background: rgba(255, 255, 255, 0.04);
+    color: $nks-text-secondary;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__champ {
+    flex: 1;
+    min-width: 0;
+    border-radius: 0 $radius-md $radius-md 0;
+  }
+}
+
+.vote-security {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: $nks-text-secondary;
+  text-align: center;
+
+  &__detail { display: block; opacity: 0.8; }
+}
+
+.vote-error {
+  padding: $sp-3;
+  border-radius: $radius-md;
+  background: rgba($nks-error, 0.12);
+  border: 1px solid rgba($nks-error, 0.35);
+  color: $nks-error;
+  font-size: 13px;
+}
+
+// ── Confirmation ────────────────────────────────────────────────────────────
+.vote-success {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+
+  &__icon { font-size: 44px; line-height: 1; }
+
+  h2 { margin: 0; font-family: $font-title; color: $nks-text; }
+
+  p { margin: 0; color: $nks-text-secondary; font-size: 14px; }
+
+  &__montant {
+    font-family: $font-title;
+    font-size: 26px;
+    font-weight: 800;
+    color: $nks-gold !important;
+  }
+}

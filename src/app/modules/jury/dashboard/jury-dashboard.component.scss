@@ -1,0 +1,209 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.jury-page {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+}
+
+.skeletons {
+  padding: $sp-4;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.sk {
+  background: rgba($nks-text, 0.06);
+  border-radius: $radius-md;
+  animation: pulse 1.5s ease-in-out infinite;
+
+  &--banner { height: 100px; }
+  &--card   { height: 80px; }
+}
+
+@keyframes pulse { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
+
+.soiree-tabs {
+  display: flex;
+  gap: $sp-2;
+  flex-wrap: wrap;
+  padding: $sp-3 $sp-4;
+  border-bottom: 1px solid rgba($nks-text, 0.06);
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.soiree-tab {
+  background: rgba($nks-text, 0.04);
+  border: 1px solid rgba($nks-text, 0.1);
+  color: $nks-text-secondary;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-md;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: $font-body;
+  text-align: left;
+  line-height: 1.4;
+  min-height: 44px;
+
+  &--active {
+    background: rgba($nks-gold, 0.1);
+    border-color: rgba($nks-gold, 0.4);
+    color: $nks-gold;
+    font-weight: 600;
+  }
+
+  small { color: inherit; opacity: 0.7; }
+}
+
+.phase-banner {
+  padding: $sp-5 $sp-4;
+  background: rgba($nks-gold, 0.04);
+  border-bottom: 1px solid rgba($nks-gold, 0.15);
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $nks-text-secondary;
+  }
+
+  &__nom {
+    font-family: $font-title;
+    color: $nks-gold;
+    font-size: 20px;
+    margin: 4px 0;
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: $nks-text-secondary;
+    margin-bottom: $sp-3;
+  }
+
+  &__stats {
+    display: flex;
+    gap: $sp-2;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: rgba($nks-text, 0.7);
+  }
+}
+
+.stat strong { color: $nks-text; }
+.stat-sep { color: rgba($nks-text, 0.3); }
+
+.section {
+  padding: $sp-4 $sp-4 0;
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $nks-text-secondary;
+    margin: 0 0 $sp-3;
+    font-weight: 600;
+    font-family: $font-body;
+
+    &--done { color: rgba($nks-success, 0.8); }
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// <button class="card"> : navigation au clavier possible, contrairement au
+// <div (click)> d'origine.
+.card {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  width: 100%;
+  padding: $sp-3 $sp-4;
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-text, 0.08);
+  border-radius: $radius-md;
+  cursor: pointer;
+  text-align: left;
+  font-family: $font-body;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: rgba($nks-gold, 0.4);
+    background: rgba($nks-gold, 0.04);
+  }
+
+  &--done { opacity: 0.75; }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-title;
+    font-weight: 700;
+    font-size: 14px;
+    background: rgba($nks-gold, 0.12);
+    color: $nks-gold;
+    border: 2px solid rgba($nks-gold, 0.3);
+
+    &--done {
+      background: rgba($nks-success, 0.12);
+      color: $nks-success;
+      border-color: rgba($nks-success, 0.3);
+    }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__nom     { font-size: 15px; font-weight: 600; color: $nks-text; }
+  &__code    { font-size: 12px; color: $nks-text-secondary; font-family: monospace; }
+  &__chanson { font-size: 13px; color: rgba($nks-text, 0.6); overflow-wrap: anywhere; }
+  &__score   { font-size: 13px; color: $nks-success; }
+  &__arrow   { color: rgba($nks-gold, 0.6); font-size: 18px; flex-shrink: 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: $sp-16 $sp-6;
+  color: $nks-text-secondary;
+}
+
+.btn--ghost {
+  display: inline-block;
+  margin-top: $sp-4;
+  padding: $sp-3 $sp-5;
+  border: 1px solid rgba($nks-gold, 0.4);
+  color: $nks-gold;
+  border-radius: $radius-sm;
+  text-decoration: none;
+  font-size: 14px;
+}
