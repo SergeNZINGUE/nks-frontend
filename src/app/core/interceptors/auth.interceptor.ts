@@ -28,9 +28,11 @@ import { AuthService } from '@core/services/auth.service';
  */
 let refreshEnCours$: Observable<string> | null = null;
 
-/** Les routes d'authentification ne doivent jamais porter de jeton. */
+/** Les routes d'authentification et les CDN externes ne doivent jamais porter de jeton. */
 function estRoutePublique(url: string): boolean {
-  return url.includes('/auth/login') || url.includes('/auth/refresh');
+  return url.includes('/auth/login')
+    || url.includes('/auth/refresh')
+    || url.includes('api.cloudinary.com');
 }
 
 function avecJeton<T>(req: HttpRequest<T>, token: string): HttpRequest<T> {

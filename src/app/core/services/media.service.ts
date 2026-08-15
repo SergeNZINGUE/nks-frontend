@@ -11,9 +11,10 @@ export interface MediaUploadResult {
 }
 
 export interface UploadUrlRequest {
-  format: string;
-  tailleOctets: number;
   type: string;
+  nomFichier: string;
+  tailleOctets: number;
+  format: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,9 +63,10 @@ export class MediaService {
    */
   uploadPhoto(file: File, type = 'PHOTO_PROFIL'): Observable<MediaUploadResult> {
     const req: UploadUrlRequest = {
-      format: file.name.split('.').pop()?.toUpperCase() ?? 'JPG',
-      tailleOctets: file.size,
       type,
+      nomFichier: file.name,
+      tailleOctets: file.size,
+      format: file.name.split('.').pop()?.toUpperCase() ?? 'JPG',
     };
     return this.getPhotoUploadUrl(req).pipe(
       switchMap(res =>
@@ -93,9 +95,10 @@ export class MediaService {
 
   uploadVideo(file: File, type = 'VIDEO_PRESELECTION'): Observable<MediaUploadResult> {
     const req: UploadUrlRequest = {
-      format: file.name.split('.').pop()?.toUpperCase() ?? 'MP4',
-      tailleOctets: file.size,
       type,
+      nomFichier: file.name,
+      tailleOctets: file.size,
+      format: file.name.split('.').pop()?.toUpperCase() ?? 'MP4',
     };
     return this.getVideoUploadUrl(req).pipe(
       switchMap(res =>
