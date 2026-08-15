@@ -11,7 +11,7 @@ import { MediaService } from '@core/services/media.service';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { CandidatureDetailResponse, CandidatPublicResponse, Video, Page } from '@core/models';
 
-type Filtre = 'TOUS' | 'EN_ATTENTE' | 'ACTIVE' | 'REJETEE' | 'VALIDEE';
+type Filtre = 'TOUS' | 'EN_ATTENTE' | 'ACTIVE' |'VALIDEE'| 'REJETEE' | 'EN_ATTENTE_PAIEMENT';
 
 interface DetailComplement {
   candidat: CandidatPublicResponse | null;
@@ -27,12 +27,6 @@ interface DetailComplement {
   template: `
 <div class="page">
   <app-topbar title="Candidatures" icon="📋" backLink="/admin" backLabel="Retour à l'administration" />
-
-  <div class="gap-banner" role="note">
-    ⚠️ La vidéo de présélection n'est pas lisible ici : le lien de streaming n'est jamais renseigné
-    côté backend (gap confirmé, pas un choix d'affichage). Les métadonnées vidéo (durée, statut) restent
-    visibles dans le dossier. La photo, elle, est affichée (endpoint ajouté le 09/08/2026).
-  </div>
 
   <!-- Filtres -->
   <div class="filtres" role="group" aria-label="Filtrer par statut">
@@ -254,6 +248,7 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
     { val: 'EN_ATTENTE', label: 'En attente' },
     { val: 'ACTIVE',     label: 'Actives'    },
     { val: 'VALIDEE',    label: 'Validées'   },
+    { val: 'EN_ATTENTE_PAIEMENT',    label: 'En attente de paiement'   },
     { val: 'REJETEE',    label: 'Rejetées'   },
     { val: 'TOUS',       label: 'Toutes'     },
   ];
