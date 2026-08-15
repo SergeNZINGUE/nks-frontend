@@ -157,14 +157,14 @@ interface DetailComplement {
           <div class="dossier__champ">
             <strong>Vidéo de présélection :</strong>
             @for (v of complement(d.id)?.videos; track v.id) {
-              <p class="dossier__video-meta">
-                🎬 {{ v.titreChanson }} — {{ v.dureeSecondes }}s — {{ v.statut }}
+              <div class="dossier__video-meta">
+                <span>🎬 {{ v.titreChanson }} — {{ dureeFormatee(v.dureeSecondes) }} — {{ statutVideoLabel(v.statut) }}</span>
                 @if (v.urlStreaming) {
-                  <a [href]="v.urlStreaming" target="_blank" rel="noopener" class="lien-inline">lire</a>
+                  <a [href]="v.urlStreaming" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">▶ Voir la vidéo</a>
                 } @else {
-                  <span class="text-muted"> (lien non disponible — gap backend)</span>
+                  <span class="text-muted">Lien de lecture non disponible</span>
                 }
-              </p>
+              </div>
             }
           </div>
         }
@@ -376,5 +376,20 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
 
   badgeClass(statut: string): string {
     return 'badge badge-' + statut.toLowerCase().replace('_', '');
+  }
+
+  dureeFormatee(sec: number): string {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  statutVideoLabel(statut: string): string {
+    const map: Record<string, string> = {
+      EN_COURS_UPLOAD: '⏳ En cours',
+      DISPONIBLE:      '✅ Disponible',
+      MASQUEE:         '🙈 Masquée',
+    };
+    return map[statut] ?? statut;
   }
 }
