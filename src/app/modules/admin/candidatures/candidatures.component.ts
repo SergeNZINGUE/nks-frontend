@@ -207,7 +207,7 @@ interface DetailComplement {
             Motif obligatoire (minimum 10 caractères).
           </div>
         }
-        <div class="modal__actions">
+        <div class="modal__actions">    
           <button type="button" class="btn btn--ghost" (click)="fermerModal()">Annuler</button>
           <button type="button" class="btn btn--err"
             [disabled]="motifCtrl.invalid || actionEnCours === candidatureArejeter.id"

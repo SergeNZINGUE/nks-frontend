@@ -52,6 +52,11 @@ import { DashboardResponse } from '@core/models';
         <div class="kpi__label">En attente</div>
         <div class="kpi__val">{{ data.candidatsEnAttente }}</div>
       </div>
+      <div class="kpi kpi--warning">
+        <div class="kpi__label">En attente de paiement</div>
+        <div class="kpi__val">{{ data.candidatsEnAttentePaiement }}</div>
+      </div>
+      
       <div class="kpi kpi--error">
         <div class="kpi__label">Rejetés</div>
         <div class="kpi__val">{{ data.candidatsRejetes }}</div>

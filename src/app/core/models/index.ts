@@ -303,6 +303,7 @@ export interface DashboardResponse {
   candidatsTotal: number;
   candidatsValides: number;
   candidatsEnAttente: number;
+  candidatsEnAttentePaiement: number;
   candidatsRejetes: number;
   votesTotauxParPhase: Record<string, number>;
   revenusInscriptions: number;
