@@ -16,6 +16,7 @@ import { EditionService } from '@core/services/edition.service';
 import { MediaService, MediaUploadResult } from '@core/services/media.service';
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatureSubmitRequest } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
 
@@ -452,7 +453,7 @@ export class InscriptionComponent implements OnInit, OnDestroy {
       },
       error: err => {
         this.isSubmitting = false;
-        this.erreur = err?.error?.message ?? 'Une erreur est survenue. Réessaie.';
+        this.erreur = messageErreur(err, 'Une erreur est survenue. Réessaie.');
       },
     });
   }

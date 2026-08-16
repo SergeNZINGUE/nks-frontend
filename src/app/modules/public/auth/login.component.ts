@@ -1,15 +1,23 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 import { AuthService } from '@core/services/auth.service';
+import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterModule],
   template: `
     <div class="page login-page">
       <div class="login-glow" aria-hidden="true"></div>
+
+      <a routerLink="/" class="login-back" aria-label="Retour à l'accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Retour</span>
+      </a>
 
       <div class="login-card">
         <div class="login-brands">
@@ -120,7 +128,7 @@ export class LoginComponent {
       },
       error: err => {
         this.loading = false;
-        this.error = err?.error?.message ?? 'Identifiants incorrects.';
+        this.error = messageErreur(err, 'Identifiants incorrects.');
       },
     });
   }

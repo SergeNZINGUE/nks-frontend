@@ -1,0 +1,82 @@
+@use 'tokens' as *;
+
+.confirm-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  z-index: 200;
+}
+
+.confirm {
+  background: $nks-bg-surface;
+  border: 1px solid rgba($nks-gold, 0.3);
+  border-radius: $radius-lg;
+  padding: $sp-6;
+  width: 100%;
+  max-width: 420px;
+  font-family: $font-body;
+
+  h2 {
+    color: $nks-gold;
+    font-family: $font-title;
+    margin: 0 0 $sp-3;
+    font-size: 16px;
+  }
+
+  &__message {
+    color: $nks-text;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  &__erreur {
+    color: $nks-error;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: $sp-3 0 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $sp-3;
+    justify-content: flex-end;
+    margin-top: $sp-5;
+  }
+}
+
+.btn {
+  padding: $sp-2 $sp-4;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: $font-body;
+  border: 1px solid transparent;
+  min-height: 40px;
+
+  &--ok {
+    background: rgba($nks-success, 0.15);
+    border-color: rgba($nks-success, 0.3);
+    color: $nks-success;
+    &:hover:not(:disabled) { background: rgba($nks-success, 0.25); }
+  }
+
+  &--err {
+    background: rgba($nks-error, 0.15);
+    border-color: rgba($nks-error, 0.3);
+    color: $nks-error;
+    &:hover:not(:disabled) { background: rgba($nks-error, 0.25); }
+  }
+
+  &--ghost {
+    background: transparent;
+    border-color: rgba($nks-text, 0.2);
+    color: $nks-text;
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

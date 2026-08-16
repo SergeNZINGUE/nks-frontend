@@ -69,6 +69,17 @@ export class AdminService {
   }
 
   /**
+   * PUT /phases/{id}/activer — passe la phase de EN_ATTENTE à EN_COURS.
+   * ⚠️ Endpoint NON IMPLÉMENTÉ côté backend au 16/08/2026 (vérifié : `StatutPhase.EN_COURS`
+   * n'apparaît nulle part dans PhaseController.java). Contrat proposé côté backend,
+   * en attente de développement. 404 attendu tant que non déployé — écran câblé en avance
+   * (cf. décision explicite utilisateur : concevoir le frontend avant complétion backend).
+   */
+  activerPhase(id: string): Observable<Phase> {
+    return this.http.put<Phase>(`${this.api}/phases/${id}/activer`, {});
+  }
+
+  /**
    * GET /candidatures?statut=&page=&size=
    * Endpoint réel : CandidatureController (pas /admin/candidatures)
    * Défaut backend : filtre sur EN_ATTENTE si statut absent

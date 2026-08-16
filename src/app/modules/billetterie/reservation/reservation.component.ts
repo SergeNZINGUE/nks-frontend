@@ -7,6 +7,7 @@ import { catchError, of, switchMap } from 'rxjs';
 
 import { BilletterieService } from '@core/services/billetterie.service';
 import { CategorieTicket, ReservationResponse } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 type Etape = 'categorie' | 'infos' | 'paiement' | 'confirmation';
@@ -143,7 +144,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
         },
         error: err => {
           this.isSubmitting = false;
-          this.erreur = err?.error?.message ?? 'Erreur lors de la réservation. Réessaie.';
+          this.erreur = messageErreur(err, 'Erreur lors de la réservation. Réessaie.');
         },
       })
     );

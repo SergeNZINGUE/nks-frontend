@@ -9,7 +9,17 @@ import {
   ReservationResponse,
   Reservation,
   ScanResponse,
+  Page,
 } from '@core/models';
+
+/** Corps de POST /admin/billetterie/tickets-gratuits — Map<String,Object> lu champ par champ côté backend. */
+export interface TicketsGratuitsRequest {
+  soireeId: string;
+  categorieId: string;
+  nom: string;
+  telephone: string;
+  nbPlaces: number;
+}
 
 /**
  * Billetterie — CdC §3.6.
@@ -67,8 +77,45 @@ export class BilletterieService {
     return this.http.post<ScanResponse>(`${this.base}/scan`, { qrUuid, soireeId });
   }
 
-  /** GET /scan/soiree/{id}/compteur — CdC §3.6.3 : compteur d'entrées temps réel */
-  compteurEntrees(soireeId: string): Observable<Record<string, number>> {
-    return this.http.get<Record<string, number>>(`${this.base}/scan/soiree/${soireeId}/compteur`);
+  /**
+   * GET /scan/soiree/{id}/compteur — CdC §3.6.3 : compteur d'entrées temps réel.
+   * `| undefined` sur les valeurs : la forme exacte du Map<String,Long> renvoyé par le
+   * backend n'est pas garantie clé par clé (ex. pas de clé 'total' si aucun scan encore) —
+   * sans ce typage explicite, Angular signale `?? 0` côté template comme redondant (NG8102)
+   * alors qu'il est nécessaire à l'exécution.
+   */
+  compteurEntrees(soireeId: string): Observable<Record<string, number | undefined>> {
+    return this.http.get<Record<string, number | undefined>>(`${this.base}/scan/soiree/${soireeId}/compteur`);
+  }
+
+  /**
+   * GET /admin/billetterie/reservations?soireeId=&page=&size= — ADMIN/SUPER_ADMIN —
+   * BilletterieController.reservationsAdmin().
+   * ⚠️ Bug backend confirmé (15/08/2026) : `Reservation.soiree`/`.paiement` LAZY sans
+   * @JsonIgnore → 500 dès qu'il y a des réservations en base pour la soirée.
+   */
+  reservationsAdmin(soireeId: string, page = 0, size = 20): Observable<Page<Reservation>> {
+    const params = new HttpParams().set('soireeId', soireeId).set('page', page).set('size', size);
+    return this.http.get<Page<Reservation>>(`${this.base}/admin/billetterie/reservations`, { params });
+  }
+
+  /**
+   * POST /admin/billetterie/tickets-gratuits — ADMIN/SUPER_ADMIN —
+   * BilletterieController.ticketsGratuits(). Émission manuelle (partenaires/VIP), sans paiement.
+   */
+  ticketsGratuits(req: TicketsGratuitsRequest): Observable<Reservation> {
+    return this.http.post<Reservation>(`${this.base}/admin/billetterie/tickets-gratuits`, req);
+  }
+
+  /**
+   * POST /admin/billetterie/categories — ADMIN/SUPER_ADMIN — BilletterieController.creerCategorie().
+   * Le backend attend l'entité JPA brute : la relation `soiree` doit être envoyée comme
+   * référence `{ id: soireeId }`, pas l'objet complet (Jackson + Hibernate résolvent la FK sur l'id seul).
+   */
+  creerCategorie(soireeId: string, categorie: Omit<CategorieTicket, 'id'>): Observable<CategorieTicket> {
+    return this.http.post<CategorieTicket>(`${this.base}/admin/billetterie/categories`, {
+      ...categorie,
+      soiree: { id: soireeId },
+    });
   }
 }

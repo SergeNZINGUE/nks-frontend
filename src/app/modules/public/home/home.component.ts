@@ -10,6 +10,7 @@ import { SiteHeaderComponent } from '../../../shared/components/site-header/site
 import { RouterLink } from '@angular/router';
 import { UpperCasePipe, DecimalPipe, DatePipe } from '@angular/common';
 import { PartnersStripComponent } from '../../../shared/components/partners-strip/partners-strip.component';
+import { CompetitionGalleryComponent } from '../../../shared/components/competition-gallery/competition-gallery.component';
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
 import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
 
@@ -23,6 +24,7 @@ interface Countdown { jours: number; heures: number; minutes: number; secondes: 
     SiteHeaderComponent,
     RouterLink,
     PartnersStripComponent,
+    CompetitionGalleryComponent,
     BottomNavComponent,
     SiteFooterComponent,
     UpperCasePipe,

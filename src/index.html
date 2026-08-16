@@ -11,6 +11,27 @@
   <!-- Préchargement des polices pour éviter le FOUT -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!--
+    CSP en défense-en-profondeur : le JWT/refresh token sont stockés en localStorage
+    (cf. auth.service.ts) — aucune faille XSS connue aujourd'hui dans le code, mais en
+    cas de faille future (dépendance tierce, nouveau composant), une CSP stricte limite
+    l'exfiltration. `style-src 'unsafe-inline'` est nécessaire : Angular (encapsulation
+    Emulated) injecte les styles de composant via des balises <style> au runtime, sans
+    nonce disponible côté client statique. Cette balise <meta> ne couvre PAS toutes les
+    directives (ex. frame-ancestors est ignoré hors en-tête HTTP) : à terme, dupliquer
+    cette policy en en-tête HTTP au niveau de l'hébergement/reverse proxy.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https://res.cloudinary.com;
+    connect-src 'self' http://localhost:8082 https://nks-backend.jcloud-ver-jpe.ik-server.com https://api.cloudinary.com;
+    base-uri 'self';
+    form-action 'self';
+    object-src 'none';
+  ">
 </head>
 <body>
   <app-root></app-root>

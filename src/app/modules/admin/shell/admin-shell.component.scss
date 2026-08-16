@@ -222,6 +222,28 @@
   @media (max-width: 480px) { display: none; }
 }
 
+.shell__logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: $sp-3;
+  border-radius: $radius-full;
+  background: transparent;
+  border: 1px solid rgba($nks-text, 0.12);
+  color: $nks-text-secondary;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: $nks-error;
+    border-color: rgba($nks-error, 0.4);
+    background: rgba($nks-error, 0.08);
+  }
+}
+
 .shell__content {
   min-height: calc(100dvh - 60px);
 }

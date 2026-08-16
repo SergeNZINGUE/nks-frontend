@@ -220,6 +220,8 @@ export interface Classement {
 
 export interface ResultatPhase {
   id: string;
+  /** Manquait dans ce modèle alors que ResultatPhase.candidat existe bien côté backend (LAZY) — corrigé le 16/08/2026, erreur de build ng serve NG... TS2339 sinon. */
+  candidat: CandidatPublicResponse;
   rang: number;
   pointsVotes: number;
   pointsJury: number;

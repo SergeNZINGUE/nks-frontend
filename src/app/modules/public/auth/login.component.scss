@@ -25,6 +25,33 @@
     $nks-bg-primary;
 }
 
+.login-back {
+  position: absolute;
+  top: $sp-5;
+  left: $sp-5;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-full;
+  color: $nks-text-secondary;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba($nks-text, 0.12);
+  background: rgba($nks-bg-surface, 0.6);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  svg { width: 16px; height: 16px; }
+
+  &:hover {
+    color: $nks-gold-light;
+    border-color: rgba($nks-gold, 0.35);
+    background: rgba($nks-gold, 0.08);
+  }
+}
+
 .login-glow {
   position: absolute;
   top: -180px;

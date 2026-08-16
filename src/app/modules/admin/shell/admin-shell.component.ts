@@ -67,6 +67,9 @@ import { ADMIN_NAV } from './admin-nav.config';
         <span class="shell__account-avatar" aria-hidden="true">A</span>
         <span class="shell__account-label">Administrateur</span>
       </div>
+      <button type="button" class="shell__logout-btn" title="Déconnexion" aria-label="Déconnexion" (click)="logout()">
+        ⏻
+      </button>
     </header>
 
     <main class="shell__content">

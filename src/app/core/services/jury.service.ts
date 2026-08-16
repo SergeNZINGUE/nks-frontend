@@ -39,6 +39,12 @@ export interface NoteJuryBrut {
     id:          string;
     codeCandidat: string;
   };
+  /** Jury.prenom/.nom sont des champs propres à l'entité (pas via utilisateur, contrairement à Candidat) */
+  jury?: {
+    id:     string;
+    prenom: string;
+    nom:    string;
+  };
 }
 
 /**
@@ -58,11 +64,66 @@ export interface CandidatBrut {
   };
 }
 
+/** Corps de POST /admin/jury (CreerJuryRequest.java — record, tous champs sauf specialite/bioPublique @NotBlank/@NotNull) */
+export interface CreerJuryRequest {
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  specialite?: string;
+  bioPublique?: string;
+  editionId: string;
+}
+
+/**
+ * Représentation d'un Jury tel que sérialisé brut par AdminController (entité JPA).
+ * `utilisateur`/`edition` sont LAZY sans @JsonIgnore → mêmes conditions de crash que
+ * Classement/NoteJury (cf. rapport LazyInitializationException 15/08/2026).
+ */
+export interface JuryBrut {
+  id: string;
+  prenom: string;
+  nom: string;
+  specialite: string | null;
+  bioPublique: string | null;
+  statut: 'ACTIF' | 'INACTIF';
+  utilisateur?: { id: string; email: string; telephone: string };
+  edition?: { id: string; nom: string };
+}
+
 @Injectable({ providedIn: 'root' })
 export class JuryService {
   private http = inject(HttpClient);
 
   private readonly base = environment.apiUrl;
+
+  /**
+   * GET /admin/jury?editionId= — AdminController.jury() — ADMIN/SUPER_ADMIN.
+   * ⚠️ Bug backend confirmé (15/08/2026) : `Jury.utilisateur` LAZY sans @JsonIgnore → 500
+   * dès qu'il y a des jurys en base sur l'édition.
+   */
+  listerAdmin(editionId: string): Observable<JuryBrut[]> {
+    return this.http.get<JuryBrut[]>(`${this.base}/admin/jury`, { params: { editionId } });
+  }
+
+  /** POST /admin/jury — AdminController.creerJury() — ADMIN/SUPER_ADMIN. Crée le compte utilisateur + le profil jury. */
+  creerAdmin(req: CreerJuryRequest): Observable<JuryBrut> {
+    return this.http.post<JuryBrut>(`${this.base}/admin/jury`, req);
+  }
+
+  /** DELETE /admin/jury/{id} — AdminController.desactiverJury() — ADMIN/SUPER_ADMIN. Désactivation logique (statut INACTIF), pas de suppression. */
+  desactiverAdmin(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/jury/${id}`);
+  }
+
+  /**
+   * GET /jury/notes/soiree/{soireeId} — JuryController.notesSoiree() — ADMIN/SUPER_ADMIN.
+   * ⚠️ Bug backend confirmé (15/08/2026) : `NoteJury.jury`/`.candidat`/`.soiree`/`.critere`
+   * tous LAZY sans @JsonIgnore → 500 dès qu'il y a des notes en base pour la soirée.
+   */
+  notesSoireeAdmin(soireeId: string): Observable<NoteJuryBrut[]> {
+    return this.http.get<NoteJuryBrut[]>(`${this.base}/jury/notes/soiree/${soireeId}`);
+  }
 
   /**
    * GET /jury/soirees

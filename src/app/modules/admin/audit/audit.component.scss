@@ -1,0 +1,11 @@
+@use 'tokens' as *;
+
+// Le journal d'audit a 4 colonnes (action/entité/utilisateur/date), pas les 5 de
+// candidatures.component.scss (.row par défaut) — override local du gabarit de grille.
+.row--audit {
+  grid-template-columns: 160px 1fr 220px 160px;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}

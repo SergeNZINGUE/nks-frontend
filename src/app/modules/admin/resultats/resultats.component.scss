@@ -1,0 +1,44 @@
+@use 'tokens' as *;
+
+// Wrapper obligatoire autour de .tbl : sans lui, un tableau HTML classique déborde
+// silencieusement sur mobile (projet mobile-first, cf. CLAUDE.md) au lieu de scroller.
+.table-wrap {
+  overflow-x: auto;
+  margin-top: $sp-4;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tbl {
+  width: 100%;
+  min-width: 520px; // force le scroll horizontal plutôt que l'écrasement des colonnes sous ce seuil
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th, td {
+    text-align: left;
+    padding: $sp-2 $sp-3;
+    border-bottom: 1px solid rgba($nks-text, 0.08);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba($nks-text, 0.5);
+  }
+}
+
+.badge-tbl {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-block;
+
+  &--QUALIFIE, &--ACTIF, &--officiel, &--CONFIRMEE  { background: rgba($nks-success, 0.15); color: $nks-success; border: 1px solid rgba($nks-success, 0.3); }
+  &--ELIMINE, &--INACTIF, &--ANNULEE, &--EXPIREE, &--FAILED, &--EXPIRED { background: rgba($nks-error, 0.15);   color: $nks-error;   border: 1px solid rgba($nks-error, 0.3); }
+  &--REPECHAGE, &--REFUNDED            { background: rgba($nks-gold, 0.15);    color: $nks-gold;    border: 1px solid rgba($nks-gold, 0.3); }
+  &--EN_ATTENTE, &--PENDING            { background: rgba($nks-text, 0.08);    color: $nks-text-secondary; border: 1px solid rgba($nks-text, 0.15); }
+}

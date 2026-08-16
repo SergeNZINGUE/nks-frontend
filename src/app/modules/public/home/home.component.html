@@ -111,6 +111,10 @@
     <!-- PARTENAIRES -->
     <app-partners-strip organisateurLogo="assets/logos/la-terrasse.png"
       organisateurNom="La Terrasse" />
+    <!-- PHOTOS DE LA COMPÉTITION — demande client (vocal 15/08/2026) -->
+    @if (edition) {
+      <app-competition-gallery [editionId]="edition.id" />
+    }
     <div class="home__contenu">
       <!-- ═══ CANDIDATS POPULAIRES ═══ -->
       @if (candidats.length) {
