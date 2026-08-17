@@ -9,6 +9,7 @@ import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
 import { CandidatPublicResponse } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 @Component({
@@ -113,7 +114,7 @@ export class MonProfilComponent implements OnInit, OnDestroy {
       },
       error: err => {
         this.isSaving = false;
-        this.erreur = err?.error?.message ?? 'Erreur lors de la sauvegarde.';
+        this.erreur = messageErreur(err, 'Erreur lors de la sauvegarde.');
       },
     });
   }

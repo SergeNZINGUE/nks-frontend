@@ -29,22 +29,22 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Éditions',           route: '/admin/edition',   icon: '🗓️', statut: 'ready' },
       { label: 'Phases',             route: '/admin/phases',    icon: '🏆', statut: 'ready' },
       { label: 'Poules & Duos',      route: '/admin/poules',    icon: '🎭', statut: 'ready' },
-      { label: 'Résultats & classement', route: '/admin/resultats', icon: '📈', statut: 'soon' },
+      { label: 'Résultats & classement', route: '/admin/resultats', icon: '📈', statut: 'ready' },
     ],
   },
   {
     titre: 'Candidats',
     items: [
       { label: 'Candidatures',  route: '/admin/candidatures', icon: '📋', statut: 'ready' },
-      { label: 'Jury',          route: '/admin/jury',         icon: '🎤', statut: 'soon'  },
+      { label: 'Jury',          route: '/admin/jury',         icon: '🎤', statut: 'ready' },
       { label: 'Votes',         route: '/admin/votes',        icon: '🗳️', statut: 'soon'  },
     ],
   },
   {
     titre: 'Billetterie',
     items: [
-      { label: 'Soirées & catégories', route: '/admin/soirees', icon: '🎉', statut: 'soon' },
-      { label: 'Réservations & scans', route: '/admin/billets',  icon: '🎟️', statut: 'soon' },
+      { label: 'Soirées & catégories', route: '/admin/soirees', icon: '🎉', statut: 'ready' },
+      { label: 'Réservations & scans', route: '/admin/billets',  icon: '🎟️', statut: 'ready' },
     ],
   },
   {
@@ -57,9 +57,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     titre: 'Plateforme',
     items: [
-      { label: 'Paiements',           route: '/admin/paiements',     icon: '💳', statut: 'soon' },
+      { label: 'Paiements',           route: '/admin/paiements',     icon: '💳', statut: 'ready' },
       { label: 'Utilisateurs & rôles', route: '/admin/utilisateurs', icon: '👤', statut: 'soon' },
-      { label: 'Audit & sécurité',    route: '/admin/audit',         icon: '🛡️', statut: 'soon' },
+      { label: 'Audit & sécurité',    route: '/admin/audit',         icon: '🛡️', statut: 'ready' },
       { label: 'Paramètres',          route: '/admin/parametres',    icon: '⚙️', statut: 'soon' },
     ],
   },

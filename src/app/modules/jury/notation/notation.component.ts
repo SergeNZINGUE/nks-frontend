@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription, forkJoin, catchError, of } from 'rxjs';
 
 import { JuryService, CandidatBrut, NoteJuryBrut, SaisirNotesRequest, CritereNotationResponse } from '@core/services/jury.service';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 /** Structure locale d'un critère (source normale : GET /jury/criteres, cf. jury.service.ts). */
@@ -294,7 +295,7 @@ export class NotationComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.jurySvc.saisirNotes(req).pipe(
         catchError(err => {
-          this.erreurSoumission = err?.error?.message ?? 'Erreur lors de la soumission.';
+          this.erreurSoumission = messageErreur(err, 'Erreur lors de la soumission.');
           return of(null);
         })
       ).subscribe(res => {

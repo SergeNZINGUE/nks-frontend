@@ -6,6 +6,7 @@ import { CandidatService } from '@core/services/candidat.service';
 import { VoteService } from '@core/services/vote.service';
 import { EditionService } from '@core/services/edition.service';
 import { CandidatPublicResponse, InitierVoteResponse } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { environment } from '@env/environment';
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
 import { TopbarComponent } from '../../../shared/components/topbar/topbar.component';
@@ -119,7 +120,7 @@ export class VoteComponent implements OnInit {
       },
       error: err => {
         this.submitting = false;
-        this.error = err?.error?.message ?? 'Erreur lors de l\'initiation du vote.';
+        this.error = messageErreur(err, 'Erreur lors de l\'initiation du vote.');
       },
     });
   }

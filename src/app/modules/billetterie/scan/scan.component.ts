@@ -6,6 +6,7 @@ import { Subscription, catchError, of } from 'rxjs';
 
 import { BilletterieService } from '@core/services/billetterie.service';
 import { ScanResponse, SoireeEvent } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 type ScanResultat = 'VALIDE' | 'INVALIDE' | 'DEJA_UTILISE' | null;
@@ -98,7 +99,7 @@ export class ScanComponent implements OnInit, OnDestroy {
       },
       error: err => {
         this.isScanning = false;
-        this.erreur = err?.error?.message ?? 'Erreur de scan — ticket introuvable.';
+        this.erreur = messageErreur(err, 'Erreur de scan — ticket introuvable.');
       },
     });
   }

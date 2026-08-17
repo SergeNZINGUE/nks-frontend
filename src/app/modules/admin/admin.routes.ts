@@ -35,24 +35,17 @@ export const adminRoutes: Routes = [
         path: 'poules',
         loadComponent: () => import('./poules/poules.component').then(c => c.PoulesComponent),
       },
-      // ── Modules prévus au cahier des charges, pas encore conçus côté écran admin ──
+      // ── Écrans câblés sur les vrais endpoints backend (15/08/2026). Plusieurs de ces
+      // endpoints renvoient 500 en pratique aujourd'hui (LazyInitializationException,
+      // correction en attente côté backend) : l'écran affiche l'erreur explicitement plutôt que de
+      // masquer le module, pour ne pas revenir à un lien mort. ──
       {
         path: 'resultats',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Résultats & classement',
-          icon: '📈',
-          description: "Publication officielle des résultats et pilotage du classement par phase n'est pas encore conçu côté admin.",
-        },
+        loadComponent: () => import('./resultats/resultats.component').then(c => c.ResultatsComponent),
       },
       {
         path: 'jury',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Gestion du jury',
-          icon: '🎤',
-          description: "Affectation des jurés, critères de notation et suivi des notations depuis l'admin n'est pas encore conçu.",
-        },
+        loadComponent: () => import('./jury/jury.component').then(c => c.JuryComponent),
       },
       {
         path: 'votes',
@@ -65,21 +58,11 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'soirees',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Soirées & catégories de billets',
-          icon: '🎉',
-          description: "Création et édition des soirées et catégories de tickets n'est pas encore conçue. Seule la réservation côté public existe aujourd'hui.",
-        },
+        loadComponent: () => import('./billetterie/soirees.component').then(c => c.SoireesComponent),
       },
       {
         path: 'billets',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Réservations & scans',
-          icon: '🎟️',
-          description: "Tableau de bord billetterie (remplissage, réservations, historique de scans) n'est pas encore conçu.",
-        },
+        loadComponent: () => import('./billetterie/billets.component').then(c => c.BilletsComponent),
       },
       {
         path: 'partenaires',
@@ -88,12 +71,7 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'paiements',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Paiements',
-          icon: '💳',
-          description: "Historique des transactions Mobile Money et remboursements manuels n'est pas encore conçu.",
-        },
+        loadComponent: () => import('./payments/payments.component').then(c => c.PaymentsComponent),
       },
       {
         path: 'utilisateurs',
@@ -106,12 +84,7 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'audit',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Audit & sécurité',
-          icon: '🛡️',
-          description: "Consultation des logs d'audit et des actions de correction admin n'est pas encore conçue.",
-        },
+        loadComponent: () => import('./audit/audit.component').then(c => c.AuditComponent),
       },
       {
         path: 'parametres',

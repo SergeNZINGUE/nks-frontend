@@ -6,6 +6,7 @@ import { Subscription, catchError, of } from 'rxjs';
 
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatureDetailResponse } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 /**
@@ -81,7 +82,7 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.candidatureSvc.initierPaiementInscription(Number(montant), telephone.trim())
         .pipe(catchError(err => {
-          this.erreur = err?.error?.message ?? 'Échec de l\'initiation du paiement.';
+          this.erreur = messageErreur(err, 'Échec de l\'initiation du paiement.');
           return of(null);
         }))
         .subscribe(res => {

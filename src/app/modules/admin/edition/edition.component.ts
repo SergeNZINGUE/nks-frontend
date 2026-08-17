@@ -4,7 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, Validati
 import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { Edition, StatutEdition } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 
 /** dateFin doit être >= dateDebut (comparaison lexicographique valide sur yyyy-MM-dd). */
 function periodeValide(cleDebut: string, cleFin: string) {
@@ -25,7 +27,7 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
 
 @Component({
   selector: 'app-edition',
-  imports: [DatePipe, ReactiveFormsModule],
+  imports: [DatePipe, ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
 
@@ -58,7 +60,7 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
           <div class="form__row">
             <div class="field">
               <label for="nom">Nom</label>
-              <input id="nom" type="text" formControlName="nom" placeholder="NKS 2027" />
+              <input id="nom" type="text" formControlName="nom" placeholder="NKS 2027" maxlength="100" />
             </div>
             <div class="field field--sm">
               <label for="annee">Année</label>
@@ -110,7 +112,7 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
 
           <div class="field">
             <label for="description">Description (optionnel)</label>
-            <textarea id="description" formControlName="description" rows="2"></textarea>
+            <textarea id="description" formControlName="description" rows="2" maxlength="500"></textarea>
           </div>
 
           @if (erreurEnvoi) {
@@ -162,7 +164,7 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
                   <td>
                     <button type="button" class="btn btn--sm" (click)="ouvrirEdition(e)">Éditer</button>
                     @if (e.statut !== 'TERMINEE' && e.statut !== 'ARCHIVEE') {
-                      <button type="button" class="btn btn--sm btn--err" [disabled]="clotureEnCours === e.id" (click)="cloturer(e)">
+                      <button type="button" class="btn btn--sm btn--err" [disabled]="clotureEnCours === e.id" (click)="editionACloturer = e">
                         {{ clotureEnCours === e.id ? '…' : 'Clôturer' }}
                       </button>
                     }
@@ -174,6 +176,18 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
         </div>
       }
     </div>
+  }
+
+  @if (editionACloturer; as e) {
+    <app-confirm-dialog
+      titre="Clôturer l'édition"
+      [message]="'Clôturer l\\'édition « ' + e.nom + ' » ? Cette action passe son statut à TERMINEE.'"
+      libelleConfirmer="Clôturer"
+      [danger]="true"
+      [enCours]="clotureEnCours === e.id"
+      [erreur]="erreurCloture"
+      (confirmed)="cloturer(e)"
+      (cancelled)="editionACloturer = null; erreurCloture = null" />
   }
 </div>
 `,
@@ -196,6 +210,8 @@ export class EditionComponent implements OnInit, OnDestroy {
   erreurEnvoi: string | null = null;
   succes = false;
   clotureEnCours: string | null = null;
+  editionACloturer: Edition | null = null;
+  erreurCloture: string | null = null;
 
   private sub = new Subscription();
 
@@ -219,14 +235,14 @@ export class EditionComponent implements OnInit, OnDestroy {
   private creerForm(valeurs?: Partial<Edition>) {
     return this.fb.nonNullable.group(
       {
-        nom: [valeurs?.nom ?? '', Validators.required],
+        nom: [valeurs?.nom ?? '', [Validators.required, Validators.maxLength(100)]],
         annee: [valeurs?.annee ?? new Date().getFullYear(), [Validators.required, Validators.min(2020)]],
         statut: [(valeurs?.statut ?? 'EN_PREPARATION') as StatutEdition, Validators.required],
         dateDebutInscriptions: [valeurs?.dateDebutInscriptions ?? '', Validators.required],
         dateFinInscriptions: [valeurs?.dateFinInscriptions ?? '', Validators.required],
         dateDebutCompetition: [valeurs?.dateDebutCompetition ?? '', Validators.required],
         dateFinCompetition: [valeurs?.dateFinCompetition ?? '', Validators.required],
-        description: [valeurs?.description ?? ''],
+        description: [valeurs?.description ?? '', Validators.maxLength(500)],
       },
       {
         validators: [
@@ -292,14 +308,15 @@ export class EditionComponent implements OnInit, OnDestroy {
 
   /** Raccourci liste : clôture rapide (statut → TERMINEE) sans ouvrir le formulaire complet. */
   cloturer(e: Edition): void {
-    if (!confirm(`Clôturer l'édition « ${e.nom} » ? Cette action passe son statut à TERMINEE.`)) return;
+    this.erreurCloture = null;
     this.clotureEnCours = e.id;
     this.sub.add(
       this.adminSvc.mettreAJourEdition(e.id, { ...e, statut: 'TERMINEE' })
-        .pipe(catchError(() => of(null)))
+        .pipe(catchError(err => { this.erreurCloture = messageErreur(err, 'Échec de la clôture.'); return of(null); }))
         .subscribe(resultat => {
           this.clotureEnCours = null;
-          if (!resultat) { this.erreurChargement = 'Échec de la clôture.'; return; }
+          if (!resultat) return;
+          this.editionACloturer = null;
           this.chargerEditions();
         })
     );

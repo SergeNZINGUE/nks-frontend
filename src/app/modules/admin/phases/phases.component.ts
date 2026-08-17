@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, Validati
 import { Subscription, switchMap, catchError, of, finalize } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { Phase, StatutPhase, NomPhase, Edition, StatutEdition } from '@core/models';
 
 const NOMS_PHASE: { val: NomPhase; label: string }[] = [
@@ -41,7 +42,7 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-phases',
-  imports: [DatePipe, ReactiveFormsModule],
+  imports: [DatePipe, ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
 
@@ -53,6 +54,11 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
     @if (nomsDisponibles.length > 0 && !formCreation) {
       <button type="button" class="btn btn--primary" (click)="ouvrirCreation()">+ Nouvelle phase</button>
     }
+  </div>
+
+  <div class="gap-banner" role="note">
+    ⚠️ Bouton « Activer » câblé sur <code>PUT /phases/&#123;id&#125;/activer</code> — endpoint pas encore
+    implémenté côté backend (404 attendu tant que non déployé).
   </div>
 
   @if (isLoading) {
@@ -234,6 +240,11 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                 <button type="button" class="btn btn--sm" (click)="ouvrirEdition(p)" [disabled]="p.statut === 'TERMINEE'">
                   Éditer
                 </button>
+                @if (p.statut === 'EN_ATTENTE') {
+                  <button type="button" class="btn btn--sm btn--ok" [disabled]="activationEnCours === p.id" (click)="phaseAActiver = p">
+                    {{ activationEnCours === p.id ? '…' : '▶ Activer' }}
+                  </button>
+                }
                 @if (p.nom !== 'PRESELECTION') {
                   <button type="button" class="btn btn--sm" [class.btn--ok]="!p.voteActif" [class.btn--err]="p.voteActif"
                     [disabled]="toggling === p.id || p.statut === 'TERMINEE'"
@@ -242,7 +253,7 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                   </button>
                 }
                 @if (p.statut !== 'TERMINEE') {
-                  <button type="button" class="btn btn--sm btn--err" [disabled]="clotureEnCours === p.id" (click)="cloturer(p)">
+                  <button type="button" class="btn btn--sm btn--err" [disabled]="clotureEnCours === p.id" (click)="phaseACloturer = p">
                     {{ clotureEnCours === p.id ? '…' : 'Clôturer' }}
                   </button>
                 }
@@ -253,9 +264,32 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
       }
     </div>
   }
+
+  @if (phaseAActiver; as p) {
+    <app-confirm-dialog
+      titre="Activer la phase"
+      [message]="'Activer la phase « ' + labelPhase(p.nom) + ' » ? Elle passera en EN_COURS.'"
+      libelleConfirmer="Activer"
+      [enCours]="activationEnCours === p.id"
+      [erreur]="erreurAction"
+      (confirmed)="activer(p)"
+      (cancelled)="phaseAActiver = null; erreurAction = null" />
+  }
+
+  @if (phaseACloturer; as p) {
+    <app-confirm-dialog
+      titre="Clôturer la phase"
+      [message]="'Clôturer la phase « ' + labelPhase(p.nom) + ' » ? Les votes seront coupés définitivement, action irréversible.'"
+      libelleConfirmer="Clôturer"
+      [danger]="true"
+      [enCours]="clotureEnCours === p.id"
+      [erreur]="erreurAction"
+      (confirmed)="cloturer(p)"
+      (cancelled)="phaseACloturer = null; erreurAction = null" />
+  }
 </div>
 `,
-  styleUrls: ['./phases.component.scss'],
+  styleUrls: ['../poules/poules.component.scss', './phases.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class PhasesComponent implements OnInit, OnDestroy {
@@ -268,6 +302,10 @@ export class PhasesComponent implements OnInit, OnDestroy {
   phases: Phase[] = [];
   toggling: string | null = null;
   clotureEnCours: string | null = null;
+  activationEnCours: string | null = null;
+  phaseAActiver: Phase | null = null;
+  phaseACloturer: Phase | null = null;
+  erreurAction: string | null = null;
 
   formCreation: ReturnType<typeof this.creerFormCreation> | null = null;
   erreurCreation: string | null = null;
@@ -461,14 +499,37 @@ export class PhasesComponent implements OnInit, OnDestroy {
   }
 
   cloturer(p: Phase): void {
-    if (!confirm(`Clôturer la phase « ${this.labelPhase(p.nom)} » ? Les votes seront coupés définitivement.`)) return;
+    this.erreurAction = null;
     this.clotureEnCours = p.id;
     this.sub.add(
       this.adminSvc.cloturerPhase(p.id).pipe(catchError(() => of(null))).subscribe(updated => {
         this.clotureEnCours = null;
-        if (!updated) { this.erreur = 'Échec de la clôture de la phase.'; return; }
+        if (!updated) { this.erreurAction = 'Échec de la clôture de la phase.'; return; }
         const idx = this.phases.findIndex(x => x.id === p.id);
         if (idx !== -1) this.phases[idx] = updated;
+        this.phaseACloturer = null;
+      })
+    );
+  }
+
+  /**
+   * PUT /phases/{id}/activer — cf. AdminService.activerPhase() : endpoint pas encore
+   * implémenté côté backend au 16/08/2026. 404 attendu tant que non déployé ;
+   * message d'erreur volontairement explicite pour ne pas faire croire à un bug frontend.
+   */
+  activer(p: Phase): void {
+    this.erreurAction = null;
+    this.activationEnCours = p.id;
+    this.sub.add(
+      this.adminSvc.activerPhase(p.id).pipe(catchError(() => of(null))).subscribe(updated => {
+        this.activationEnCours = null;
+        if (!updated) {
+          this.erreurAction = "Échec de l'activation — endpoint backend pas encore déployé (404 attendu, cf. bannière ci-dessus).";
+          return;
+        }
+        const idx = this.phases.findIndex(x => x.id === p.id);
+        if (idx !== -1) this.phases[idx] = updated;
+        this.phaseAActiver = null;
       })
     );
   }

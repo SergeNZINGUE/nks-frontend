@@ -6,6 +6,7 @@ import { AdminService } from '@core/services/admin.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { PouleDuoService } from '@core/services/poule-duo.service';
 import { Phase, Edition, CandidatPublicResponse, PouleResponse, AffectationPouleResponse, DuoResponse } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 
 const LABEL_PHASE: Record<string, string> = {
   PRESELECTION:  'Présélection',
@@ -339,7 +340,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
     const nom = this.formPoule.getRawValue().nom;
     this.sub.add(
       this.pouleDuoSvc.creerPoule(this.phaseSelectionnee.id, nom).pipe(
-        catchError(err => { this.erreurPoule = err?.error?.message ?? 'Échec de la création de la poule.'; return of(null); }),
+        catchError(err => { this.erreurPoule = messageErreur(err, 'Échec de la création de la poule.'); return of(null); }),
         finalize(() => { this.creationPouleEnCours = false; })
       ).subscribe(poule => {
         if (!poule) return;
@@ -375,7 +376,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
       this.pouleDuoSvc.affecter(poule.id, ids).pipe(
         // Appel @Transactional côté backend : en cas d'échec (ex. candidat déjà affecté ailleurs, RM-41),
         // TOUT le lot est rejeté (pas d'affectation partielle) — le message reflète cet état binaire.
-        catchError(err => { this.erreurAffectation = err?.error?.message ?? 'Échec de l\'affectation (un candidat est peut-être déjà dans une poule de cette phase).'; return of(null); }),
+        catchError(err => { this.erreurAffectation = messageErreur(err, 'Échec de l\'affectation (un candidat est peut-être déjà dans une poule de cette phase).'); return of(null); }),
         finalize(() => { this.affectationEnCours = false; })
       ).subscribe(affectations => {
         if (!affectations) return;
@@ -397,7 +398,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
     this.creationDuoEnCours = true;
     this.sub.add(
       this.pouleDuoSvc.creerDuo(this.phaseSelectionnee.id, v.candidat1Id, v.candidat2Id, v.chansonCommune || undefined).pipe(
-        catchError(err => { this.erreurDuo = err?.error?.message ?? 'Échec de la création du duo.'; return of(null); }),
+        catchError(err => { this.erreurDuo = messageErreur(err, 'Échec de la création du duo.'); return of(null); }),
         finalize(() => { this.creationDuoEnCours = false; })
       ).subscribe(duo => {
         if (!duo) return;

@@ -7,6 +7,7 @@ import { Subscription, catchError, of } from 'rxjs';
 import { AdminService, CommunicationRequest } from '@core/services/admin.service';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Edition } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
 
 /** Valeurs de StatutProfilCandidat utilisables comme filtre */
 const FILTRES_STATUT = [
@@ -76,7 +77,7 @@ const FILTRES_STATUT = [
         <!-- Sujet e-mail (optionnel) -->
         <div class="form-group">
           <label>Sujet e-mail <small>(optionnel, ignoré si SMS uniquement)</small></label>
-          <input formControlName="sujetEmail" placeholder="Ex: Résultats de la présélection NKS 2026" />
+          <input formControlName="sujetEmail" placeholder="Ex: Résultats de la présélection NKS 2026" maxlength="150" />
         </div>
         <!-- Canaux -->
         <div class="form-group">
@@ -131,7 +132,7 @@ export class CommunicationComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       filtreStatut: [''],              // '' = null (tous)
       message:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(160)]],
-      sujetEmail:   [''],
+      sujetEmail:   ['', Validators.maxLength(150)],
       canalSms:     [true],
       canalEmail:   [true],
     });
@@ -172,7 +173,7 @@ export class CommunicationComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.adminSvc.envoyerCommunication(req).pipe(
         catchError(err => {
-          this.erreur = err?.error?.message ?? 'Erreur lors de l\'envoi.';
+          this.erreur = messageErreur(err, 'Erreur lors de l\'envoi.');
           return of(null);
         })
       ).subscribe(res => {

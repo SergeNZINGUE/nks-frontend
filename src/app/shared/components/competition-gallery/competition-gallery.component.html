@@ -1,0 +1,24 @@
+@if (!chargement && photos.length) {
+  <section class="gallery" aria-labelledby="gallery-titre">
+    <h2 id="gallery-titre" class="gallery__titre">Les visages de la compétition</h2>
+
+    <div class="gallery__viewport">
+      <ul class="gallery__piste"
+        [style.--duree]="dureeAnimation"
+        [attr.aria-label]="photos.length + ' candidats en photo'">
+        <!-- Seconde moitié = doublon visuel, masqué aux lecteurs d'écran -->
+        @for (c of piste; track suivrePiste(i, c); let i = $index) {
+          <li class="gallery__item" [attr.aria-hidden]="i >= photos.length ? 'true' : null">
+            <a [routerLink]="['/candidat', c.id]"
+              class="gallery__lien"
+              [attr.tabindex]="i >= photos.length ? -1 : null"
+              [attr.title]="c.prenom + ' ' + c.nom">
+              <img [src]="c.photoUrl" [alt]="c.prenom + ' ' + c.nom" loading="lazy" />
+              <span class="gallery__legende">{{ c.prenom }} {{ c.nom }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  </section>
+}

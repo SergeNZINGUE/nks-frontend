@@ -24,4 +24,22 @@ export class SoireeService {
   disponibilite(soireeId: string): Observable<CategorieTicket[]> {
     return this.http.get<CategorieTicket[]>(`${this.base}/${soireeId}/disponibilite`);
   }
+
+  /**
+   * POST /soirees?phaseId= — ADMIN/SUPER_ADMIN — SoireeController.creer().
+   * `edition` est résolue côté backend depuis la phase (phase.getEdition()) : ne pas l'envoyer.
+   */
+  creer(phaseId: string, soiree: Omit<SoireeEvent, 'id'>): Observable<SoireeEvent> {
+    const params = new HttpParams().set('phaseId', phaseId);
+    return this.http.post<SoireeEvent>(this.base, soiree, { params });
+  }
+
+  /**
+   * PUT /soirees/{id} — ADMIN/SUPER_ADMIN — SoireeController.mettreAJour().
+   * Remplacement des champs modifiables uniquement (nom, dateHeure, lieu, adresse,
+   * capaciteMax, statut, voteSurPlaceActif) — la phase/édition ne sont pas modifiables ici.
+   */
+  mettreAJour(id: string, soiree: Omit<SoireeEvent, 'id'>): Observable<SoireeEvent> {
+    return this.http.put<SoireeEvent>(`${this.base}/${id}`, soiree);
+  }
 }

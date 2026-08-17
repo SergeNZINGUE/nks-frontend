@@ -4,7 +4,11 @@ import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { PartenaireService } from '@core/services/partenaire.service';
 import { MediaService } from '@core/services/media.service';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { Partenaire, NiveauPartenariat } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
+
+const REGEX_TELEPHONE = /^\+?[0-9]{8,15}$/;
 
 const NIVEAUX: { val: NiveauPartenariat; label: string }[] = [
   { val: 'TITRE',      label: 'Titre (principal)' },
@@ -17,7 +21,7 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
 
 @Component({
   selector: 'app-partenaires',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
 
@@ -52,7 +56,7 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
           <div class="form__row">
             <div class="field">
               <label for="nom">Nom</label>
-              <input id="nom" type="text" formControlName="nom" placeholder="Orange Burkina" />
+              <input id="nom" type="text" formControlName="nom" placeholder="Orange Burkina" maxlength="150" />
             </div>
             <div class="field field--sm">
               <label for="niveau">Niveau</label>
@@ -80,12 +84,12 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
 
           <div class="field">
             <label for="description">Description</label>
-            <textarea id="description" formControlName="description" rows="2"></textarea>
+            <textarea id="description" formControlName="description" rows="2" maxlength="500"></textarea>
           </div>
 
           <div class="field">
             <label for="siteWebUrl">Site web</label>
-            <input id="siteWebUrl" type="text" formControlName="siteWebUrl" placeholder="https://…" />
+            <input id="siteWebUrl" type="text" formControlName="siteWebUrl" placeholder="https://…" maxlength="255" />
           </div>
 
           <fieldset class="fieldset">
@@ -93,15 +97,18 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
             <div class="form__row">
               <div class="field">
                 <label for="contactNom">Nom du contact</label>
-                <input id="contactNom" type="text" formControlName="contactNom" />
+                <input id="contactNom" type="text" formControlName="contactNom" maxlength="150" />
               </div>
               <div class="field">
                 <label for="contactEmail">E-mail</label>
-                <input id="contactEmail" type="email" formControlName="contactEmail" />
+                <input id="contactEmail" type="email" formControlName="contactEmail" maxlength="255" />
               </div>
               <div class="field">
                 <label for="contactTelephone">Téléphone</label>
-                <input id="contactTelephone" type="text" formControlName="contactTelephone" />
+                <input id="contactTelephone" type="tel" formControlName="contactTelephone" maxlength="15" />
+                @if (form!.controls.contactTelephone.invalid && form!.controls.contactTelephone.touched) {
+                  <div class="field-error">Format invalide (8 à 15 chiffres, + optionnel).</div>
+                }
               </div>
             </div>
           </fieldset>
@@ -162,7 +169,7 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
                   <td class="table__muted">{{ p.contactNom || '—' }}</td>
                   <td>
                     <button type="button" class="btn btn--sm" (click)="ouvrirEdition(p)">Éditer</button>
-                    <button type="button" class="btn btn--sm btn--err" [disabled]="desactivationEnCours === p.id" (click)="desactiver(p)">
+                    <button type="button" class="btn btn--sm btn--err" [disabled]="desactivationEnCours === p.id" (click)="partenaireADesactiver = p">
                       {{ desactivationEnCours === p.id ? '…' : 'Désactiver' }}
                     </button>
                   </td>
@@ -173,6 +180,18 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
         </div>
       }
     </div>
+  }
+
+  @if (partenaireADesactiver; as p) {
+    <app-confirm-dialog
+      titre="Désactiver le partenaire"
+      [message]="'Désactiver « ' + p.nom + ' » ? Il disparaîtra de la page publique Partenaires (aucune réactivation possible depuis l\\'admin à ce jour).'"
+      libelleConfirmer="Désactiver"
+      [danger]="true"
+      [enCours]="desactivationEnCours === p.id"
+      [erreur]="erreurDesactivation"
+      (confirmed)="desactiver(p)"
+      (cancelled)="partenaireADesactiver = null; erreurDesactivation = null" />
   }
 </div>
 `,
@@ -197,6 +216,8 @@ export class PartenairesComponent implements OnInit, OnDestroy {
   erreurEnvoi: string | null = null;
   succes = false;
   desactivationEnCours: string | null = null;
+  partenaireADesactiver: Partenaire | null = null;
+  erreurDesactivation: string | null = null;
 
   private sub = new Subscription();
 
@@ -219,14 +240,14 @@ export class PartenairesComponent implements OnInit, OnDestroy {
 
   private creerForm(valeurs?: Partial<Partenaire>) {
     return this.fb.nonNullable.group({
-      nom: [valeurs?.nom ?? '', Validators.required],
+      nom: [valeurs?.nom ?? '', [Validators.required, Validators.maxLength(150)]],
       niveauPartenariat: [(valeurs?.niveauPartenariat ?? null) as NiveauPartenariat | null],
       logoUrl: [valeurs?.logoUrl ?? ''],
-      description: [valeurs?.description ?? ''],
-      siteWebUrl: [valeurs?.siteWebUrl ?? ''],
-      contactNom: [valeurs?.contactNom ?? ''],
-      contactEmail: [valeurs?.contactEmail ?? '', Validators.email],
-      contactTelephone: [valeurs?.contactTelephone ?? ''],
+      description: [valeurs?.description ?? '', Validators.maxLength(500)],
+      siteWebUrl: [valeurs?.siteWebUrl ?? '', Validators.maxLength(255)],
+      contactNom: [valeurs?.contactNom ?? '', Validators.maxLength(150)],
+      contactEmail: [valeurs?.contactEmail ?? '', [Validators.email, Validators.maxLength(255)]],
+      contactTelephone: [valeurs?.contactTelephone ?? '', Validators.pattern(REGEX_TELEPHONE)],
     });
   }
 
@@ -308,17 +329,18 @@ export class PartenairesComponent implements OnInit, OnDestroy {
   }
 
   desactiver(p: Partenaire): void {
-    if (!confirm(`Désactiver « ${p.nom} » ? Il disparaîtra de la page publique Partenaires (aucune réactivation possible depuis l'admin à ce jour).`)) return;
+    this.erreurDesactivation = null;
     this.desactivationEnCours = p.id;
     this.sub.add(
       this.partenaireSvc.desactiver(p.id).subscribe({
         next: () => {
           this.desactivationEnCours = null;
+          this.partenaireADesactiver = null;
           this.chargerPartenaires();
         },
-        error: () => {
+        error: err => {
           this.desactivationEnCours = null;
-          this.erreurChargement = 'Échec de la désactivation.';
+          this.erreurDesactivation = messageErreur(err, 'Échec de la désactivation.');
         },
       })
     );

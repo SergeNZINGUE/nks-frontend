@@ -1,0 +1,100 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.gallery {
+  background: $nks-bg-primary;
+  padding: $sp-8 0 $sp-10;
+  overflow: hidden;
+
+  @media (min-width: 900px) { padding: $sp-10 0 $sp-12; }
+
+  &__titre {
+    font-family: $font-title;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: $nks-gold;
+    text-align: center;
+    margin: 0 0 $sp-6;
+  }
+
+  &__viewport {
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  &__piste {
+    --duree: 35s;
+
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: max-content;
+    animation: gallery-defilement var(--duree) linear infinite;
+
+    &:hover,
+    &:focus-within { animation-play-state: paused; }
+  }
+
+  &__item { flex-shrink: 0; }
+
+  &__lien {
+    position: relative;
+    display: block;
+    width: 160px;
+    height: 200px;
+    border-radius: $radius-md;
+    overflow: hidden;
+    border: 1px solid rgba($nks-gold, 0.18);
+
+    @media (min-width: 900px) { width: 190px; height: 230px; }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+    }
+
+    &:hover img,
+    &:focus-visible img { transform: scale(1.06); }
+  }
+
+  &__legende {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: $sp-2 $sp-3;
+    background: linear-gradient(0deg, rgba(#000, 0.75), transparent);
+    color: $nks-text;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@keyframes gallery-defilement {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__viewport {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .gallery__piste {
+    animation: none;
+    width: auto;
+    padding-inline: $sp-4;
+  }
+}
