@@ -39,16 +39,11 @@
                à ce qui est réellement possible de faire là, maintenant. -->
           @if (voteActif) {
             <p class="hero__texte">
-              L'édition {{ edition?.annee }} de la grande compétition karaoké de
-              Ouagadougou bat son plein. Votez pour vos favoris, suivez le
-              classement en direct et réservez vos soirées.
+              {{ edition?.description }}
             </p>
           } @else if (inscriptionsOuvertes) {
             <p class="hero__texte">
-              L'édition {{ edition?.annee }} de la grande compétition karaoké de
-              Ouagadougou revient — les inscriptions sont ouvertes. Tentez votre
-              chance, déposez votre candidature et rejoignez les prochains
-              candidats de Night Karaoke Stars.
+              {{ edition?.description }}
             </p>
           } @else {
             <p class="hero__texte">
