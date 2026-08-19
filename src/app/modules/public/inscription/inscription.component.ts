@@ -120,7 +120,7 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     this.step1 = this.fb.group({
       prenom: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       nom: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      dateNaissance: ['', [Validators.required, this.ageMinimumValidator(20)]],
+      dateNaissance: ['', [Validators.required, this.ageMinimumValidator(18)]],
       telephone: ['', [Validators.required, Validators.pattern(telPattern)]],
       email: ['', [Validators.required, Validators.email]],
     });
@@ -151,7 +151,7 @@ export class InscriptionComponent implements OnInit, OnDestroy {
    */
   get dateNaissanceMax(): string {
     const limite = new Date();
-    limite.setFullYear(limite.getFullYear() - 20);
+    limite.setFullYear(limite.getFullYear() - 18);
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${limite.getFullYear()}-${pad(limite.getMonth() + 1)}-${pad(limite.getDate())}`;
   }
