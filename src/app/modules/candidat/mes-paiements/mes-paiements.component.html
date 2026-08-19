@@ -60,18 +60,12 @@
         }
         <form [formGroup]="form" (ngSubmit)="payer()" class="paiement-form">
           <div class="form-group">
-            <label for="montant">Montant des frais d'inscription (FCFA) *</label>
-            <input id="montant" type="number" formControlName="montant" min="1"
-              placeholder="Montant communiqué par le comité d'organisation" />
+            <label for="montant">Montant des frais d'inscription</label>
+            <input id="montant" type="text" [value]="montantFormate" readonly disabled
+              aria-readonly="true" />
             <span class="form-hint">
-              Le montant est fixé par le comité d'organisation. Il figure dans le SMS
-              et l'e-mail de validation de ta candidature.
+              Montant fixe défini par le comité d'organisation, non modifiable.
             </span>
-            @if (form.get('montant')?.invalid && form.get('montant')?.touched) {
-              <span class="form-error">
-                Montant requis (supérieur à 0).
-              </span>
-            }
           </div>
           <div class="form-group">
             <label for="telephone">Numéro Mobile Money *</label>

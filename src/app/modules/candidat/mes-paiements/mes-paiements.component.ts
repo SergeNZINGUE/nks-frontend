@@ -20,10 +20,15 @@ import { TopbarComponent } from '@shared/components/topbar/topbar.component';
  * GAP BACKEND #1 : aucun endpoint ne liste les paiements d'un candidat.
  *   GET /paiements est réservé ADMIN/SUPER_ADMIN, GET /paiements/{id} exige de
  *   connaître l'identifiant. L'historique (CdC §5.2) n'est donc pas affichable.
- * GAP BACKEND #2 : PRIX_INSCRIPTION_FCFA n'est exposé par aucun endpoint
- *   (aucun contrôleur ne sert parametres_plateforme). Le montant doit être saisi
- *   ou communiqué hors plateforme.
+ * GAP BACKEND #2 (partiellement contourné le 19/08/2026, décision explicite user) :
+ *   PRIX_INSCRIPTION_FCFA n'est exposé par aucun endpoint (aucun contrôleur ne sert
+ *   parametres_plateforme). Le montant était donc auparavant un champ libre saisi par
+ *   le candidat — risque direct de fraude (montant arbitraire envoyé au paiement).
+ *   Corrigé : montant figé en dur à MONTANT_INSCRIPTION_FCFA, champ lecture seule.
+ *   À REMPLACER dès qu'un endpoint backend expose ce paramètre — ne pas laisser ce
+ *   hardcode traîner si le montant change un jour côté organisateur.
  */
+const MONTANT_INSCRIPTION_FCFA = 15_000;
 @Component({
   selector: 'app-mes-paiements',
   imports: [RouterModule, ReactiveFormsModule, TopbarComponent],
@@ -45,9 +50,10 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   private sub = new Subscription();
 
+  readonly montantFormate = `${MONTANT_INSCRIPTION_FCFA.toLocaleString('fr-FR')} FCFA`;
+
   ngOnInit(): void {
     this.form = this.fb.group({
-      montant: [null, [Validators.required, Validators.min(1)]],
       telephone: ['', [Validators.required, Validators.pattern(/^(\+226|00226)?[0-9]{8}$/)]],
     });
 
@@ -77,10 +83,10 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
     this.isPaying = true;
     this.erreur = null;
 
-    const { montant, telephone } = this.form.value;
+    const { telephone } = this.form.value;
 
     this.sub.add(
-      this.candidatureSvc.initierPaiementInscription(Number(montant), telephone.trim())
+      this.candidatureSvc.initierPaiementInscription(MONTANT_INSCRIPTION_FCFA, telephone.trim())
         .pipe(catchError(err => {
           this.erreur = messageErreur(err, 'Échec de l\'initiation du paiement.');
           return of(null);
