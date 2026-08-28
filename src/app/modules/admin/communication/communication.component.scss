@@ -16,6 +16,28 @@
   margin-inline: auto;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $sp-3;
+  flex-wrap: wrap;
+  margin-bottom: $sp-5;
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    margin: 0;
+    max-width: 480px;
+  }
+}
+
 .loading { color: $nks-text-secondary; font-size: 14px; }
 
 .edition-tag {
@@ -134,9 +156,10 @@
   min-height: 48px;
 
   &--primary {
-    background: $nks-gold;
+    background: $nks-gradient-gold;
     color: #000;
-    &:hover:not(:disabled) { background: $nks-gold-hover; }
+    transition: filter $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+    &:hover:not(:disabled) { filter: brightness(1.06); box-shadow: $shadow-glow-gold; }
   }
 
   &:disabled { opacity: 0.45; cursor: not-allowed; }

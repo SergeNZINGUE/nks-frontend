@@ -3,23 +3,20 @@ import { DatePipe } from '@angular/common';
 import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { AuditService, AuditLogBrut } from '@core/services/audit.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Page } from '@core/models';
-
-const MSG_BACKEND_CASSE =
-  "Backend indisponible : LazyInitializationException connue sur AuditLog.utilisateur (LAZY sans @JsonIgnore). Correction en attente côté backend.";
+import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-audit',
-  imports: [DatePipe, TopbarComponent],
+  imports: [DatePipe],
   template: `
 <div class="page">
-  <app-topbar title="Audit & sécurité" icon="🛡️" backLink="/admin" backLabel="Retour à l'administration" />
 
-  <div class="gap-banner" role="note">
-    ⚠️ Écran câblé sur <code>GET /admin/audit-logs</code> (journal append-only, aucune suppression
-    possible en base). Cassé côté backend aujourd'hui (500 confirmé en test live, dès qu'il y a des
-    lignes d'audit).
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Audit &amp; sécurité</h1>
+      <p class="page-header__subtitle">Journal append-only des actions sensibles effectuées sur la plateforme.</p>
+    </div>
   </div>
 
   @if (isLoading) {
@@ -50,7 +47,7 @@ const MSG_BACKEND_CASSE =
             {{ l.entiteConcernee }}
             <small>{{ l.entiteId ?? '—' }}</small>
           </span>
-          <span role="cell">{{ l.utilisateur?.email ?? 'système' }}</span>
+          <span role="cell">{{ l.utilisateurId ?? 'système' }}</span>
           <span role="cell" class="row__date">{{ l.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
         </div>
       }
@@ -88,7 +85,7 @@ export class AuditComponent implements OnInit, OnDestroy {
     this.pageCourante = page;
     this.sub.add(
       this.auditSvc.lister(page, 25).pipe(
-        catchError(() => { this.erreur = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreur = messageErreur(err, "Erreur de chargement du journal d'audit."); return of(null); }),
         finalize(() => { this.isLoading = false; })
       ).subscribe(res => { if (res) this.page = res; })
     );

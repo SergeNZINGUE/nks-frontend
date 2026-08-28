@@ -3,24 +3,20 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { PaiementService, PaiementBrut } from '@core/services/paiement.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Page } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
-const MSG_BACKEND_CASSE =
-  "Backend indisponible : LazyInitializationException connue sur Paiement.utilisateur (LAZY sans @JsonIgnore). Correction en attente côté backend.";
-
 @Component({
   selector: 'app-payments',
-  imports: [DatePipe, DecimalPipe, TopbarComponent],
+  imports: [DatePipe, DecimalPipe],
   template: `
 <div class="page">
-  <app-topbar title="Paiements" icon="💳" backLink="/admin" backLabel="Retour à l'administration" />
 
-  <div class="gap-banner" role="note">
-    ⚠️ Écran câblé sur les endpoints réels de <code>PaiementController</code>. La liste et le détail
-    sont aujourd'hui cassés côté backend (500 confirmé en test live, dès qu'il y a des paiements en
-    base) : seule la confirmation manuelle n'a pas été testée mais ne sérialise pas la liste complète.
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Paiements</h1>
+      <p class="page-header__subtitle">Historique des paiements et confirmation manuelle des paiements en attente.</p>
+    </div>
   </div>
 
   @if (isLoading) {
@@ -131,7 +127,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
     this.pageCourante = page;
     this.sub.add(
       this.paiementSvc.lister(page, 20).pipe(
-        catchError(() => { this.erreur = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreur = messageErreur(err, 'Erreur de chargement des paiements.'); return of(null); }),
         finalize(() => { this.isLoading = false; })
       ).subscribe(res => { if (res) this.page = res; })
     );

@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, switchMap, catchError, of, finalize } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
 import { ClassementService } from '@core/services/classement.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
+import { PouleDuoService } from '@core/services/poule-duo.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { Phase, Edition, Classement, ResultatPhase } from '@core/models';
+import { messageErreur } from '@core/utils/http-error.util';
+import { telechargerBlob } from '@core/utils/download.util';
 
 const LABEL_PHASE: Record<string, string> = {
   PRESELECTION:  'Présélection',
@@ -15,25 +18,17 @@ const LABEL_PHASE: Record<string, string> = {
   FINALE:        'Finale',
 };
 
-/**
- * Message affiché à chaque appel cassé — cf. rapport LazyInitializationException du
- * 15/08/2026 : Classement.candidat / ResultatPhase.candidat (LAZY, sans @JsonIgnore) plantent
- * dès qu'il y a des données en base. Bug backend confirmé en live, pas une hypothèse.
- */
-const MSG_BACKEND_CASSE =
-  "Backend indisponible : LazyInitializationException connue sur cet endpoint (Candidat.utilisateur/.edition LAZY sans protection). Correction en attente côté backend.";
-
 @Component({
   selector: 'app-resultats',
-  imports: [DecimalPipe, TopbarComponent, ConfirmDialogComponent],
+  imports: [DecimalPipe, ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
-  <app-topbar title="Résultats & classement" icon="📈" backLink="/admin" backLabel="Retour à l'administration" />
 
-  <div class="gap-banner" role="note">
-    ⚠️ Écran câblé sur les 4 endpoints réels de <code>ClassementController</code>. 3 sur 4 sont
-    aujourd'hui cassés côté backend (500 confirmé en test live) : seule la publication fonctionne.
-    Les sections ci-dessous resteront en erreur tant que le correctif n'est pas déployé.
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Résultats &amp; classement</h1>
+      <p class="page-header__subtitle">Calculer les classements par phase, publier les résultats officiels et gérer les repêchages.</p>
+    </div>
   </div>
 
   @if (isLoading) {
@@ -65,28 +60,41 @@ const MSG_BACKEND_CASSE =
           <button type="button" class="btn btn--primary" [disabled]="calculEnCours" (click)="calculerClassement()">
             {{ calculEnCours ? 'Calcul…' : '🔄 Calculer le classement de cette phase' }}
           </button>
+          <button type="button" class="btn btn--ghost" [disabled]="!phaseSelectionneeId || exportVotesEnCours" (click)="exporterVotesCsv()">
+            {{ exportVotesEnCours ? 'Export…' : '⬇ Exporter les votes (CSV)' }}
+          </button>
         </div>
 
         @if (erreurPhase) {
           <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurPhase }}</div>
+        }
+        @if (erreurExportVotes) {
+          <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurExportVotes }}</div>
         }
 
         @if (resultatsPhase.length > 0) {
           <div class="table-wrap">
             <table class="tbl" aria-label="Résultats de la phase">
               <thead>
-                <tr><th scope="col">Rang</th><th scope="col">Candidat</th><th scope="col">Votes</th><th scope="col">Jury</th><th scope="col">Public</th><th scope="col">Total</th><th scope="col">Statut</th></tr>
+                <tr><th scope="col">Rang</th><th scope="col">Candidat</th><th scope="col">Votes</th><th scope="col">Jury</th><th scope="col">Public</th><th scope="col">Total</th><th scope="col">Statut</th><th scope="col">Actions</th></tr>
               </thead>
               <tbody>
                 @for (r of resultatsPhase; track r) {
-                  <tr>
+                  <tr [class.tbl__row--rang1]="r.rang === 1">
                     <td>{{ r.rang }}</td>
-                    <td>{{ nomCandidat(r.candidat) }}</td>
-                    <td>{{ r.pointsVotes | number:'1.0-1' }}</td>
+                    <td>{{ nomCandidat(r) }}</td>
+                    <td>{{ r.pointsVotesEnLigne | number:'1.0-1' }}</td>
                     <td>{{ r.pointsJury | number:'1.0-1' }}</td>
-                    <td>{{ r.pointsPublic | number:'1.0-1' }}</td>
+                    <td>{{ r.pointsPublicSurPlace | number:'1.0-1' }}</td>
                     <td><strong>{{ r.totalPoints | number:'1.0-1' }}</strong></td>
-                    <td><span class="badge-tbl" [class]="'badge-tbl--' + r.statut">{{ r.statut }}</span></td>
+                    <td><span class="badge-tbl" [class]="'badge-tbl--' + r.statutQualification">{{ r.statutQualification }}</span></td>
+                    <td>
+                      @if (r.statutQualification === 'ELIMINE') {
+                        <button type="button" class="btn btn--sm" [disabled]="repechageEnCoursId === r.id" (click)="ouvrirRepechage(r)">
+                          {{ repechageEnCoursId === r.id ? '…' : '↩ Repêcher' }}
+                        </button>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -116,10 +124,10 @@ const MSG_BACKEND_CASSE =
               <thead><tr><th scope="col">Rang</th><th scope="col">Candidat</th><th scope="col">Total</th><th scope="col">Officiel</th></tr></thead>
               <tbody>
                 @for (c of classementGlobal; track c) {
-                  <tr>
+                  <tr [class.tbl__row--rang1]="c.rangGlobal === 1">
                     <td>{{ c.rangGlobal }}</td>
-                    <td>{{ nomCandidat(c.candidat) }}</td>
-                    <td><strong>{{ c.totalPoints | number:'1.0-1' }}</strong></td>
+                    <td>{{ nomCandidat(c) }}</td>
+                    <td><strong>{{ c.totalPointsCumules | number:'1.0-1' }}</strong></td>
                     <td>
                       @if (c.officiel) {
                         <span class="badge-tbl badge-tbl--officiel">✓ Officiel</span>
@@ -155,14 +163,46 @@ const MSG_BACKEND_CASSE =
       (confirmed)="publier()"
       (cancelled)="demandePublication = false" />
   }
+
+  <!-- Modal repêchage -->
+  @if (resultatARepecher; as r) {
+    <div class="modal-bg" (click)="fermerRepechage()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-repechage" (click)="$event.stopPropagation()">
+        <h2 id="titre-repechage">Repêcher {{ nomCandidat(r) }}</h2>
+        <label for="motifRepechage" class="sr-only">Motif du repêchage</label>
+        <textarea id="motifRepechage"
+          class="modal__textarea"
+          [formControl]="motifRepechageCtrl"
+          placeholder="Motif du repêchage (minimum 50 caractères, obligatoire — RM-43)"
+          rows="4"></textarea>
+        @if (motifRepechageCtrl.invalid && motifRepechageCtrl.touched) {
+          <div class="modal__err" role="alert">
+            Motif obligatoire (minimum 50 caractères).
+          </div>
+        }
+        @if (erreurRepechage) {
+          <div class="modal__err" role="alert">⚠️ {{ erreurRepechage }}</div>
+        }
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" (click)="fermerRepechage()">Annuler</button>
+          <button type="button" class="btn btn--ok"
+            [disabled]="motifRepechageCtrl.invalid || repechageEnCoursId === r.id"
+            (click)="confirmerRepechage()">
+            {{ repechageEnCoursId === r.id ? '…' : 'Confirmer le repêchage' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 `,
-  styleUrls: ['../phases/phases.component.scss', '../poules/poules.component.scss', './resultats.component.scss'],
+  styleUrls: ['../phases/phases.component.scss', '../poules/poules.component.scss', './resultats.component.scss', '../candidatures/candidatures.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class ResultatsComponent implements OnInit, OnDestroy {
   private adminSvc = inject(AdminService);
   private classementSvc = inject(ClassementService);
+  private pouleDuoSvc = inject(PouleDuoService);
 
   isLoading = true;
   erreurChargement: string | null = null;
@@ -173,6 +213,14 @@ export class ResultatsComponent implements OnInit, OnDestroy {
   calculEnCours = false;
   erreurPhase: string | null = null;
   resultatsPhase: ResultatPhase[] = [];
+
+  exportVotesEnCours = false;
+  erreurExportVotes: string | null = null;
+
+  resultatARepecher: ResultatPhase | null = null;
+  motifRepechageCtrl = new FormControl('', [Validators.required, Validators.minLength(50)]);
+  repechageEnCoursId: string | null = null;
+  erreurRepechage: string | null = null;
 
   chargementGlobal = false;
   erreurGlobal: string | null = null;
@@ -209,20 +257,18 @@ export class ResultatsComponent implements OnInit, OnDestroy {
   labelPhase(n: string): string { return LABEL_PHASE[n] ?? n; }
 
   /**
-   * `Candidat` n'a pas de champ prenom/nom en propre côté backend — uniquement via
-   * `candidat.utilisateur` (LAZY, souvent absent tant que le bug LazyInit n'est pas corrigé).
-   * Repli sur le code candidat, toujours présent, plutôt qu'un champ vide silencieux.
+   * `ClassementResponse`/`ResultatPhaseResponse` n'exposent que `codeCandidat` (pas de
+   * prénom/nom : ces DTOs n'ont jamais renvoyé cette info, même avant l'alignement de contrat).
    */
-  nomCandidat(c: { codeCandidat?: string; prenom?: string; nom?: string } | null | undefined): string {
-    if (!c) return '—';
-    if (c.prenom || c.nom) return `${c.prenom ?? ''} ${c.nom ?? ''}`.trim();
-    return c.codeCandidat ?? '—';
+  nomCandidat(c: { codeCandidat?: string } | null | undefined): string {
+    return c?.codeCandidat ?? '—';
   }
 
   selectionnerPhase(phaseId: string): void {
     this.phaseSelectionneeId = phaseId;
     this.resultatsPhase = [];
     this.erreurPhase = null;
+    this.erreurExportVotes = null;
   }
 
   calculerClassement(): void {
@@ -231,7 +277,7 @@ export class ResultatsComponent implements OnInit, OnDestroy {
     this.erreurPhase = null;
     this.sub.add(
       this.classementSvc.calculerPhase(this.phaseSelectionneeId).pipe(
-        catchError(() => { this.erreurPhase = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreurPhase = messageErreur(err, 'Échec du calcul du classement.'); return of(null); }),
         finalize(() => { this.calculEnCours = false; })
       ).subscribe(resultats => {
         if (resultats) this.resultatsPhase = resultats;
@@ -244,7 +290,7 @@ export class ResultatsComponent implements OnInit, OnDestroy {
     this.erreurGlobal = null;
     this.sub.add(
       this.classementSvc.global().pipe(
-        catchError(() => { this.erreurGlobal = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreurGlobal = messageErreur(err, 'Erreur de chargement du classement global.'); return of(null); }),
         finalize(() => { this.chargementGlobal = false; })
       ).subscribe(classement => {
         if (classement) this.classementGlobal = classement;
@@ -266,6 +312,63 @@ export class ResultatsComponent implements OnInit, OnDestroy {
           this.messagePublication = '✓ Résultats publiés.';
           this.chargerGlobal();
         }
+      })
+    );
+  }
+
+  /**
+   * GET /admin/rapports/votes/export-csv?phaseId= — déclenche le téléchargement du CSV des
+   * votes de la phase sélectionnée (blob, pas de rendu JSON).
+   */
+  exporterVotesCsv(): void {
+    if (!this.phaseSelectionneeId) return;
+    this.exportVotesEnCours = true;
+    this.erreurExportVotes = null;
+    this.sub.add(
+      this.adminSvc.exportVotesCsv(this.phaseSelectionneeId).pipe(
+        catchError(err => { this.erreurExportVotes = messageErreur(err, "Échec de l'export CSV des votes."); return of(null); }),
+        finalize(() => { this.exportVotesEnCours = false; })
+      ).subscribe(blob => {
+        if (!blob) return;
+        telechargerBlob(blob, `votes-phase-${this.phaseSelectionneeId}.csv`);
+      })
+    );
+  }
+
+  ouvrirRepechage(r: ResultatPhase): void {
+    this.resultatARepecher = r;
+    this.erreurRepechage = null;
+    this.motifRepechageCtrl.reset('');
+  }
+
+  fermerRepechage(): void {
+    this.resultatARepecher = null;
+    this.erreurRepechage = null;
+    this.motifRepechageCtrl.reset('');
+  }
+
+  /**
+   * POST /candidats/{id}/repechage?phaseId= — RM-43 : motif obligatoire (>= 50 caractères,
+   * validé aussi côté backend). Met à jour localement le statut de la ligne concernée en
+   * REPECHAGE sans recharger toute la liste.
+   */
+  confirmerRepechage(): void {
+    if (!this.resultatARepecher || this.motifRepechageCtrl.invalid || !this.phaseSelectionneeId) return;
+    const r = this.resultatARepecher;
+    const motif = this.motifRepechageCtrl.value as string;
+    this.repechageEnCoursId = r.id;
+    this.erreurRepechage = null;
+    this.sub.add(
+      this.pouleDuoSvc.repecher(r.candidatId, this.phaseSelectionneeId, motif).pipe(
+        catchError(err => { this.erreurRepechage = messageErreur(err, 'Échec du repêchage.'); return of(null); }),
+        finalize(() => { this.repechageEnCoursId = null; })
+      ).subscribe(resultat => {
+        if (!resultat) return;
+        const idx = this.resultatsPhase.findIndex(x => x.id === r.id);
+        if (idx !== -1) {
+          this.resultatsPhase[idx] = { ...this.resultatsPhase[idx], statutQualification: 'REPECHAGE' };
+        }
+        this.fermerRepechage();
       })
     );
   }

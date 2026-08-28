@@ -5,6 +5,7 @@ import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { RichTextEditorComponent } from '@shared/components/rich-text-editor/rich-text-editor.component';
 import { Edition, StatutEdition } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
@@ -27,7 +28,7 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
 
 @Component({
   selector: 'app-edition',
-  imports: [DatePipe, ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [DatePipe, ReactiveFormsModule, ConfirmDialogComponent, RichTextEditorComponent],
   template: `
 <div class="page">
 
@@ -111,8 +112,11 @@ const STATUTS: { val: StatutEdition; label: string }[] = [
           </fieldset>
 
           <div class="field">
-            <label for="description">Description (optionnel)</label>
-            <textarea id="description" formControlName="description" rows="2" maxlength="500"></textarea>
+            <label>Description (optionnel)</label>
+            <app-rich-text-editor
+              formControlName="description"
+              placeholder="Décrivez l'édition (mise en forme : gras, listes, alignement, liens)…"
+              ariaLabel="Description de l'édition" />
           </div>
 
           @if (erreurEnvoi) {
@@ -242,7 +246,7 @@ export class EditionComponent implements OnInit, OnDestroy {
         dateFinInscriptions: [valeurs?.dateFinInscriptions ?? '', Validators.required],
         dateDebutCompetition: [valeurs?.dateDebutCompetition ?? '', Validators.required],
         dateFinCompetition: [valeurs?.dateFinCompetition ?? '', Validators.required],
-        description: [valeurs?.description ?? '', Validators.maxLength(500)],
+        description: [valeurs?.description ?? '', Validators.maxLength(5000)],
       },
       {
         validators: [

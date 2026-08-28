@@ -5,26 +5,21 @@ import { Subscription, switchMap, catchError, of, finalize } from 'rxjs';
 import { AdminService } from '@core/services/admin.service';
 import { JuryService, JuryBrut, NoteJuryBrut } from '@core/services/jury.service';
 import { SoireeService } from '@core/services/soiree.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { Edition, SoireeEvent } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
-const MSG_BACKEND_CASSE =
-  "Backend indisponible : LazyInitializationException connue sur cet endpoint (relation LAZY sans protection). Correction en attente côté backend.";
-
 @Component({
   selector: 'app-jury',
-  imports: [ReactiveFormsModule, TopbarComponent, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
-  <app-topbar title="Gestion du jury" icon="🎤" backLink="/admin" backLabel="Retour à l'administration" />
 
-  <div class="gap-banner" role="note">
-    ⚠️ Écran câblé sur les endpoints réels de <code>JuryController</code> / <code>AdminController</code>.
-    Liste des jurys et consultation des notes sont aujourd'hui cassées côté backend (500 confirmé en
-    test live). La création/désactivation d'un jury ne sérialise pas de relation LAZY complexe et
-    devrait fonctionner.
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Gestion du jury</h1>
+      <p class="page-header__subtitle">Créer les jurés, consulter leurs notes et clôturer la notation par soirée.</p>
+    </div>
   </div>
 
   @if (isLoading) {
@@ -80,7 +75,7 @@ const MSG_BACKEND_CASSE =
                 <tr>
                   <td>{{ j.prenom }} {{ j.nom }}</td>
                   <td>{{ j.specialite ?? '—' }}</td>
-                  <td>{{ j.utilisateur?.email ?? '—' }}</td>
+                  <td class="mono">{{ j.utilisateurId.slice(0, 8) }}…</td>
                   <td><span class="badge-tbl" [class]="'badge-tbl--' + j.statut">{{ j.statut }}</span></td>
                   <td>
                     @if (j.statut === 'ACTIF') {
@@ -115,9 +110,15 @@ const MSG_BACKEND_CASSE =
         <button type="button" class="btn" [disabled]="!soireeSelectionneeId || chargementNotes" (click)="chargerNotes()">
           {{ chargementNotes ? 'Chargement…' : 'Charger les notes' }}
         </button>
+        <button type="button" class="btn btn--err" [disabled]="!soireeSelectionneeId || clotureEnCours" (click)="demandeCloture = true">
+          {{ clotureEnCours ? 'Clôture…' : '🔒 Clôturer la notation de cette soirée' }}
+        </button>
       </div>
       @if (erreurNotes) {
         <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurNotes }}</div>
+      }
+      @if (messageCloture) {
+        <div class="field-hint" role="status" aria-live="polite" style="margin-top: 8px;">{{ messageCloture }}</div>
       }
       @if (notes.length > 0) {
         <table class="tbl">
@@ -125,10 +126,10 @@ const MSG_BACKEND_CASSE =
           <tbody>
             @for (n of notes; track n.id) {
               <tr>
-                <td>{{ n.candidat.codeCandidat }}</td>
-                <td>{{ n.jury ? (n.jury.prenom + ' ' + n.jury.nom) : '—' }}</td>
-                <td>{{ n.critere.nom }}</td>
-                <td>{{ n.valeur }} / {{ n.critere.noteMax }}</td>
+                <td>{{ n.candidatId.slice(0, 8) }}…</td>
+                <td>{{ n.juryId.slice(0, 8) }}…</td>
+                <td>{{ n.critereNom }}</td>
+                <td>{{ n.valeur }}</td>
                 <td>{{ n.verrouille ? '🔒' : '—' }}</td>
               </tr>
             }
@@ -147,6 +148,18 @@ const MSG_BACKEND_CASSE =
       [enCours]="desactivationEnCoursId === j.id"
       (confirmed)="confirmerDesactivation(j)"
       (cancelled)="juryADesactiver = null" />
+  }
+
+  @if (demandeCloture) {
+    <app-confirm-dialog
+      titre="Clôturer la notation"
+      message="Clôturer définitivement la fenêtre de notation jury de cette soirée ? Les jurés ne pourront plus saisir ni modifier de notes. Cette action est irréversible."
+      libelleConfirmer="Clôturer"
+      [danger]="true"
+      [enCours]="clotureEnCours"
+      [erreur]="erreurCloture"
+      (confirmed)="confirmerCloture()"
+      (cancelled)="demandeCloture = false; erreurCloture = null" />
   }
 </div>
 `,
@@ -187,6 +200,11 @@ export class JuryComponent implements OnInit, OnDestroy {
   erreurNotes: string | null = null;
   notes: NoteJuryBrut[] = [];
 
+  demandeCloture = false;
+  clotureEnCours = false;
+  erreurCloture: string | null = null;
+  messageCloture: string | null = null;
+
   private sub = new Subscription();
 
   ngOnInit(): void {
@@ -216,7 +234,7 @@ export class JuryComponent implements OnInit, OnDestroy {
     this.erreurListe = null;
     this.sub.add(
       this.jurySvc.listerAdmin(this.edition.id).pipe(
-        catchError(() => { this.erreurListe = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreurListe = messageErreur(err, 'Erreur de chargement des jurés.'); return of(null); }),
         finalize(() => { this.chargementListe = false; })
       ).subscribe(jurys => { if (jurys) this.jurys = jurys; })
     );
@@ -261,6 +279,7 @@ export class JuryComponent implements OnInit, OnDestroy {
     this.soireeSelectionneeId = id;
     this.notes = [];
     this.erreurNotes = null;
+    this.messageCloture = null;
   }
 
   chargerNotes(): void {
@@ -269,9 +288,29 @@ export class JuryComponent implements OnInit, OnDestroy {
     this.erreurNotes = null;
     this.sub.add(
       this.jurySvc.notesSoireeAdmin(this.soireeSelectionneeId).pipe(
-        catchError(() => { this.erreurNotes = MSG_BACKEND_CASSE; return of(null); }),
+        catchError(err => { this.erreurNotes = messageErreur(err, 'Erreur de chargement des notes.'); return of(null); }),
         finalize(() => { this.chargementNotes = false; })
       ).subscribe(notes => { if (notes) this.notes = notes; })
+    );
+  }
+
+  confirmerCloture(): void {
+    if (!this.soireeSelectionneeId) return;
+    this.clotureEnCours = true;
+    this.erreurCloture = null;
+    // 204 No Content : Angular HttpClient renvoie `null` aussi bien sur succès que sur le
+    // repli catchError → distinction par indicateur local, pas par la valeur émise (même
+    // pattern que ResultatsComponent.publier()).
+    let echec = false;
+    this.sub.add(
+      this.jurySvc.cloturerNotationSoiree(this.soireeSelectionneeId).pipe(
+        catchError(err => { echec = true; this.erreurCloture = messageErreur(err, 'Échec de la clôture de la notation.'); return of(undefined); }),
+        finalize(() => { this.clotureEnCours = false; })
+      ).subscribe(() => {
+        if (echec) return; // la modale reste ouverte avec l'erreur affichée
+        this.demandeCloture = false;
+        this.messageCloture = '✓ Notation clôturée pour cette soirée.';
+      })
     );
   }
 }

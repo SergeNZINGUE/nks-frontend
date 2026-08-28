@@ -24,7 +24,7 @@ import { ADMIN_NAV } from './admin-nav.config';
 
   <aside class="sidebar">
     <div class="sidebar__brand">
-      <span class="sidebar__logo" aria-hidden="true">✦</span>
+      <img src="assets/logos/nks.png" alt="" class="sidebar__logo" />
       <span class="sidebar__brand-text">NKS <span>Admin</span></span>
     </div>
 

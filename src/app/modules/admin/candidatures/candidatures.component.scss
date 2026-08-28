@@ -10,6 +10,30 @@
   padding-bottom: $sp-12;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $sp-3;
+  flex-wrap: wrap;
+  padding: $sp-4 $sp-4 0;
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    margin: 0;
+    max-width: 480px;
+  }
+}
+
 .filtres {
   display: flex;
   gap: $sp-2;
@@ -103,6 +127,11 @@
   border: 1px solid rgba($nks-text, 0.08);
   border-radius: $radius-md;
   margin-bottom: $sp-2;
+  transition: background $dur-fast $ease-out, border-color $dur-fast $ease-out;
+
+  // Écrans de travail (tableaux denses) : hover discret pour repérer la ligne,
+  // pas d'effet lourd (halo/élévation) qui nuirait à la lisibilité d'une liste longue.
+  &:hover { background: rgba($nks-text, 0.04); }
 
   // Empilé sous 768px : la grille tabulaire n'a pas de sens sur mobile
   @media (max-width: 767px) {
@@ -118,6 +147,8 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: rgba($nks-text, 0.45);
+
+    &:hover { background: transparent; }
 
     @media (max-width: 767px) { display: none; }
   }
@@ -237,6 +268,7 @@
   font-family: $font-body;
   border: none;
   min-height: 40px;
+  transition: background $dur-fast $ease-out, border-color $dur-fast $ease-out;
 
   &--ok {
     background: rgba($nks-success, 0.15);

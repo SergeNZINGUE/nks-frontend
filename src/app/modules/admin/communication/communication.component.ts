@@ -5,7 +5,6 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Subscription, catchError, of } from 'rxjs';
 
 import { AdminService, CommunicationRequest } from '@core/services/admin.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Edition } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
@@ -22,13 +21,19 @@ const FILTRES_STATUT = [
 
 @Component({
   selector: 'app-communication',
-  imports: [RouterModule, ReactiveFormsModule, TopbarComponent],
+  imports: [RouterModule, ReactiveFormsModule],
   template: `
 <div class="page">
 
-  <app-topbar title="Communication" icon="📢" backLink="/admin" backLabel="Retour à l'administration" />
-
   <div class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">Communication</h1>
+        <p class="page-header__subtitle">Envoyer un SMS et/ou un e-mail aux candidats de l'édition en cours, filtrés par statut.</p>
+      </div>
+    </div>
+
 
     @if (chargementEdition) {
       <div class="loading">Chargement de l'édition…</div>

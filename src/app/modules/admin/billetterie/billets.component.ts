@@ -7,19 +7,25 @@ import { Subscription, switchMap, catchError, of, finalize, forkJoin } from 'rxj
 import { AdminService } from '@core/services/admin.service';
 import { SoireeService } from '@core/services/soiree.service';
 import { BilletterieService } from '@core/services/billetterie.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Edition, SoireeEvent, CategorieTicket, Reservation, Page } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
+import { telechargerBlob } from '@core/utils/download.util';
 
 const MSG_BACKEND_CASSE =
   "Backend indisponible : LazyInitializationException connue sur Reservation.soiree/.paiement (LAZY sans @JsonIgnore). Correction en attente côté backend.";
 
 @Component({
   selector: 'app-billets',
-  imports: [ReactiveFormsModule, DecimalPipe, TopbarComponent],
+  imports: [ReactiveFormsModule, DecimalPipe],
   template: `
 <div class="page">
-  <app-topbar title="Réservations & scans" icon="🎟️" backLink="/admin" backLabel="Retour à l'administration" />
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Réservations &amp; scans</h1>
+      <p class="page-header__subtitle">Suivre les réservations, émettre des tickets gratuits et exporter les billets d'une soirée.</p>
+    </div>
+  </div>
 
   <div class="gap-banner" role="note">
     ⚠️ Écran câblé sur les endpoints réels de <code>BilletterieController</code>. La liste des
@@ -47,6 +53,16 @@ const MSG_BACKEND_CASSE =
       </div>
       @if (compteur) {
         <p class="field-hint" style="margin-top: 8px;">Entrées scannées : {{ compteur['total'] ?? 0 }}</p>
+      }
+      @if (soireeSelectionneeId) {
+        <div class="form__actions" style="margin-top: 8px;">
+          <button type="button" class="btn btn--ghost" [disabled]="exportTicketsEnCours" (click)="exporterTicketsCsv()">
+            {{ exportTicketsEnCours ? 'Export…' : '⬇ Exporter les tickets (CSV)' }}
+          </button>
+        </div>
+        @if (erreurExportTickets) {
+          <div class="field-error" role="alert" style="margin-top: 8px;">⚠️ {{ erreurExportTickets }}</div>
+        }
       }
     </div>
 
@@ -139,6 +155,9 @@ export class BilletsComponent implements OnInit, OnDestroy {
   erreurReservations: string | null = null;
   reservations: Reservation[] = [];
 
+  exportTicketsEnCours = false;
+  erreurExportTickets: string | null = null;
+
   formGratuit = this.fb.nonNullable.group({
     categorieId: ['', Validators.required],
     nbPlaces: [1, [Validators.required, Validators.min(1)]],
@@ -177,6 +196,7 @@ export class BilletsComponent implements OnInit, OnDestroy {
   selectionnerSoiree(id: string): void {
     this.soireeSelectionneeId = id;
     this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
+    this.erreurExportTickets = null;
     this.chargerReservations();
     this.sub.add(
       forkJoin([
@@ -215,6 +235,25 @@ export class BilletsComponent implements OnInit, OnDestroy {
         this.reservations = [reservation, ...this.reservations];
         this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
         this.messageGratuit = `✓ Ticket(s) émis pour ${reservation.nomReservant}.`;
+      })
+    );
+  }
+
+  /**
+   * GET /admin/billetterie/soiree/{id}/export-csv — déclenche le téléchargement du CSV des
+   * tickets de la soirée sélectionnée (blob, pas de rendu JSON).
+   */
+  exporterTicketsCsv(): void {
+    if (!this.soireeSelectionneeId) return;
+    this.exportTicketsEnCours = true;
+    this.erreurExportTickets = null;
+    this.sub.add(
+      this.billetterieSvc.exporterTicketsCsv(this.soireeSelectionneeId).pipe(
+        catchError(err => { this.erreurExportTickets = messageErreur(err, "Échec de l'export CSV des tickets."); return of(null); }),
+        finalize(() => { this.exportTicketsEnCours = false; })
+      ).subscribe(blob => {
+        if (!blob) return;
+        telechargerBlob(blob, `tickets-soiree-${this.soireeSelectionneeId}.csv`);
       })
     );
   }

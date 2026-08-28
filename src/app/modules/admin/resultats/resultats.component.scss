@@ -27,6 +27,25 @@
     letter-spacing: 0.04em;
     color: rgba($nks-text, 0.5);
   }
+
+  // Hover discret sur les lignes de données uniquement (pas l'en-tête) : écran de
+  // travail, on garde la densité — pas d'élévation ni d'animation, juste un repère visuel.
+  tbody tr {
+    transition: background $dur-fast $ease-out;
+    &:hover { background: rgba($nks-text, 0.04); }
+  }
+}
+
+// Rang 1 — cohérence avec le podium public (ranking.component.scss, round 2) : un accent
+// or discret plutôt que le glow ambiant large (celui-ci serait rogné par le scroll
+// horizontal de .table-wrap sur un tableau dense).
+.tbl__row--rang1 {
+  background: rgba($nks-gold, 0.06);
+  box-shadow: inset 3px 0 0 $nks-gold;
+
+  &:hover { background: rgba($nks-gold, 0.1); }
+
+  td:first-child { color: $nks-gold; font-weight: 700; }
 }
 
 .badge-tbl {

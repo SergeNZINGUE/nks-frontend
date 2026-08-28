@@ -144,9 +144,10 @@
   transition: background 0.2s;
 
   &--primary {
-    background: $nks-gold;
+    background: $nks-gradient-gold;
     color: $nks-bg-primary;
-    &:hover:not(:disabled) { background: rgba($nks-gold, 0.85); }
+    transition: filter $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+    &:hover:not(:disabled) { filter: brightness(1.06); box-shadow: $shadow-glow-gold; }
   }
 
   &--ghost {
@@ -203,6 +204,11 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+  }
+
+  tbody tr {
+    transition: background $dur-fast $ease-out;
+    &:hover { background: rgba($nks-text, 0.04); }
   }
 }
 

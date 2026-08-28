@@ -7,16 +7,21 @@ import { Subscription, switchMap, catchError, of, finalize, forkJoin } from 'rxj
 import { AdminService } from '@core/services/admin.service';
 import { SoireeService } from '@core/services/soiree.service';
 import { BilletterieService } from '@core/services/billetterie.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { Edition, Phase, SoireeEvent, CategorieTicket } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-soirees',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, RouterModule, TopbarComponent],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, RouterModule],
   template: `
 <div class="page">
-  <app-topbar title="Soirées & catégories" icon="🎉" backLink="/admin" backLabel="Retour à l'administration" />
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Soirées &amp; catégories</h1>
+      <p class="page-header__subtitle">Créer les soirées de l'édition en cours et gérer leurs catégories de tickets.</p>
+    </div>
+  </div>
 
   <div class="gap-banner" role="note">
     Écran câblé sur les endpoints réels de <code>SoireeController</code> /

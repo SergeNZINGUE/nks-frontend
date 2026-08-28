@@ -284,9 +284,10 @@
   }
 
   &--primary {
-    background: $nks-gold;
+    background: $nks-gradient-gold;
     color: $nks-bg-primary;
-    &:hover:not(:disabled) { background: rgba($nks-gold, 0.85); }
+    transition: filter $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+    &:hover:not(:disabled) { filter: brightness(1.06); box-shadow: $shadow-glow-gold; }
   }
 
   &--ghost {

@@ -56,11 +56,6 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
     }
   </div>
 
-  <div class="gap-banner" role="note">
-    ⚠️ Bouton « Activer » câblé sur <code>PUT /phases/&#123;id&#125;/activer</code> — endpoint pas encore
-    implémenté côté backend (404 attendu tant que non déployé).
-  </div>
-
   @if (isLoading) {
     <div class="skeletons" role="status" aria-label="Chargement des phases">
       @for (i of [1,2,3,4]; track i) {
@@ -512,11 +507,7 @@ export class PhasesComponent implements OnInit, OnDestroy {
     );
   }
 
-  /**
-   * PUT /phases/{id}/activer — cf. AdminService.activerPhase() : endpoint pas encore
-   * implémenté côté backend au 16/08/2026. 404 attendu tant que non déployé ;
-   * message d'erreur volontairement explicite pour ne pas faire croire à un bug frontend.
-   */
+  /** PUT /phases/{id}/activer — cf. AdminService.activerPhase() : transitionne EN_ATTENTE → EN_COURS. */
   activer(p: Phase): void {
     this.erreurAction = null;
     this.activationEnCours = p.id;
@@ -524,7 +515,7 @@ export class PhasesComponent implements OnInit, OnDestroy {
       this.adminSvc.activerPhase(p.id).pipe(catchError(() => of(null))).subscribe(updated => {
         this.activationEnCours = null;
         if (!updated) {
-          this.erreurAction = "Échec de l'activation — endpoint backend pas encore déployé (404 attendu, cf. bannière ci-dessus).";
+          this.erreurAction = "Échec de l'activation de la phase.";
           return;
         }
         const idx = this.phases.findIndex(x => x.id === p.id);

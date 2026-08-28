@@ -86,10 +86,16 @@
 .kpi {
   border-radius: $radius-md;
   padding: $sp-4;
-  border: 1px solid rgba($nks-text, 0.08);
-  background: $nks-bg-surface;
+  border: 1px solid $nks-border;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
   position: relative;
   overflow: hidden;
+  transition: box-shadow $dur-base $ease-out, border-color $dur-base $ease-out;
+
+  &:hover {
+    border-color: rgba($nks-gold, 0.35);
+    box-shadow: $shadow-glow-gold;
+  }
 
   &::before {
     content: '';
