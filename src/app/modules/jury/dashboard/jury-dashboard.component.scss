@@ -51,6 +51,7 @@
   text-align: left;
   line-height: 1.4;
   min-height: 44px;
+  transition: border-color $dur-fast $ease-out, background $dur-fast $ease-out, color $dur-fast $ease-out;
 
   &--active {
     background: rgba($nks-gold, 0.1);
@@ -141,15 +142,19 @@
   background: $nks-bg-surface;
   border: 1px solid rgba($nks-text, 0.08);
   border-radius: $radius-md;
+  box-shadow: $shadow-card;
   cursor: pointer;
   text-align: left;
   font-family: $font-body;
   color: inherit;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color $dur-fast $ease-out, background $dur-fast $ease-out,
+    box-shadow $dur-base $ease-out, transform $dur-fast $ease-out;
 
-  &:hover {
+  &:hover, &:focus-visible {
     border-color: rgba($nks-gold, 0.4);
     background: rgba($nks-gold, 0.04);
+    box-shadow: $shadow-card, $shadow-glow-gold;
+    transform: translateY(-2px);
   }
 
   &--done { opacity: 0.75; }
@@ -165,9 +170,9 @@
     font-family: $font-title;
     font-weight: 700;
     font-size: 14px;
-    background: rgba($nks-gold, 0.12);
-    color: $nks-gold;
-    border: 2px solid rgba($nks-gold, 0.3);
+    background: $nks-gradient-gold;
+    color: $nks-bg-primary;
+    border: 2px solid rgba($nks-gold, 0.5);
 
     &--done {
       background: rgba($nks-success, 0.12);

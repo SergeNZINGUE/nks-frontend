@@ -190,7 +190,7 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
 
         // Construire notesMap : candidatId → NoteJuryBrut[]
         for (const n of notes) {
-          const cid = n.candidat.id;
+          const cid = n.candidatId;
           if (!this.notesMap.has(cid)) this.notesMap.set(cid, []);
           this.notesMap.get(cid)!.push(n);
         }
@@ -211,13 +211,13 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
   }
 
   nomCandidat(c: CandidatBrut): string {
-    if (c.utilisateur) return `${c.utilisateur.prenom} ${c.utilisateur.nom}`;
-    return c.codeCandidat; // fallback si LAZY non chargé
+    if (c.prenom || c.nom) return `${c.prenom} ${c.nom}`.trim();
+    return c.codeCandidat;
   }
 
   initiales(c: CandidatBrut): string {
-    if (c.utilisateur) {
-      return (c.utilisateur.prenom[0] ?? '') + (c.utilisateur.nom[0] ?? '');
+    if (c.prenom || c.nom) {
+      return (c.prenom[0] ?? '') + (c.nom[0] ?? '');
     }
     return c.codeCandidat.slice(-2).toUpperCase();
   }

@@ -183,8 +183,8 @@ export class NotationComponent implements OnInit, OnDestroy {
         // Résoudre les infos du candidat
         const candidat = candidats.find(c => c.id === this.candidatId);
         if (candidat) {
-          const prenom = candidat.utilisateur?.prenom ?? '';
-          const nom    = candidat.utilisateur?.nom    ?? '';
+          const prenom = candidat.prenom ?? '';
+          const nom    = candidat.nom    ?? '';
           this.candidatNom  = prenom || nom ? `${prenom} ${nom}`.trim() : candidat.codeCandidat;
           this.candidatCode = candidat.codeCandidat;
           this.chanson      = candidat.chansonPreselection ?? '';
@@ -201,40 +201,24 @@ export class NotationComponent implements OnInit, OnDestroy {
             .map(c => ({ id: c.id, nom: c.nom, noteMin: c.noteMin, noteMax: c.noteMax, ordre: c.ordre }));
           this.criteresFallback = false;
         } else {
-          // Repli 1 : critères déjà présents dans mes notes existantes (toutes soirées confondues).
-          const critereMap = new Map<string, CritereLocal>();
-          for (const n of notes) {
-            if (!critereMap.has(n.critere.id)) {
-              critereMap.set(n.critere.id, {
-                id:      n.critere.id,
-                nom:     n.critere.nom,
-                noteMin: n.critere.noteMin,
-                noteMax: n.critere.noteMax,
-              });
-            }
-          }
-          if (critereMap.size > 0) {
-            this.criteres = Array.from(critereMap.values())
-              .sort((a, b) => a.noteMax === b.noteMax ? a.nom.localeCompare(b.nom) : b.noteMax - a.noteMax);
-            this.criteresFallback = false;
-          } else {
-            // Repli 2 (dernier recours) : grille officielle du CdC codée en dur.
-            // N'arrive plus en fonctionnement normal depuis l'ajout de GET /jury/criteres —
-            // seulement si l'édition n'a aucun critère configuré en base (oubli admin) ou
-            // si le backend est injoignable.
-            this.criteres = [...CRITERES_CDC];
-            this.criteresFallback = true;
-          }
+          // Repli (dernier recours) : grille officielle du CdC codée en dur.
+          // N'arrive plus en fonctionnement normal depuis l'ajout de GET /jury/criteres —
+          // seulement si l'édition n'a aucun critère configuré en base (oubli admin) ou
+          // si le backend est injoignable. L'ancien repli intermédiaire (reconstruction depuis
+          // les notes existantes) a été retiré : `NoteJuryResponse` ne porte plus les bornes
+          // (noteMin/noteMax) du critère, ce repli ne peut plus fonctionner.
+          this.criteres = [...CRITERES_CDC];
+          this.criteresFallback = true;
         }
 
         // Notes existantes pour CE candidat
-        const notesCeCandidat = notes.filter(n => n.candidat.id === this.candidatId);
+        const notesCeCandidat = notes.filter(n => n.candidatId === this.candidatId);
         this.dejaNote = notesCeCandidat.length > 0;
 
         // Construire le formulaire
         const controls: Record<string, unknown> = {};
         for (const c of this.criteres) {
-          const existing = notesCeCandidat.find(n => n.critere.id === c.id);
+          const existing = notesCeCandidat.find(n => n.critereId === c.id);
           controls[`critere_${c.id}`] = [
             existing?.valeur ?? c.noteMin,
             [Validators.required, Validators.min(c.noteMin), Validators.max(c.noteMax)],

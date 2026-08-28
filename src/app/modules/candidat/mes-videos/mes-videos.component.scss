@@ -27,8 +27,10 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 .video-card {
   display: flex; align-items: center; gap: 12px;
   background: $surface; border: 1px solid $border; border-radius: t.$radius-md;
-  padding: 12px; transition: border-color 0.2s;
-  &:hover { border-color: $gold; }
+  padding: 12px; box-shadow: t.$shadow-card;
+  transition: border-color t.$dur-fast t.$ease-out, box-shadow t.$dur-base t.$ease-out,
+    transform t.$dur-fast t.$ease-out;
+  &:hover { border-color: $gold; box-shadow: t.$shadow-card, t.$shadow-glow-gold; transform: translateY(-2px); }
 }
 
 .video-thumb {
@@ -53,9 +55,13 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   width: 36px; height: 36px; border-radius: 50%; background: rgba($gold, 0.15);
   border: 1px solid $gold; color: $gold; display: flex; align-items: center;
   justify-content: center; text-decoration: none; font-size: 14px; flex-shrink: 0;
+  transition: background t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+  &:hover { background: rgba($gold, 0.22); box-shadow: t.$shadow-glow-gold; }
 
   &--indispo {
     background: rgba($muted, 0.1); border-color: rgba($muted, 0.3); color: $muted; cursor: default;
+    &:hover { background: rgba($muted, 0.1); box-shadow: none; }
   }
 }
 

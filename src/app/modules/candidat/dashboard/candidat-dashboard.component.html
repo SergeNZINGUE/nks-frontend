@@ -112,13 +112,13 @@ Dashboard — Espace Candidat NKS
           @for (s of scores; track s; let i = $index) {
             <div class="scores-table__row">
               <span>Phase {{ i + 1 }}</span>
-              <span>{{ s.pointsVotes }}</span>
+              <span>{{ s.pointsVotesEnLigne }}</span>
               <span>{{ s.pointsJury }}</span>
               <span class="score-total">{{ s.totalPoints }}</span>
-              <span class="badge" [class.badge--success]="s.statut === 'QUALIFIE'"
-                [class.badge--danger]="s.statut === 'ELIMINE'"
-                [class.badge--warning]="s.statut === 'EN_ATTENTE'">
-                {{ s.statut }}
+              <span class="badge" [class.badge--success]="s.statutQualification === 'QUALIFIE'"
+                [class.badge--danger]="s.statutQualification === 'ELIMINE'"
+                [class.badge--warning]="s.statutQualification === 'EN_ATTENTE'">
+                {{ s.statutQualification }}
               </span>
             </div>
           }
