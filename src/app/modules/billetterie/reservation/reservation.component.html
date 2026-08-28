@@ -117,45 +117,32 @@
     </div>
   }
 
-  <!-- ═══ Étape 3 : Paiement MoMo ═══ -->
+  <!-- ═══ Étape 3 : Récapitulatif + paiement ═══ -->
   @if (etape === 'paiement') {
     <div class="step-content">
-      <h2 class="step-title">Paiement Mobile Money</h2>
+      <h2 class="step-title">Confirme ta réservation</h2>
       <div class="montant-recap">
         {{ formInfos.get('nbPlaces')?.value }} place(s) × {{ categorieSelectionnee?.prix | number }} FCFA
         = <strong>{{ montantTotal | number }} FCFA</strong>
       </div>
+      <p class="text-muted" style="text-align:center;">
+        🔒 Paiement sécurisé — LigdiCash. Tu recevras une demande de paiement sur le numéro
+        {{ formInfos.get('telephoneReservant')?.value }}.
+      </p>
       @if (erreur) {
         <div class="toast toast--error">⚠️ {{ erreur }}</div>
       }
-      <form [formGroup]="formPaiement" class="res-form">
-        <div class="form-group">
-          <label>Numéro Mobile Money *</label>
-          <input type="tel" formControlName="telephone" placeholder="+226 70 00 00 00" />
-        </div>
-        <div class="form-group">
-          <label>Opérateur *</label>
-          <div class="radio-group">
-            @for (op of operateurs; track op) {
-              <label class="radio-option">
-                <input type="radio" formControlName="operateur" [value]="op.value" />
-                <span>{{ op.label }}</span>
-              </label>
-            }
-          </div>
-        </div>
-        <button type="button" class="btn btn--primary btn--full"
-          [disabled]="formPaiement.invalid || isSubmitting"
-          (click)="soumettre()">
-          @if (!isSubmitting) {
-            <span>💳 Confirmer et payer {{ montantTotal | number }} FCFA</span>
-          }
-          @if (isSubmitting) {
-            <span>⏳ Traitement en cours…</span>
-          }
-        </button>
-        <button type="button" class="btn btn--ghost btn--full" (click)="etape = 'infos'">← Retour</button>
-      </form>
+      <button type="button" class="btn btn--primary btn--full"
+        [disabled]="isSubmitting"
+        (click)="soumettre()">
+        @if (!isSubmitting) {
+          <span>💳 Confirmer et payer {{ montantTotal | number }} FCFA</span>
+        }
+        @if (isSubmitting) {
+          <span>⏳ Traitement en cours…</span>
+        }
+      </button>
+      <button type="button" class="btn btn--ghost btn--full" (click)="etape = 'infos'">← Retour</button>
     </div>
   }
 
@@ -176,7 +163,7 @@
       </div>
       @if (confirmation.urlPaiement) {
         <a [href]="confirmation.urlPaiement" class="btn btn--primary btn--full btn--lg">
-          Ouvrir la page de paiement ✦
+          Ouvrir la page de paiement <app-star-mark [size]="14" />
         </a>
       }
       <p class="confirmation__hint">

@@ -51,9 +51,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   border: 2px solid rgba($gold,0.3); display: block; margin: 0 auto 10px;
   background: white; /* QR codes needed white background */
 }
-.qr-uuid {
-  font-family: monospace; font-size: 11px; color: $muted;
-  word-break: break-all; display: block;
+.qr-img--loading {
+  background: rgba(255,255,255,0.05);
 }
 
 .pending-notice {

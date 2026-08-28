@@ -19,7 +19,7 @@
         placeholder="Ex : 70000000"
         (keyup.enter)="rechercher()"
         />
-      <button class="btn btn--primary" (click)="rechercher()" [disabled]="isLoading">
+      <button class="btn btn--primary" (click)="rechercher()" [disabled]="isLoading || throttled">
         @if (!isLoading) {
           <span>🔍 Rechercher</span>
         }
@@ -74,12 +74,16 @@
             </div>
             <span class="badge badge--{{ statutClass(r.statut) }}">{{ statutLabel(r.statut) }}</span>
           </div>
-          <!-- QR code (visible si réservation confirmée) -->
+          <!-- QR code (visible si réservation confirmée) — généré localement, le qrUuid
+               brut n'est volontairement plus affiché en texte dans le DOM (IDOR, cf. audit). -->
           @if (r.statut === 'CONFIRMEE' && r.qrUuid) {
             <div class="qr-section">
               <p class="qr-label">Présente ce QR code à l'entrée</p>
-              <img [src]="qrPlaceholderUrl(r.qrUuid)" alt="QR Code ticket" class="qr-img" />
-              <code class="qr-uuid">{{ r.qrUuid }}</code>
+              @if (qrDataUrl(r.qrUuid); as src) {
+                <img [src]="src" alt="QR Code ticket" class="qr-img" />
+              } @else {
+                <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+              }
             </div>
           }
           <!-- Attente confirmation -->

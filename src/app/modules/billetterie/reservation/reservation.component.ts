@@ -9,12 +9,13 @@ import { BilletterieService } from '@core/services/billetterie.service';
 import { CategorieTicket, ReservationResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 
 type Etape = 'categorie' | 'infos' | 'paiement' | 'confirmation';
 
 @Component({
   selector: 'app-reservation',
-  imports: [DecimalPipe, ReactiveFormsModule, RouterModule, TopbarComponent],
+  imports: [DecimalPipe, ReactiveFormsModule, RouterModule, TopbarComponent, StarMarkComponent],
   templateUrl: './reservation.component.html',
   styleUrls: ['./reservation.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -36,12 +37,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
   erreur: string | null = null;
 
   formInfos!: FormGroup;
-  formPaiement!: FormGroup;
-
-  readonly operateurs = [
-    { value: 'ORANGE_MONEY', label: '🟠 Orange Money' },
-    { value: 'MOOV_MONEY',   label: '🔵 Moov Money' },
-  ];
 
   private sub = new Subscription();
 
@@ -51,11 +46,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
       telephoneReservant: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{8,15}$/)]],
       emailReservant:     ['', [Validators.email]],
       nbPlaces:           [1, [Validators.required, Validators.min(1), Validators.max(10)]],
-    });
-
-    this.formPaiement = this.fb.group({
-      telephone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{8,15}$/)]],
-      operateur: ['ORANGE_MONEY', Validators.required],
     });
 
     this.soireeId = this.route.snapshot.paramMap.get('soireeId');
@@ -108,14 +98,11 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   passerAuPaiement(): void {
     if (this.formInfos.invalid) return;
-    // Pré-remplir téléphone paiement avec le téléphone de réservation
-    const tel = this.formInfos.get('telephoneReservant')?.value;
-    if (tel) this.formPaiement.get('telephone')?.setValue(tel);
     this.etape = 'paiement';
   }
 
   soumettre(): void {
-    if (this.formPaiement.invalid || !this.categorieSelectionnee || !this.soireeId) return;
+    if (!this.categorieSelectionnee || !this.soireeId) return;
     this.isSubmitting = true;
     this.erreur = null;
 

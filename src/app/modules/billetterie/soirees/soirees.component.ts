@@ -8,10 +8,11 @@ import { BilletterieService } from '@core/services/billetterie.service';
 import { SoireeEvent } from '@core/models';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
+import { SiteFooterComponent } from '@shared/components/site-footer/site-footer.component';
 
 @Component({
   selector: 'app-soirees',
-  imports: [DatePipe, RouterModule, TopbarComponent, SiteHeaderComponent],
+  imports: [DatePipe, RouterModule, TopbarComponent, SiteHeaderComponent, SiteFooterComponent],
   templateUrl: './soirees.component.html',
   styleUrls: ['./soirees.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
