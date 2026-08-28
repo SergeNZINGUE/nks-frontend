@@ -52,30 +52,45 @@
   @if (!loading && !erreur) {
     <div class="gallery__grid">
       @for (c of candidats; track c) {
-        <a
-          [routerLink]="['/candidat', c.id]"
-          class="gallery-card card"
-          >
-          <div class="avatar gallery-card__avatar">
-            @if (c.photoUrl) {
-              <img [src]="c.photoUrl" [alt]="c.prenom + ' ' + c.nom" />
-            } @else {
-              {{ initiales(c) }}
+        <article class="gallery-card">
+          <a [routerLink]="['/candidat', c.id]" class="gallery-card__poster">
+            <div class="gallery-card__photo">
+              @if (photoValide(c)) {
+                <img [src]="c.photoUrl" [alt]="c.prenom + ' ' + c.nom" (error)="onPhotoErreur(c)" />
+              } @else {
+                <div class="gallery-card__fallback" aria-hidden="true">
+                  <span class="gallery-card__fallback-initiales">{{ initiales(c) }}</span>
+                  <app-star-mark [size]="20" />
+                </div>
+              }
+            </div>
+            <span class="gallery-card__ruban">
+              <span class="gallery-card__code">{{ c.codeCandidat }}</span>
+              <span class="badge badge--actif gallery-card__badge">★ ACTIF</span>
+            </span>
+            @if (rang(c); as r) {
+              <span class="gallery-card__rang">🏆 #{{ r }}</span>
             }
+          </a>
+          <div class="gallery-card__info">
+            <h3 class="gallery-card__name">{{ c.prenom }} {{ c.nom }}</h3>
+            <div class="gallery-card__actions">
+              @if (phaseActiveId) {
+                <button type="button" class="btn btn--primary btn--sm gallery-card__voter" (click)="ouvrirVote(c)">
+                  Voter <app-star-mark [size]="14" />
+                </button>
+              }
+              <a [routerLink]="['/candidat', c.id]" class="btn btn--secondary btn--sm">Voir le profil</a>
+            </div>
           </div>
-          <span class="gallery-card__code text-gold">{{ c.codeCandidat }}</span>
-          <span class="gallery-card__name">{{ c.prenom }} {{ c.nom }}</span>
-          <span class="badge badge--actif gallery-card__badge">★ ACTIF</span>
-          <span class="gallery-card__chanson text-muted">🎵 {{ c.chansonPreselection }}</span>
-          <div class="gallery-card__actions">
-            <a [routerLink]="['/candidat', c.id]" class="btn btn--secondary btn--sm" (click)="$event.stopPropagation()">Voir</a>
-            @if (phaseActiveId) {
-              <a [routerLink]="['/voter', c.id]" class="btn btn--primary btn--sm" (click)="$event.stopPropagation()">✦</a>
-            }
-          </div>
-        </a>
+        </article>
       }
     </div>
+  }
+
+  <!-- MODALE DE VOTE -->
+  @if (candidatVote && phaseActiveId) {
+    <app-vote-modal [candidat]="candidatVote" [phaseId]="phaseActiveId" (closed)="fermerVote()" />
   }
 
   <!-- CHARGER PLUS -->
@@ -87,5 +102,6 @@
     </div>
   }
 
+  <app-site-footer />
   <app-bottom-nav active="galerie" />
 </div>

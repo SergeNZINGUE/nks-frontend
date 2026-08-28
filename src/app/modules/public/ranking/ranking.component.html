@@ -10,9 +10,9 @@
   }
 
   @if (loading) {
-    <div style="padding:16px">
+    <div class="ranking__loading">
       @for (_ of [1,2,3,4,5]; track _) {
-        <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px;"></div>
+        <div class="skeleton ranking__skeleton-item"></div>
       }
     </div>
   }
@@ -21,7 +21,7 @@
     <div class="ranking__list">
       @for (item of classement; track item; let i = $index) {
         <a
-          [routerLink]="['/candidat', item.candidat.id]"
+          [routerLink]="['/candidat', item.candidatId]"
           class="ranking-item card"
           [class.ranking-item--top]="i < 3"
           [class.ranking-item--rang1]="i === 0"
@@ -30,22 +30,22 @@
           >
           <span class="ranking-item__rank">{{ rankIcon(i) }}</span>
           <div class="ranking-item__info">
-            <span class="ranking-item__code text-gold">{{ item.candidat.codeCandidat }}</span>
-            <span class="ranking-item__name">{{ item.candidat.prenom }} {{ item.candidat.nom }}</span>
+            <span class="ranking-item__code text-gold">{{ item.codeCandidat }}</span>
           </div>
           <div class="ranking-item__score">
-            <span class="text-gold" style="font-size:20px;font-weight:800;">{{ item.totalPoints | number:'1.1-1' }}</span>
-            <span class="text-muted" style="font-size:11px;">pts</span>
+            <span class="text-gold ranking-item__score-value">{{ item.totalPointsCumules | number:'1.1-1' }}</span>
+            <span class="text-muted ranking-item__score-unit">pts</span>
           </div>
         </a>
       }
       @if (!classement.length) {
-        <div style="text-align:center;padding:32px;">
+        <div class="ranking__empty">
           <p class="text-muted">Aucun classement disponible pour le moment.</p>
         </div>
       }
     </div>
   }
 
+  <app-site-footer />
   <app-bottom-nav active="classement" />
 </div>

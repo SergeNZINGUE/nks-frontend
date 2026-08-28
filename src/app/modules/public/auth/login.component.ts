@@ -4,10 +4,11 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 import { AuthService } from '@core/services/auth.service';
 import { messageErreur } from '@core/utils/http-error.util';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterModule],
+  imports: [ReactiveFormsModule, RouterModule, StarMarkComponent],
   template: `
     <div class="page login-page">
       <div class="login-glow" aria-hidden="true"></div>
@@ -89,7 +90,7 @@ import { messageErreur } from '@core/utils/http-error.util';
               <span class="login-spinner" aria-hidden="true"></span>
               <span>Connexion…</span>
             } @else {
-              <span>✦ Se connecter</span>
+              <span><app-star-mark [size]="14" /> Se connecter</span>
             }
           </button>
         </form>

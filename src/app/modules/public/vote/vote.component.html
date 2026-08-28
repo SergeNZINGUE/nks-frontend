@@ -32,7 +32,7 @@
           <a
             [href]="success.urlPaiement"
             class="btn btn--primary btn--full btn--lg">
-            Ouvrir la page de paiement ✦
+            Ouvrir la page de paiement <app-star-mark [size]="14" />
           </a>
         }
         <a [routerLink]="['/candidat', candidat?.id]" class="btn btn--secondary btn--full">
@@ -49,7 +49,6 @@
           <div class="vote-candidat__info">
             <span class="vote-candidat__code">{{ candidat.codeCandidat }}</span>
             <span class="vote-candidat__nom">{{ candidat.prenom }} {{ candidat.nom }}</span>
-            <span class="vote-candidat__chanson">🎵 {{ candidat.chansonPreselection }}</span>
           </div>
         </div>
       }
@@ -77,6 +76,20 @@
               </button>
             }
           </div>
+          <!-- NOMBRE PERSONNALISÉ -->
+          <div class="form-field">
+            <label class="form-field__label" for="vote-custom">Ou saisissez un autre nombre de votes</label>
+            <input
+              id="vote-custom"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              class="input-field"
+              formControlName="nbVotes"
+              placeholder="Ex. 15"
+              >
+          </div>
           <!-- TOTAL -->
           <div class="vote-total">
             <span class="vote-total__libelle">Total · {{ form.value.nbVotes }} votes</span>
@@ -100,12 +113,7 @@
             <span class="form-field__hint">Ce numéro sera débité pour le paiement.</span>
           </div>
           <!-- SÉCURITÉ -->
-          <p class="vote-security">
-            🔒 Paiement sécurisé — LigdiCash.
-            <span class="vote-security__detail">
-              L'opérateur (Orange Money, Moov Money) se choisit à l'étape suivante.
-            </span>
-          </p>
+          <p class="vote-security">🔒 Paiement sécurisé — LigdiCash.</p>
           <!-- ERREUR -->
           @if (error) {
             <div class="vote-error" role="alert">{{ error }}</div>
@@ -116,7 +124,11 @@
             class="btn btn--primary btn--full btn--lg"
             [disabled]="form.invalid || submitting"
             >
-            {{ submitting ? '⣾ Traitement…' : '✦ Payer ' + totalFormate + ' ✦' }}
+            @if (submitting) {
+              <span>⣾ Traitement…</span>
+            } @else {
+              <span><app-star-mark [size]="14" /> Payer {{ totalFormate }} <app-star-mark [size]="14" /></span>
+            }
           </button>
         </form>
       }
@@ -124,5 +136,6 @@
 
   </div>
 
+  <app-site-footer />
   <app-bottom-nav active="galerie" />
 </div>

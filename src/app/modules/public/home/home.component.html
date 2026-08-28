@@ -25,6 +25,29 @@
   @if (!loading) {
     <!-- ═══ HERO — deux colonnes en desktop, empilé en mobile ═══ -->
     <section class="hero">
+      <!-- Champ d'étoiles décoratif — purement visuel, sous le contenu, jamais cliquable -->
+      <div class="hero__stars" aria-hidden="true">
+        @for (s of stars; track $index) {
+          <span
+            class="hero__star"
+            [class.hero__star--gold]="s.gold"
+            [style.top.%]="s.top"
+            [style.left.%]="s.left"
+            [style.width.px]="s.size"
+            [style.height.px]="s.size"
+            [style.animation-duration.s]="s.duration"
+            [style.animation-delay.s]="s.delay"
+            [style.--star-opacity]="s.opacity"
+          ></span>
+        }
+        <!-- Étoile filante — traverse le hero toutes les ~13s, traînée dégradée qui
+             s'estompe, tête = logo NKS existant (étoile-micro), animée en
+             transform/opacity uniquement (aucun reflow). -->
+        <div class="hero__shooting-star">
+          <span class="hero__shooting-star-trail"></span>
+          <img src="assets/logos/nks.png" alt="" class="hero__shooting-star-head" />
+        </div>
+      </div>
       <div class="hero__inner">
         <!-- Colonne gauche : accroche -->
         <div class="hero__accroche">
@@ -38,13 +61,9 @@
           <!-- Même logique que le CTA juste en dessous : le message doit correspondre
                à ce qui est réellement possible de faire là, maintenant. -->
           @if (voteActif) {
-            <p class="hero__texte">
-              {{ edition?.description }}
-            </p>
+            <p class="hero__texte" [innerHTML]="edition?.description ?? ''"></p>
           } @else if (inscriptionsOuvertes) {
-            <p class="hero__texte">
-              {{ edition?.description }}
-            </p>
+            <p class="hero__texte" [innerHTML]="edition?.description ?? ''"></p>
           } @else {
             <p class="hero__texte">
               L'édition {{ edition?.annee }} de la grande compétition karaoké de
@@ -60,9 +79,9 @@
                  candidature si la fenêtre d'inscription est ouverte, sinon un
                  simple lien de découverte — jamais un bouton "Voter" mort. -->
             @if (voteActif) {
-              <a routerLink="/galerie" class="btn btn--primary btn--lg">Voter maintenant ✦</a>
+              <a routerLink="/galerie" class="btn btn--primary btn--lg">Voter maintenant <app-star-mark [size]="14" /></a>
             } @else if (inscriptionsOuvertes) {
-              <a routerLink="/inscription" class="btn btn--primary btn--lg">Devenir candidat ✦</a>
+              <a routerLink="/inscription" class="btn btn--primary btn--lg">Devenir candidat <app-star-mark [size]="14" /></a>
             } @else {
               <a routerLink="/galerie" class="btn btn--primary btn--lg">Découvrir les candidats</a>
             }
@@ -103,7 +122,8 @@
         }
       </div>
     </section>
-    <!-- PARTENAIRES -->
+    <!-- ORGANISATEUR + PARTENAIRES — app-partners-strip gère déjà les deux en interne
+         (bandeau défilant, cf. son propre template) : rien à ajouter ici. -->
     <app-partners-strip organisateurLogo="assets/logos/la-terrasse.png"
       organisateurNom="La Terrasse" />
     <!-- PHOTOS DE LA COMPÉTITION — demande client (vocal 15/08/2026) -->
@@ -111,28 +131,45 @@
       <app-competition-gallery [editionId]="edition.id" />
     }
     <div class="home__contenu">
-      <!-- ═══ CANDIDATS POPULAIRES ═══ -->
-      @if (candidats.length) {
+      <!-- ═══ À LA UNE — le mieux classé en avant, le reste en rangée ═══ -->
+      @if (classement.length) {
         <section class="bloc">
           <div class="bloc__entete">
-            <h2 class="bloc__titre">Candidats populaires</h2>
+            <h2 class="bloc__titre">Les visages de la compétition</h2>
             <a routerLink="/galerie" class="bloc__lien">Voir tout →</a>
           </div>
-          <div class="candidats">
-            @for (c of candidats; track c; let i = $index) {
-              <article class="candidat">
-                <a [routerLink]="['/candidat', c.id]" class="candidat__lien">
-                  <div class="avatar candidat__avatar">{{ initiales(c) }}</div>
-                  <h3 class="candidat__nom">{{ c.prenom }} {{ c.nom }}</h3>
-                  <p class="candidat__meta">
-                    <span class="candidat__code">{{ c.codeCandidat }}</span>
-                    <span class="candidat__rang">🏆 Rang #{{ i + 1 }}</span>
-                  </p>
+          <div class="spotlight">
+            @if (classement[0]; as leader) {
+              <article class="spotlight__leader">
+                <a [routerLink]="['/candidat', leader.candidatId]" class="spotlight__leader-lien">
+                  <span class="spotlight__leader-couronne">🏆 En tête</span>
+                  <div class="avatar spotlight__leader-avatar">{{ initialesClassement(leader) }}</div>
+                  <span class="spotlight__leader-code">{{ leader.codeCandidat }}</span>
+                  <h3 class="spotlight__leader-nom">
+                    @if (profilClasse(leader); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ leader.codeCandidat }} }
+                  </h3>
+                  <p class="spotlight__leader-votes"><strong>{{ leader.totalPointsCumules | number:'1.0-0' }}</strong> votes</p>
                 </a>
-                <a [routerLink]="['/voter', c.id]" class="btn btn--primary btn--sm candidat__voter">
-                  Voter ✦
-                </a>
+                @if (voteActif) {
+                  <a [routerLink]="['/voter', leader.candidatId]" class="btn btn--primary btn--sm spotlight__leader-voter">
+                    Voter <app-star-mark [size]="14" />
+                  </a>
+                }
               </article>
+            }
+            @if (classement.length > 1) {
+              <div class="spotlight__rangee">
+                @for (item of classement.slice(1); track item; let i = $index) {
+                  <a [routerLink]="['/candidat', item.candidatId]" class="spotlight__ligne">
+                    <span class="spotlight__ligne-rang">{{ i + 2 }}</span>
+                    <div class="avatar spotlight__ligne-avatar">{{ initialesClassement(item) }}</div>
+                    <span class="spotlight__ligne-nom">
+                      @if (profilClasse(item); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ item.codeCandidat }} }
+                    </span>
+                    <span class="spotlight__ligne-votes">{{ item.totalPointsCumules | number:'1.0-0' }}</span>
+                  </a>
+                }
+              </div>
             }
           </div>
         </section>
@@ -168,19 +205,21 @@
               <h2 class="bloc__titre">Classement live</h2>
               <a routerLink="/classement" class="bloc__lien">Tout voir →</a>
             </div>
-            <ol class="classement">
+            <div class="classement-bars">
               @for (item of classement; track item; let i = $index) {
-                <li class="classement__ligne">
-                  <span class="classement__rang" aria-hidden="true">
+                <a [routerLink]="['/candidat', item.candidatId]" class="classement-bar" [class.classement-bar--top]="i === 0">
+                  <span class="classement-bar__rang" aria-hidden="true">
                     {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1) }}
                   </span>
-                  <span class="classement__nom">
-                    {{ item.candidat.prenom }} {{ item.candidat.nom }}
+                  <span class="classement-bar__nom">{{ item.codeCandidat }}</span>
+                  <span class="classement-bar__piste">
+                    <span class="classement-bar__remplissage"
+                      [style.width.%]="classement[0].totalPointsCumules ? (item.totalPointsCumules / classement[0].totalPointsCumules) * 100 : 0"></span>
                   </span>
-                  <b class="classement__score">{{ item.totalPoints | number:'1.1-1' }}</b>
-                </li>
+                  <b class="classement-bar__score">{{ item.totalPointsCumules | number:'1.0-1' }}</b>
+                </a>
               }
-            </ol>
+            </div>
           </section>
         }
       </div>

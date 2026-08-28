@@ -222,7 +222,7 @@ $bascule: 900px;
     &--done {
       cursor: pointer;
       .stepper__dot {
-        background: $gold;
+        background: t.$nks-gradient-gold;
         border-color: $gold;
         color: $bg;
       }
@@ -252,7 +252,7 @@ $bascule: 900px;
     font-weight: 700;
     background: $bg;
     flex-shrink: 0;
-    transition: all 0.2s;
+    transition: border-color t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out, background t.$dur-fast t.$ease-out, color t.$dur-fast t.$ease-out;
 
     @media (min-width: $bascule) {
       width: 40px;
@@ -291,9 +291,9 @@ $bascule: 900px;
 
   &__fill {
     height: 100%;
-    background: $gold;
+    background: t.$nks-gradient-gold;
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width t.$dur-base t.$ease-out;
   }
 }
 
@@ -673,7 +673,9 @@ $bascule: 900px;
   &__halo {
     position: absolute;
     inset: 0;
-    background: radial-gradient(90% 60% at 50% 30%, rgba(t.$nks-gold, 0.16), transparent 65%);
+    background:
+      radial-gradient(90% 60% at 50% 30%, rgba(t.$nks-gold, 0.18), transparent 65%),
+      radial-gradient(50% 40% at 85% 10%, rgba(#6C4AB6, 0.1), transparent 70%);
     pointer-events: none;
   }
 
@@ -687,10 +689,12 @@ $bascule: 900px;
     gap: t.$sp-5;
     padding: t.$sp-10 t.$sp-6;
     text-align: center;
-    background: $surface;
+    background: t.$nks-glass-bg;
+    backdrop-filter: blur(t.$nks-glass-blur);
+    -webkit-backdrop-filter: blur(t.$nks-glass-blur);
     border: 1px solid rgba(t.$nks-gold, 0.25);
     border-radius: t.$radius-lg;
-    box-shadow: t.$shadow-card;
+    box-shadow: t.$shadow-card, t.$shadow-glow-gold;
   }
 
   &__titre {

@@ -11,7 +11,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
   <div class="success-screen">
     <div class="success-screen__halo" aria-hidden="true"></div>
     <div class="success-screen__carte">
-      <div class="success-icon" aria-hidden="true">✦</div>
+      <div class="success-icon" aria-hidden="true"><app-star-mark [size]="40" /></div>
       <h1 class="success-screen__titre">Candidature soumise</h1>
       <p class="code-candidat">
         <span class="code-candidat__libelle">Votre code candidat est</span>
@@ -19,12 +19,13 @@ administrateur → notification → puis paiement depuis l'espace candidat.
       </p>
       <ol class="suite">
         <li><span class="suite__num">1</span> Le comité d'organisation examinera votre dossier.</li>
-        <li><span class="suite__num">2</span> Vous reçevrez la réponse par SMS/e-mail.</li>
-        <li><span class="suite__num">3</span> Si vous êtes retenu, les frais d'inscription devrons être réglés depuis votre espace personnel pour validar votre candidature.</li>
+        <li><span class="suite__num">2</span> Vous recevrez la réponse par SMS/e-mail.</li>
+        <li><span class="suite__num">3</span> Si vous êtes retenu, les frais d'inscription devrons être réglés depuis votre espace personnel pour valider votre candidature.</li>
       </ol>
       <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
     </div>
   </div>
+  <app-site-footer />
 }
 
 <!-- ── Inscriptions fermées ───────────────────────────────────────── -->
@@ -32,12 +33,13 @@ administrateur → notification → puis paiement depuis l'espace candidat.
   <div class="success-screen">
     <div class="success-screen__halo" aria-hidden="true"></div>
     <div class="success-screen__carte">
-      <div class="success-icon" aria-hidden="true">✦</div>
+      <div class="success-icon" aria-hidden="true"><app-star-mark [size]="40" /></div>
       <h1 class="success-screen__titre">Inscriptions closes</h1>
       <p>La période d'inscription pour cette édition est terminée. Rendez vous à la prochaine édition.</p>
       <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
     </div>
   </div>
+  <app-site-footer />
 }
 
 <!-- ── Formulaire stepper ─────────────────────────────────────────── -->
@@ -315,12 +317,22 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               <div class="mots-counter" [class.mots-counter--limit]="motivationMots > 190">
                 {{ motivationMots }} / 200 mots
               </div>
+              <div
+                class="mots-counter"
+                [class.mots-counter--limit]="motivationCaracteres > 1400">
+                {{ motivationCaracteres }} / 1500 caractères
+              </div>
               @if (hasError(step4, 'motivation', 'required')) {
                 <span class="form-error">Champ requis</span>
               }
               @if (hasError(step4, 'motivation', 'maxMots')) {
                 <span class="form-error">
                   Maximum 200 mots — vous en avez {{ motivationMots }}.
+                </span>
+              }
+              @if (hasError(step4, 'motivation', 'maxCaracteres')) {
+                <span class="form-error">
+                  Maximum 1500 caractères — vous en avez {{ motivationCaracteres }}.
                 </span>
               }
             </div>

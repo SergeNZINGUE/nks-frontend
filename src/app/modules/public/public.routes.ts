@@ -17,4 +17,12 @@ export const publicRoutes: Routes = [
     loadComponent: () =>
       import('./inscription/inscription.component').then(c => c.InscriptionComponent),
   },
+  {
+    // return_url / cancel_url LigdiCash — cf. PaiementRetourComponent. Générique
+    // aux 3 flux payants (inscription/vote/billet) : identifie le paiement via
+    // ?paiementId=, jamais via un contexte candidat/phase supposé.
+    path: 'paiement/retour',
+    loadComponent: () =>
+      import('./paiement-retour/paiement-retour.component').then(c => c.PaiementRetourComponent),
+  },
 ];

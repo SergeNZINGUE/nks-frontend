@@ -8,6 +8,7 @@ import { TopbarComponent } from '../../../shared/components/topbar/topbar.compon
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
+import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
 
 @Component({
     selector: 'app-ranking',
@@ -18,6 +19,7 @@ import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom
     TopbarComponent,
     RouterLink,
     BottomNavComponent,
+    SiteFooterComponent,
     DecimalPipe,
     DatePipe
 ],

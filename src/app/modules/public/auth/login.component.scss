@@ -41,7 +41,7 @@
   text-decoration: none;
   border: 1px solid rgba($nks-text, 0.12);
   background: rgba($nks-bg-surface, 0.6);
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color $dur-fast $ease-out, border-color $dur-fast $ease-out, background $dur-fast $ease-out;
 
   svg { width: 16px; height: 16px; }
 
@@ -73,11 +73,13 @@
   align-items: center;
   gap: $sp-5;
   padding: $sp-8 $sp-6;
-  background: linear-gradient(180deg, rgba($nks-bg-card, 0.95), rgba($nks-bg-surface, 0.95));
+  background: $nks-glass-bg;
+  backdrop-filter: blur($nks-glass-blur);
+  -webkit-backdrop-filter: blur($nks-glass-blur);
   border: 1px solid rgba($nks-gold, 0.22);
   border-radius: $radius-lg;
-  box-shadow: $shadow-card, $shadow-gold;
-  animation: login-rise 0.5s ease both;
+  box-shadow: $shadow-card, $shadow-glow-gold;
+  animation: login-rise $dur-base * 2 $ease-out both;
 }
 
 @keyframes login-rise {
@@ -168,6 +170,12 @@
 
   &__control .input-field {
     padding-left: $sp-10;
+    transition: border-color $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+    &:focus {
+      border-color: $nks-gold;
+      box-shadow: 0 0 0 3px rgba($nks-gold, 0.16);
+    }
   }
 
   &__control:has(.form-field__toggle) .input-field {

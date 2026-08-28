@@ -12,6 +12,8 @@ import { SiteHeaderComponent } from '../../../shared/components/site-header/site
 import { TopbarComponent } from '../../../shared/components/topbar/topbar.component';
 import { DecimalPipe } from '@angular/common';
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
+import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 
 type VoteOption = { nb: number; label: string; prix: string };
 
@@ -25,7 +27,9 @@ type VoteOption = { nb: number; label: string; prix: string };
     RouterLink,
     ReactiveFormsModule,
     BottomNavComponent,
-    DecimalPipe
+    SiteFooterComponent,
+    DecimalPipe,
+    StarMarkComponent
 ],
     changeDetection: ChangeDetectionStrategy.Eager,
 })

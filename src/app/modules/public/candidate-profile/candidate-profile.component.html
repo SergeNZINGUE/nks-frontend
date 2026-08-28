@@ -50,7 +50,7 @@
     @if (phaseActiveId) {
       <div class="profile__vote-cta">
         <a [routerLink]="['/voter', candidat.id]" class="btn btn--primary btn--full btn--lg">
-          ✦ Voter pour {{ candidat.codeCandidat }} ✦
+          <app-star-mark [size]="14" /> Voter pour {{ candidat.codeCandidat }} <app-star-mark [size]="14" />
         </a>
       </div>
     }
@@ -75,8 +75,8 @@
             <div class="phase-history__item card">
               <span class="phase-history__label">{{ phaseLabel(s) }}</span>
               <span class="phase-history__score text-gold">{{ s.totalPoints | number:'1.1-1' }} pts</span>
-              <span class="badge" [class]="'badge--' + (s.statut === 'QUALIFIE' ? 'success' : s.statut === 'ELIMINE' ? 'error' : 'warning')">
-                {{ statutLabel(s.statut) }}
+              <span class="badge" [class]="'badge--' + (s.statutQualification === 'QUALIFIE' ? 'success' : s.statutQualification === 'ELIMINE' ? 'error' : 'warning')">
+                {{ statutLabel(s.statutQualification) }}
               </span>
             </div>
           }
@@ -85,5 +85,6 @@
     }
   }
 
+  <app-site-footer />
   <app-bottom-nav active="galerie" />
 </div>

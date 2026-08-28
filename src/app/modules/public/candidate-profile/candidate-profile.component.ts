@@ -10,6 +10,8 @@ import { SiteHeaderComponent } from '../../../shared/components/site-header/site
 import { TopbarComponent } from '../../../shared/components/topbar/topbar.component';
 import { DecimalPipe } from '@angular/common';
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
+import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 
 @Component({
     selector: 'app-candidate-profile',
@@ -20,7 +22,9 @@ import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom
     TopbarComponent,
     RouterLink,
     BottomNavComponent,
-    DecimalPipe
+    SiteFooterComponent,
+    DecimalPipe,
+    StarMarkComponent
 ],
     changeDetection: ChangeDetectionStrategy.Eager,
 })

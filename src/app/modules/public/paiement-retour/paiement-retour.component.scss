@@ -1,0 +1,53 @@
+@use 'tokens' as *;
+
+.paiement-retour__shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: $sp-8 $sp-4 calc(#{$bottom-nav-height} + #{$sp-8});
+
+  @media (min-width: 900px) {
+    padding: $sp-16 $sp-4;
+  }
+}
+
+.paiement-retour__carte {
+  background: $nks-bg-surface;
+  border: 1px solid $nks-border;
+  border-radius: $radius-lg;
+  padding: $sp-8 $sp-5;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-3;
+
+  h2 { margin: 0; font-family: $font-title; color: $nks-text; }
+  p  { margin: 0; font-size: 14px; }
+
+  .btn { margin-top: $sp-3; }
+
+  &--ok  { border-color: rgba($nks-success, 0.35); }
+  &--err { border-color: rgba($nks-error, 0.35); }
+}
+
+.paiement-retour__icone { font-size: 48px; line-height: 1; }
+
+.paiement-retour__spinner {
+  font-size: 32px;
+  animation: paiement-retour-spin 0.9s linear infinite;
+}
+
+@keyframes paiement-retour-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paiement-retour__spinner { animation: none; }
+}
+
+.paiement-retour__montant {
+  font-family: $font-title;
+  font-size: 28px;
+  font-weight: 800;
+  color: $nks-gold !important;
+}

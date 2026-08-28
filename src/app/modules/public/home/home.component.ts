@@ -13,8 +13,15 @@ import { PartnersStripComponent } from '../../../shared/components/partners-stri
 import { CompetitionGalleryComponent } from '../../../shared/components/competition-gallery/competition-gallery.component';
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
 import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 
 interface Countdown { jours: number; heures: number; minutes: number; secondes: number; }
+
+/** Une étoile décorative du champ scintillant du hero — purement visuel, aucune donnée métier. */
+interface Star {
+  top: number; left: number; size: number; opacity: number;
+  duration: number; delay: number; gold: boolean;
+}
 
 @Component({
     selector: 'app-home',
@@ -29,7 +36,8 @@ interface Countdown { jours: number; heures: number; minutes: number; secondes: 
     SiteFooterComponent,
     UpperCasePipe,
     DecimalPipe,
-    DatePipe
+    DatePipe,
+    StarMarkComponent
 ],
     changeDetection: ChangeDetectionStrategy.Eager,
 })
@@ -57,6 +65,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private subs = new Subscription();
 
+  /**
+   * Champ d'étoiles scintillantes en arrière-plan du hero — décor pur, généré une
+   * seule fois (pas de SSR/hydration sur ce projet, donc Math.random() ici est
+   * sans risque de désynchronisation). Pas de Canvas ni de librairie : chaque
+   * étoile est un <span> positionné en %, animé en CSS pur (voir home.component.scss).
+   */
+  readonly stars: Star[] = this.buildStarField(60);
+
   ngOnInit(): void {
     // courante() (et non enCours()) : en EN_PREPARATION aucune édition n'est
     // EN_COURS, mais l'accueil doit quand même connaître l'édition à venir
@@ -69,7 +85,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       // erreur survient. Sans ce catchError par source, un endpoint en panne
       // viderait toute la page d'accueil au lieu de sa seule section.
       forkJoin({
-        candidats:   this.candidatSvc.galerie(edition.id, 0, 4).pipe(catchError(() => of(null))),
+        // Taille 20 (pas 4) : le spotlight/classement affiché plus bas a besoin de
+        // pouvoir retrouver le profil (prénom/nom) des candidats les mieux classés,
+        // pas seulement des 4 premiers de la pagination galerie.
+        candidats:   this.candidatSvc.galerie(edition.id, 0, 20).pipe(catchError(() => of(null))),
         soirees:     this.soireeSvc.lister(edition.id).pipe(catchError(() => of([] as SoireeEvent[]))),
         classement:  this.classementSvc.global().pipe(catchError(() => of([] as Classement[]))),
         phaseActive: this.editionSvc.phaseActive(edition.id).pipe(catchError(() => of(null))),
@@ -100,6 +119,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   initiales(c: CandidatPublicResponse): string {
     return this.candidatSvc.initiales(c);
+  }
+
+  /**
+   * Profil complet (prénom/nom/photo) d'une entrée de classement, si le candidat
+   * fait partie de la page de galerie chargée en parallèle — sinon `null` : le
+   * template retombe alors sur `codeCandidat` seul plutôt que d'inventer un nom.
+   */
+  profilClasse(item: Classement): CandidatPublicResponse | null {
+    return this.candidats.find(c => c.id === item.candidatId) ?? null;
+  }
+
+  initialesClassement(item: Classement): string {
+    const profil = this.profilClasse(item);
+    return profil ? this.initiales(profil) : item.codeCandidat.slice(-2).toUpperCase();
   }
 
   prochaineSoiree(): SoireeEvent | null {
@@ -204,6 +237,27 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.voteActif = phase !== null;
       this.armerCompteARebours(edition, this.soirees);
       this.appRef.tick();
+    });
+  }
+
+  /**
+   * Génère `count` étoiles réparties aléatoirement sur toute la zone du hero.
+   * Délai d'animation négatif (`-Math.random() * duration`) : chaque étoile
+   * démarre en plein milieu de son cycle plutôt que toutes en phase à 0,
+   * pour un scintillement naturel dès le premier rendu.
+   */
+  private buildStarField(count: number): Star[] {
+    return Array.from({ length: count }, () => {
+      const duration = 3 + Math.random() * 4; // 3s à 7s : scintillement lent, jamais clignotant
+      return {
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: 1 + Math.random() * 2,          // 1 à 3px
+        opacity: 0.15 + Math.random() * 0.35, // base discrète, quelques-unes plus vives via l'animation
+        duration,
+        delay: -Math.random() * duration,
+        gold: Math.random() < 0.22,           // ~1 étoile sur 5 en or, le reste en blanc
+      };
     });
   }
 }

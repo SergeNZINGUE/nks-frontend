@@ -19,6 +19,9 @@ import { CandidatureSubmitRequest } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
+import { SiteFooterComponent } from '@shared/components/site-footer/site-footer.component';
+import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
+import { environment } from '@env/environment';
 
 /** Règles médias — CdC §3.1.1 + arbitrage client (README backend §1) */
 const PHOTO_MAX_OCTETS = 5 * 1024 * 1024;          // 5 Mo
@@ -26,9 +29,30 @@ const VIDEO_MAX_OCTETS = 100 * 1024 * 1024;        // 100 Mo (décision client, 
 const VIDEO_DUREE_MIN_S = 45;
 const VIDEO_DUREE_MAX_S = 60;
 
+/**
+ * Domaine Cloudinary attendu pour toute URL média (photo/vidéo/capture) — cf.
+ * MediaService.uploadPhoto()/uploadVideo() : `cloud.secure_url` provient de Cloudinary,
+ * avec un fallback `https://res.cloudinary.com/upload/...`. Le client contrôlant
+ * entièrement `urlPhoto`/`urlVideo`/`urlCaptureSocial` avant envoi au backend
+ * (POST /candidatures), on rejette côté frontend toute valeur hors de ce domaine
+ * plutôt que de laisser un payload manipulé partir vers l'API (mitigation ;
+ * la validation faisant foi reste côté backend, hors scope ici).
+ */
+const CLOUDINARY_HOST = 'res.cloudinary.com';
+
+function estUrlCloudinaryValide(url: string | undefined | null): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === CLOUDINARY_HOST;
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-inscription',
-  imports: [ReactiveFormsModule, RouterModule, TopbarComponent, SiteHeaderComponent],
+  imports: [ReactiveFormsModule, RouterModule, TopbarComponent, SiteHeaderComponent, SiteFooterComponent, StarMarkComponent],
   templateUrl: './inscription.component.html',
   styleUrls: ['./inscription.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -135,7 +159,10 @@ export class InscriptionComponent implements OnInit, OnDestroy {
 
     this.step4 = this.fb.group({
       chansonPreselection: ['', [Validators.required, Validators.maxLength(150)]],
-      motivation: ['', [Validators.required, this.maxMotsValidator(200)]],
+      motivation: [
+        '',
+        [Validators.required, this.maxMotsValidator(200), this.maxCaracteresValidator(1500)],
+      ],
       // Renseigné par l'upload de la capture, jamais saisi à la main.
       // @NotBlank côté backend (CandidatureSubmitRequest.urlCaptureSocial).
       captureUploaded: [false, Validators.requiredTrue],
@@ -188,10 +215,28 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * Contrainte en caractères, alignée sur le backend (`CandidatureSubmitRequest.motivation`
+   * : @Size(max=1500)). Distincte de `maxMotsValidator` (contrainte UX "~200 mots" du CdC) :
+   * un texte à mots courts/nombreux ou contenant une URL longue peut passer le seuil de mots
+   * tout en dépassant 1500 caractères et être rejeté par le backend — les deux contraintes
+   * sont donc conservées en parallèle.
+   */
+  private maxCaracteresValidator(max: number): ValidatorFn {
+    return (ctrl: AbstractControl): ValidationErrors | null => {
+      const val = (ctrl.value ?? '') as string;
+      return val.length <= max ? null : { maxCaracteres: { max, actuel: val.length } };
+    };
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
   get motivationMots(): number {
     const val = (this.step4.get('motivation')?.value ?? '').trim();
     return val ? val.split(/\s+/).length : 0;
+  }
+
+  get motivationCaracteres(): number {
+    return ((this.step4.get('motivation')?.value ?? '') as string).length;
   }
 
   formForStep(s: number): FormGroup {
@@ -419,6 +464,18 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     if ([this.step1, this.step2, this.step3, this.step4].some(f => f.invalid)) {
       this.erreur = 'Certains champs sont incomplets ou invalides.';
       return;
+    }
+
+    // Le client contrôle entièrement urlPhoto/urlVideo/urlCaptureSocial avant l'envoi :
+    // on refuse de soumettre si l'une d'elles ne pointe pas vers Cloudinary (mitigation
+    // frontend contre un payload manipulé ; en dev, MediaService retombe volontairement
+    // sur des URLs blob: quand Cloudinary n'est pas configuré, cf. media.service.ts).
+    if (environment.production) {
+      const urlsMedias = [this.photoResult.url, this.videoResult.url, this.captureResult.url];
+      if (urlsMedias.some(url => !estUrlCloudinaryValide(url))) {
+        this.erreur = "Fichier invalide, veuillez réessayer l'upload.";
+        return;
+      }
     }
 
     const s1 = this.step1.value;

@@ -1,8 +1,22 @@
 @use 'tokens' as *;
 
+// Teintes médaille argent/bronze — pas de variable équivalente dans les tokens
+// globaux (palette limitée à l'or de marque). Déclarées ici, localement à cet
+// écran, plutôt qu'en hex brut dans le HTML : seul le classement en a l'usage.
+$nks-silver: #C0C0C0;
+$nks-bronze: #CD7F32;
+
 .ranking {
-  &__update { padding: $sp-2 $sp-4; font-size: 12px; }
-  &__list   { padding: $sp-3 $sp-4; display: flex; flex-direction: column; gap: $sp-2; }
+  &__update  { padding: $sp-2 $sp-4; font-size: 12px; }
+  &__list    { padding: $sp-3 $sp-4; display: flex; flex-direction: column; gap: $sp-2; }
+  &__loading { padding: $sp-4; }
+  &__empty   { text-align: center; padding: $sp-8; }
+}
+
+.ranking__skeleton-item {
+  height: 60px;
+  border-radius: $radius-md;
+  margin-bottom: $sp-2;
 }
 
 .ranking-item {
@@ -12,9 +26,12 @@
   padding: $sp-3 $sp-4;
   text-decoration: none;
   border: 1px solid $nks-border;
-  transition: border-color 0.2s;
+  transition: border-color $dur-fast $ease-out, transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
 
-  &:hover { border-color: $nks-gold; }
+  &:hover {
+    border-color: $nks-gold;
+    transform: translateY(-2px);
+  }
 
   // Podium — spec §7.6 : les 3 premiers sont traités à part, chacun avec sa
   // teinte (or / argent / bronze). Le reste du classement reste compact.
@@ -24,24 +41,32 @@
     padding: $sp-4;
   }
 
+  // Rang 1 : glow doré plus marqué que les autres — direction 2026 (round 2).
   &--rang1 {
     border-color: $nks-gold;
     background: rgba($nks-gold, 0.15);
-    box-shadow: $shadow-gold;
+    box-shadow: $shadow-glow-gold;
+
+    &:hover { box-shadow: $shadow-glow-gold, $shadow-gold; }
 
     .ranking-item__name { font-size: 17px; }
   }
 
   // Argent et bronze : teintes neutres, jamais dorées, pour que la 1re place
-  // reste la seule à porter la couleur de marque.
+  // reste la seule à porter la couleur de marque. Juste un peu de profondeur
+  // au survol, cohérente avec la direction 2026.
   &--rang2 {
-    border-color: rgba(#C0C0C0, 0.5);
-    background: rgba(#C0C0C0, 0.08);
+    border-color: rgba($nks-silver, 0.5);
+    background: rgba($nks-silver, 0.08);
+
+    &:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
   }
 
   &--rang3 {
-    border-color: rgba(#CD7F32, 0.5);
-    background: rgba(#CD7F32, 0.1);
+    border-color: rgba($nks-bronze, 0.5);
+    background: rgba($nks-bronze, 0.1);
+
+    &:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
   }
 
   &__rank  { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
@@ -49,6 +74,8 @@
   &__code  { font-size: 11px; font-weight: 700; }
   &__name  { font-size: 15px; font-weight: 600; color: $nks-text; }
   &__score { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+  &__score-value { font-size: 20px; font-weight: 800; }
+  &__score-unit  { font-size: 11px; }
 }
 
 // ── Desktop ─────────────────────────────────────────────────────────────────
