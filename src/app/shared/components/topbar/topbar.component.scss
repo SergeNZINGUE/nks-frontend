@@ -12,7 +12,9 @@
   gap: $sp-3;
   padding: $sp-3 $sp-4;
   min-height: 56px;
-  background: $nks-bg-surface;
+  background: $nks-glass-bg;
+  backdrop-filter: blur($nks-glass-blur);
+  -webkit-backdrop-filter: blur($nks-glass-blur);
   border-bottom: 1px solid $nks-border;
 
   &__title {
@@ -45,7 +47,7 @@
     align-items: center;
     justify-content: center;
     border-radius: $radius-sm;
-    transition: background 0.2s;
+    transition: background $dur-fast $ease-out, color $dur-fast $ease-out;
 
     &:hover { background: rgba($nks-gold, 0.1); }
   }

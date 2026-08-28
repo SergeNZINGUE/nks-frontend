@@ -33,6 +33,10 @@
               "src/styles/global.scss"
             ],
             "scripts": [],
+            "allowedCommonJsDependencies": [
+              "qrcode",
+              "quill-delta"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": [
                 "src/styles"

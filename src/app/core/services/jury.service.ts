@@ -23,45 +23,35 @@ export interface CritereNotationResponse {
   ordre:   number;
 }
 
-/** Représentation d'une NoteJury retournée par le backend (entité JPA sérialisée) */
+/**
+ * Représentation d'une NoteJury retournée par le backend — `NoteJuryResponse` (DTO record) :
+ * plus d'objets imbriqués `critere`/`candidat`/`jury`, tout est aplati en `xxxId`.
+ * ⚠️ `noteMax` du critère n'est plus disponible sur cette réponse, contrairement à avant.
+ */
 export interface NoteJuryBrut {
-  id:        string;
-  valeur:    number;
-  verrouille: boolean;
-  dateSaisie: string;
-  critere: {
-    id:      string;
-    nom:     string;
-    noteMin: number;
-    noteMax: number;
-  };
-  candidat: {
-    id:          string;
-    codeCandidat: string;
-  };
-  /** Jury.prenom/.nom sont des champs propres à l'entité (pas via utilisateur, contrairement à Candidat) */
-  jury?: {
-    id:     string;
-    prenom: string;
-    nom:    string;
-  };
+  id:          string;
+  juryId:      string;
+  candidatId:  string;
+  soireeId:    string;
+  critereId:   string;
+  critereNom:  string;
+  valeur:      number;
+  verrouille:  boolean;
+  dateSaisie:  string;
 }
 
 /**
- * Candidat retourné par GET /jury/candidats?soireeId=
- * Le backend sérialise l'entité Candidat (LAZY) + Utilisateur — peut être partiel
- * si LazyInitializationException (bug backend connu, open-in-view=false)
+ * Candidat retourné par GET /jury/candidats?soireeId= — `CandidatPublicResponse` (DTO record,
+ * même convention que `@core/models`). `prenom`/`nom` sont à plat, plus d'objet `utilisateur` imbriqué.
  */
 export interface CandidatBrut {
   id:                  string;
   codeCandidat:        string;
+  prenom:              string;
+  nom:                 string;
   biographie:          string | null;
   chansonPreselection: string | null;
   statutProfil:        string;
-  utilisateur?: {
-    prenom: string;
-    nom:    string;
-  };
 }
 
 /** Corps de POST /admin/jury (CreerJuryRequest.java — record, tous champs sauf specialite/bioPublique @NotBlank/@NotNull) */
@@ -76,9 +66,8 @@ export interface CreerJuryRequest {
 }
 
 /**
- * Représentation d'un Jury tel que sérialisé brut par AdminController (entité JPA).
- * `utilisateur`/`edition` sont LAZY sans @JsonIgnore → mêmes conditions de crash que
- * Classement/NoteJury (cf. rapport LazyInitializationException 15/08/2026).
+ * Représentation d'un Jury tel que renvoyé par AdminController — `JuryResponse` (DTO record) :
+ * `utilisateur`/`edition` sont aplatis en `utilisateurId`/`editionId`, plus d'objets imbriqués.
  */
 export interface JuryBrut {
   id: string;
@@ -87,8 +76,8 @@ export interface JuryBrut {
   specialite: string | null;
   bioPublique: string | null;
   statut: 'ACTIF' | 'INACTIF';
-  utilisateur?: { id: string; email: string; telephone: string };
-  edition?: { id: string; nom: string };
+  editionId: string;
+  utilisateurId: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -97,11 +86,7 @@ export class JuryService {
 
   private readonly base = environment.apiUrl;
 
-  /**
-   * GET /admin/jury?editionId= — AdminController.jury() — ADMIN/SUPER_ADMIN.
-   * ⚠️ Bug backend confirmé (15/08/2026) : `Jury.utilisateur` LAZY sans @JsonIgnore → 500
-   * dès qu'il y a des jurys en base sur l'édition.
-   */
+  /** GET /admin/jury?editionId= — AdminController.jury() — ADMIN/SUPER_ADMIN. */
   listerAdmin(editionId: string): Observable<JuryBrut[]> {
     return this.http.get<JuryBrut[]>(`${this.base}/admin/jury`, { params: { editionId } });
   }
@@ -116,11 +101,7 @@ export class JuryService {
     return this.http.delete<void>(`${this.base}/admin/jury/${id}`);
   }
 
-  /**
-   * GET /jury/notes/soiree/{soireeId} — JuryController.notesSoiree() — ADMIN/SUPER_ADMIN.
-   * ⚠️ Bug backend confirmé (15/08/2026) : `NoteJury.jury`/`.candidat`/`.soiree`/`.critere`
-   * tous LAZY sans @JsonIgnore → 500 dès qu'il y a des notes en base pour la soirée.
-   */
+  /** GET /jury/notes/soiree/{soireeId} — JuryController.notesSoiree() — ADMIN/SUPER_ADMIN. */
   notesSoireeAdmin(soireeId: string): Observable<NoteJuryBrut[]> {
     return this.http.get<NoteJuryBrut[]>(`${this.base}/jury/notes/soiree/${soireeId}`);
   }
@@ -174,5 +155,15 @@ export class JuryService {
     return this.http.get<NoteJuryBrut[]>(`${this.base}/jury/mes-notes`, {
       params: { soireeId }
     });
+  }
+
+  /**
+   * PUT /soirees/{id}/cloturer-notation — JuryController.cloturerNotation() — ADMIN/SUPER_ADMIN.
+   * Ferme définitivement la fenêtre de notation jury de la soirée (verrouille les notes déjà
+   * saisies). Action irréversible côté métier — confirmation obligatoire côté UI avant appel.
+   * 204 No Content en cas de succès.
+   */
+  cloturerNotationSoiree(soireeId: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/soirees/${soireeId}/cloturer-notation`, {});
   }
 }

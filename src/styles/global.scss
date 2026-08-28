@@ -115,13 +115,13 @@ a { color: $nks-gold; text-decoration: none; &:hover { color: $nks-gold-hover; }
   font-size: 16px;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: box-shadow $dur-fast $ease-out, filter $dur-fast $ease-out, transform $dur-fast $ease-out;
   white-space: nowrap;
 
   &--primary {
-    background-color: $nks-gold;
+    background: $nks-gradient-gold;
     color: #000;
-    &:hover { background-color: $nks-gold-hover; }
+    &:hover:not(:disabled) { filter: brightness(1.06); box-shadow: $shadow-glow-gold; }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 

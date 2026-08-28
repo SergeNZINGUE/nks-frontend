@@ -32,4 +32,14 @@ export class VideoService {
   uploader(req: UploaderVideoRequest): Observable<Video> {
     return this.http.post<Video>(this.base, req);
   }
+
+  /**
+   * PUT /videos/{id}/masquer — VideoController.masquer() — ADMIN/SUPER_ADMIN.
+   * Modération de contenu : passe la vidéo au statut MASQUEE (elle disparaît de la galerie
+   * publique / du dossier candidat) sans suppression ni perte du fichier source.
+   * 204 No Content en cas de succès.
+   */
+  masquer(videoId: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/${videoId}/masquer`, {});
+  }
 }

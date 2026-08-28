@@ -118,4 +118,15 @@ export class BilletterieService {
       soiree: { id: soireeId },
     });
   }
+
+  /**
+   * GET /admin/billetterie/soiree/{id}/export-csv — ADMIN/SUPER_ADMIN —
+   * AdminController.exportTicketsCsv(). Renvoie le CSV brut (Content-Disposition: attachment) :
+   * à consommer en `Blob` (responseType: 'blob') pour déclencher le téléchargement, pas en JSON.
+   */
+  exporterTicketsCsv(soireeId: string): Observable<Blob> {
+    return this.http.get(`${this.base}/admin/billetterie/soiree/${soireeId}/export-csv`, {
+      responseType: 'blob',
+    });
+  }
 }

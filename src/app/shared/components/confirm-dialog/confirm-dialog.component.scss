@@ -12,13 +12,16 @@
 }
 
 .confirm {
-  background: $nks-bg-surface;
+  background: $nks-glass-bg;
+  backdrop-filter: blur($nks-glass-blur);
+  -webkit-backdrop-filter: blur($nks-glass-blur);
   border: 1px solid rgba($nks-gold, 0.3);
   border-radius: $radius-lg;
   padding: $sp-6;
   width: 100%;
   max-width: 420px;
   font-family: $font-body;
+  box-shadow: $shadow-glow-gold, $shadow-card;
 
   h2 {
     color: $nks-gold;
@@ -57,6 +60,7 @@
   font-family: $font-body;
   border: 1px solid transparent;
   min-height: 40px;
+  transition: background $dur-fast $ease-out, border-color $dur-fast $ease-out;
 
   &--ok {
     background: rgba($nks-success, 0.15);

@@ -68,13 +68,7 @@ export class AdminService {
     return this.http.put<Phase>(`${this.api}/phases/${id}/cloturer`, {});
   }
 
-  /**
-   * PUT /phases/{id}/activer — passe la phase de EN_ATTENTE à EN_COURS.
-   * ⚠️ Endpoint NON IMPLÉMENTÉ côté backend au 16/08/2026 (vérifié : `StatutPhase.EN_COURS`
-   * n'apparaît nulle part dans PhaseController.java). Contrat proposé côté backend,
-   * en attente de développement. 404 attendu tant que non déployé — écran câblé en avance
-   * (cf. décision explicite utilisateur : concevoir le frontend avant complétion backend).
-   */
+  /** PUT /phases/{id}/activer — transitionne la phase de EN_ATTENTE à EN_COURS. */
   activerPhase(id: string): Observable<Phase> {
     return this.http.put<Phase>(`${this.api}/phases/${id}/activer`, {});
   }
@@ -134,5 +128,17 @@ export class AdminService {
    */
   envoyerCommunication(req: CommunicationRequest): Observable<Record<string, unknown>> {
     return this.http.post<Record<string, unknown>>(`${this.api}/admin/communication/envoyer`, req);
+  }
+
+  /**
+   * GET /admin/rapports/votes/export-csv?phaseId= — AdminController.exportVotesCsv() —
+   * ADMIN/SUPER_ADMIN. Renvoie le CSV brut (Content-Disposition: attachment) : à consommer en
+   * `Blob` (responseType: 'blob') pour déclencher le téléchargement côté navigateur, pas en JSON.
+   */
+  exportVotesCsv(phaseId: string): Observable<Blob> {
+    return this.http.get(`${this.api}/admin/rapports/votes/export-csv`, {
+      params: { phaseId },
+      responseType: 'blob',
+    });
   }
 }

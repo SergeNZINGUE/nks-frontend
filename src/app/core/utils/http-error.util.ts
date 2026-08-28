@@ -13,10 +13,26 @@ import { HttpErrorResponse } from '@angular/common/http';
  * Sur 4xx (validation métier, ex. "pondérations invalides", "candidat déjà
  * affecté"), le message backend est une information de validation fiable et
  * utile à l'utilisateur : il est affiché tel quel s'il est présent.
+ *
+ * Cas particulier : `GlobalExceptionHandler.handleValidation` renvoie
+ * volontairement un `message` générique ("Requête invalide") accompagné d'un
+ * tableau `details[]` contenant le détail utile par champ (ex. "motivation :
+ * La motivation est limitée à ~200 mots"). Ce tableau est repris ici pour que
+ * l'utilisateur voie l'information exploitable plutôt que le seul message
+ * générique.
  */
 export function messageErreur(err: unknown, repli: string): string {
   if (err instanceof HttpErrorResponse && err.status < 500) {
-    const msg = (err.error as { message?: string } | null | undefined)?.message;
+    const body = err.error as { message?: string; details?: unknown } | null | undefined;
+    const msg = body?.message;
+    const details = Array.isArray(body?.details)
+      ? body.details.filter((d): d is string => typeof d === 'string' && d.trim() !== '')
+      : [];
+
+    if (details.length) {
+      const entete = typeof msg === 'string' && msg.trim() ? msg.trim() : repli;
+      return [entete, ...details].join('\n');
+    }
     if (typeof msg === 'string' && msg.trim()) return msg;
   }
   return repli;

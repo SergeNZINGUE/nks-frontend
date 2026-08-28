@@ -1,0 +1,104 @@
+// Surcharge du thème Quill "snow" (clair par défaut) pour matcher la palette
+// sombre NKS. ViewEncapsulation par défaut (Emulated) ne suffit pas ici : Quill
+// construit sa propre toolbar/éditeur en DOM impératif (hors template Angular),
+// donc on encapsule tout sous une classe racine unique (.nks-rte) plutôt que de
+// désactiver l'encapsulation du composant.
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.nks-rte {
+  border: 1px solid rgba($nks-text, 0.15);
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: $nks-bg-primary;
+  font-family: $font-body;
+
+  &--disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────
+.nks-rte ::ng-deep .ql-toolbar.ql-snow {
+  background: $nks-bg-surface;
+  border: none;
+  border-bottom: 1px solid $nks-border;
+  padding: $sp-2 $sp-3;
+  font-family: $font-body;
+}
+
+.nks-rte ::ng-deep .ql-snow .ql-stroke { stroke: $nks-text-secondary; }
+.nks-rte ::ng-deep .ql-snow .ql-fill,
+.nks-rte ::ng-deep .ql-snow .ql-stroke.ql-fill { fill: $nks-text-secondary; }
+.nks-rte ::ng-deep .ql-snow .ql-picker-label { color: $nks-text-secondary; }
+
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button:hover,
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button.ql-active,
+.nks-rte ::ng-deep .ql-snow .ql-picker-label:hover,
+.nks-rte ::ng-deep .ql-snow .ql-picker-label.ql-active,
+.nks-rte ::ng-deep .ql-snow .ql-picker-item:hover,
+.nks-rte ::ng-deep .ql-snow .ql-picker-item.ql-selected {
+  color: $nks-gold;
+}
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button:hover .ql-stroke,
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.nks-rte ::ng-deep .ql-snow .ql-picker-label:hover .ql-stroke,
+.nks-rte ::ng-deep .ql-snow .ql-picker-label.ql-active .ql-stroke {
+  stroke: $nks-gold;
+}
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button:hover .ql-fill,
+.nks-rte ::ng-deep .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: $nks-gold;
+}
+
+.nks-rte ::ng-deep .ql-snow .ql-picker-options {
+  background: $nks-bg-card;
+  border: 1px solid $nks-border !important;
+  border-radius: $radius-sm;
+}
+.nks-rte ::ng-deep .ql-snow .ql-picker-item { color: $nks-text-secondary; }
+
+// ─── Zone d'édition ──────────────────────────────────────────────────────
+.nks-rte ::ng-deep .ql-container.ql-snow {
+  border: none;
+  font-size: 14px;
+  font-family: $font-body;
+}
+
+.nks-rte ::ng-deep .ql-editor {
+  min-height: 120px;
+  max-height: 320px;
+  overflow-y: auto;
+  color: $nks-text;
+  line-height: 1.5;
+
+  a { color: $nks-gold; }
+  ul, ol { padding-left: $sp-5; }
+  p { margin: 0 0 $sp-2; }
+}
+
+.nks-rte ::ng-deep .ql-editor.ql-blank::before {
+  color: rgba($nks-text-secondary, 0.65);
+  font-style: normal;
+  left: $sp-3;
+}
+
+// ─── Popup lien ──────────────────────────────────────────────────────────
+.nks-rte ::ng-deep .ql-snow .ql-tooltip {
+  background: $nks-bg-card;
+  border: 1px solid $nks-border;
+  color: $nks-text;
+  box-shadow: $shadow-card;
+  border-radius: $radius-sm;
+}
+.nks-rte ::ng-deep .ql-snow .ql-tooltip input[type='text'] {
+  background: $nks-bg-primary;
+  border: 1px solid $nks-border;
+  color: $nks-text;
+}
+.nks-rte ::ng-deep .ql-snow .ql-tooltip a.ql-action,
+.nks-rte ::ng-deep .ql-snow .ql-tooltip a.ql-remove {
+  color: $nks-gold;
+}

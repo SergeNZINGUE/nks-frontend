@@ -12,26 +12,21 @@ export class ClassementService {
 
   /**
    * GET /classement — édition EN_COURS.
-   * ⚠️ BUG BACKEND CONFIRMÉ EN LIVE (15/08/2026) : ClassementController.classementEditionEnCours()
-   * sérialise l'entité JPA Classement brute. `Classement.candidat` (LAZY) déclenche
-   * LazyInitializationException dès qu'il y a des lignes en base (open-in-view=false,
-   * pas de @JsonIgnore sur Candidat.utilisateur/.edition) → 500 systématique.
-   * De plus `Candidat` n'a pas de champ `prenom`/`nom` en propre : ces champs n'existent
-   * QUE via `Candidat.utilisateur`, lui-même LAZY. Même corrigé pour le 500, tant que le
-   * contrat de réponse n'expose pas prenom/nom à plat, `candidat.prenom` restera vide ici.
+   * ClassementController.classementEditionEnCours() renvoie désormais `ClassementResponse`
+   * (DTO record) : plus de `candidat` imbriqué, juste `candidatId`/`codeCandidat`.
    */
   global(): Observable<Classement[]> {
     return this.http.get<Classement[]>(`${this.api}/classement`);
   }
 
-  /** GET /classement/phase/{phaseId} — même bug que global() (ResultatPhase.candidat/.phase LAZY). */
+  /** GET /classement/phase/{phaseId} — renvoie `ResultatPhaseResponse[]` (candidatId/codeCandidat, plus de `candidat` imbriqué). */
   parPhase(phaseId: string): Observable<ResultatPhase[]> {
     return this.http.get<ResultatPhase[]>(`${this.api}/classement/phase/${phaseId}`);
   }
 
   /**
    * POST /phases/{id}/calculer-classement — ADMIN/SUPER_ADMIN — ClassementController.calculer().
-   * Recalcule et renvoie le classement de la phase (même forme/bug que parPhase()).
+   * Recalcule et renvoie le classement de la phase (même forme que parPhase() : `ResultatPhaseResponse[]`).
    */
   calculerPhase(phaseId: string): Observable<ResultatPhase[]> {
     return this.http.post<ResultatPhase[]>(`${this.api}/phases/${phaseId}/calculer-classement`, {});

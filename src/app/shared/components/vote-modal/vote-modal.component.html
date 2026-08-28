@@ -1,0 +1,112 @@
+<app-modal [titre]="success() ? 'Vote enregistré' : 'Voter pour ' + candidat().prenom" (closed)="fermer()">
+
+  <!-- SUCCÈS -->
+  @if (success(); as res) {
+    <div class="vote-modal__success">
+      <div class="vote-modal__success-icon" aria-hidden="true">✅</div>
+      @if (redirectionEnCours()) {
+        <p>Redirection vers le paiement sécurisé LigdiCash…</p>
+      } @else {
+        <p>Vous allez recevoir une demande de paiement sur votre téléphone.</p>
+      }
+      <p class="vote-modal__success-montant">{{ res.montantTotal | number:'1.0-0' }} FCFA</p>
+      @if (res.urlPaiement) {
+        <a [href]="res.urlPaiement" class="btn btn--primary btn--full btn--lg">
+          Ouvrir la page de paiement <app-star-mark [size]="14" />
+        </a>
+      }
+      <button type="button" class="btn btn--secondary btn--full" (click)="fermer()">Fermer</button>
+    </div>
+  }
+
+  @if (!success()) {
+    <!-- MINI CANDIDAT -->
+    <div class="vote-modal__candidat">
+      <div class="avatar vote-modal__avatar">
+        @if (candidat().photoUrl && !photoErreur()) {
+          <img [src]="candidat().photoUrl" [alt]="candidat().prenom + ' ' + candidat().nom" (error)="onPhotoErreur()" />
+        } @else {
+          {{ initiales() }}
+        }
+      </div>
+      <div class="vote-modal__candidat-info">
+        <span class="vote-modal__candidat-code">{{ candidat().codeCandidat }}</span>
+        <span class="vote-modal__candidat-nom">{{ candidat().prenom }} {{ candidat().nom }}</span>
+      </div>
+    </div>
+
+    <!-- FORMULAIRE -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="vote-modal__form">
+      <p class="vote-modal__label">Combien de votes ?</p>
+      <div class="vote-options">
+        @for (opt of voteOptions; track opt) {
+          <button
+            type="button"
+            class="vote-option"
+            [class.vote-option--active]="form.value.nbVotes === opt.nb"
+            [attr.aria-pressed]="form.value.nbVotes === opt.nb"
+            (click)="selectOption(opt.nb)"
+            >
+            <span class="vote-option__nb">{{ opt.label }}</span>
+            <span class="vote-option__prix">{{ opt.prix }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="form-field vote-custom">
+        <label class="form-field__label" for="vote-modal-custom">Ou saisissez un autre nombre de votes</label>
+        <input
+          id="vote-modal-custom"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          class="input-field"
+          formControlName="nbVotes"
+          placeholder="Ex. 15"
+          >
+      </div>
+
+      <div class="vote-total">
+        <span class="vote-total__libelle">Total · {{ form.value.nbVotes }} votes</span>
+        <span class="vote-total__montant">{{ totalFormate }}</span>
+      </div>
+
+      <div class="form-field">
+        <label class="form-field__label" for="vote-modal-tel">Numéro de téléphone</label>
+        <div class="vote-tel">
+          <span class="vote-tel__indicatif" aria-hidden="true">+226</span>
+          <input
+            id="vote-modal-tel"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            class="input-field vote-tel__champ"
+            formControlName="telephone"
+            placeholder="06 00 00 00"
+            >
+        </div>
+        <span class="form-field__hint">Ce numéro sera débité pour le paiement.</span>
+      </div>
+
+      <p class="vote-modal__securite">🔒 Paiement sécurisé — LigdiCash.</p>
+
+      @if (error()) {
+        <div class="vote-modal__erreur" role="alert">{{ error() }}</div>
+      }
+
+      <button
+        type="submit"
+        class="btn btn--primary btn--full btn--lg"
+        [disabled]="form.invalid || submitting()"
+        >
+        @if (submitting()) {
+          <span>⣾ Traitement…</span>
+        } @else {
+          <span><app-star-mark [size]="14" /> Payer {{ totalFormate }} <app-star-mark [size]="14" /></span>
+        }
+      </button>
+    </form>
+  }
+
+</app-modal>

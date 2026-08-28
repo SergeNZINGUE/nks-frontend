@@ -1,0 +1,23 @@
+<div class="modal-bg" (click)="onBackdropClick()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="titre() ? null : ariaLabel()"
+    [attr.aria-labelledby]="titre() ? 'modal-titre' : null"
+    tabindex="-1"
+    #panel
+    (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      @if (titre()) {
+        <h2 id="modal-titre" class="modal__titre">{{ titre() }}</h2>
+      }
+      <button type="button" class="modal__fermer" (click)="closed.emit()" aria-label="Fermer">
+        <span aria-hidden="true">✕</span>
+      </button>
+    </div>
+    <div class="modal__corps">
+      <ng-content />
+    </div>
+  </div>
+</div>

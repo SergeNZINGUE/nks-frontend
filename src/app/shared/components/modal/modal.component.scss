@@ -1,0 +1,69 @@
+@use 'tokens' as *;
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.modal {
+  background: $nks-glass-bg;
+  backdrop-filter: blur($nks-glass-blur);
+  -webkit-backdrop-filter: blur($nks-glass-blur);
+  border: 1px solid rgba($nks-gold, 0.3);
+  border-radius: $radius-lg;
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - #{$sp-8});
+  overflow-y: auto;
+  font-family: $font-body;
+  box-shadow: $shadow-glow-gold, $shadow-card;
+
+  &:focus { outline: none; }
+
+  &__header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $sp-3;
+    padding: $sp-5 $sp-5 0;
+    background: inherit;
+  }
+
+  &__titre {
+    color: $nks-gold;
+    font-family: $font-title;
+    font-size: 18px;
+    margin: 0;
+  }
+
+  &__fermer {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-full;
+    border: 1px solid rgba($nks-text, 0.2);
+    background: transparent;
+    color: $nks-text;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background $dur-fast $ease-out, border-color $dur-fast $ease-out;
+
+    &:hover { background: rgba($nks-text, 0.1); border-color: $nks-gold; }
+  }
+
+  &__corps {
+    padding: $sp-4 $sp-5 $sp-5;
+  }
+}

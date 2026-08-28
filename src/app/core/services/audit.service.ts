@@ -5,20 +5,17 @@ import { environment } from '@env/environment';
 import { Page } from '@core/models';
 
 /**
- * AuditLog tel que sérialisé brut par AdminController (entité JPA, journal append-only —
- * REVOKE DELETE/UPDATE en base, cf. V1__init_schema.sql). `utilisateur` est LAZY sans
- * @JsonIgnore → même bug que Classement/Jury/Paiements (cf. rapport 15/08/2026).
+ * AuditLog tel que renvoyé par AdminController (journal append-only — REVOKE DELETE/UPDATE
+ * en base, cf. V1__init_schema.sql). Le contrôleur sérialise désormais `AuditLogResponse`
+ * (DTO record) : `utilisateur` est aplati en `utilisateurId`, pas d'objet imbriqué.
  */
 export interface AuditLogBrut {
   id: number;
-  utilisateur?: { id: string; email: string } | null;
+  utilisateurId: string | null;
   action: string;
   entiteConcernee: string;
   entiteId: string | null;
-  donneesAvant: string | null;
-  donneesApres: string | null;
   ipSource: string | null;
-  userAgent: string | null;
   timestamp: string;
 }
 
@@ -28,10 +25,7 @@ export class AuditService {
 
   private readonly base = environment.apiUrl;
 
-  /**
-   * GET /admin/audit-logs (Pageable) — ADMIN/SUPER_ADMIN — AdminController.auditLogs().
-   * ⚠️ Bug backend confirmé (15/08/2026) : 500 dès qu'il y a des lignes d'audit en base.
-   */
+  /** GET /admin/audit-logs (Pageable) — ADMIN/SUPER_ADMIN — AdminController.auditLogs(). */
   lister(page = 0, size = 25): Observable<Page<AuditLogBrut>> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<Page<AuditLogBrut>>(`${this.base}/admin/audit-logs`, { params });

@@ -20,6 +20,12 @@
     nonce disponible côté client statique. Cette balise <meta> ne couvre PAS toutes les
     directives (ex. frame-ancestors est ignoré hors en-tête HTTP) : à terme, dupliquer
     cette policy en en-tête HTTP au niveau de l'hébergement/reverse proxy.
+
+    NOTE SÉCURITÉ (audit) : `http://localhost:8082` dans `connect-src` ci-dessous n'est
+    utile qu'en développement local (backend Spring Boot local). Ce projet ne dispose
+    d'aucun mécanisme de remplacement de cet index.html entre dev et prod (pas de
+    fileReplacements Angular sur ce fichier) : il DOIT être retiré manuellement de cette
+    ligne avant tout déploiement en production.
   -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';

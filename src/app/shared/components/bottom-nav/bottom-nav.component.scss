@@ -22,15 +22,27 @@
     gap: 3px;
     text-decoration: none;
     color: $nks-text-secondary;
-    transition: color 0.2s;
+    transition: color $dur-fast $ease-out;
 
-    &--active {
-      color: $nks-gold;
-    }
+    &--active { color: $nks-gold; }
   }
 
   &__icon  { font-size: 20px; line-height: 1; }
-  &__label { font-size: 10px; font-weight: 600; }
+  &__label {
+    font-size: 10px;
+    font-weight: 600;
+    transition: color $dur-fast $ease-out;
+  }
+
+  // Le glyphe emoji (couleur native, non recolorable en CSS) reste plein or ;
+  // seul le libellé texte porte le dégradé — cohérent avec le principe "dégradé
+  // au lieu d'aplat sur les éléments d'accent actifs".
+  &__item--active &__label {
+    background: $nks-gradient-gold;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
   // Au-delà de 900 px la navigation passe dans l'en-tête horizontal
   // (app-site-header) : le prototype desktop n'a pas de barre du bas.

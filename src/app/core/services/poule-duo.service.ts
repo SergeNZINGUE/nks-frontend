@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { PouleResponse, AffectationPouleResponse, DuoResponse } from '@core/models';
+import { PouleResponse, AffectationPouleResponse, DuoResponse, ResultatPhase } from '@core/models';
 
 /**
  * Client HTTP pour bf.laterrasse.nks.controller.PouleDuoController (§13.10, §13.9 — US-25/26/27).
@@ -55,5 +55,18 @@ export class PouleDuoService {
   /** GET /duos/phase/{phaseId} — endpoint public (cf. SecurityConfig `/duos/phase/**`), pas besoin d'un rôle admin. */
   duosPhase(phaseId: string): Observable<DuoResponse[]> {
     return this.http.get<DuoResponse[]>(`${this.api}/duos/phase/${phaseId}`);
+  }
+
+  /**
+   * POST /candidats/{id}/repechage?phaseId= — PouleDuoController.repecher() — ADMIN/SUPER_ADMIN.
+   * Repêchage manuel d'un candidat éliminé (CdC §3.4 : "avec validation de motif"). Le backend
+   * exige un `motif` NotBlank d'au moins 50 caractères (RepechageRequest.java, RM-43) : ce n'est
+   * pas une validation front cosmétique, une requête plus courte est rejetée en 400.
+   * Passe ResultatPhase.statutQualification à REPECHAGE et notifie le candidat (SMS + e-mail).
+   */
+  repecher(candidatId: string, phaseId: string, motif: string): Observable<ResultatPhase> {
+    return this.http.post<ResultatPhase>(`${this.api}/candidats/${candidatId}/repechage`, { motif }, {
+      params: { phaseId },
+    });
   }
 }

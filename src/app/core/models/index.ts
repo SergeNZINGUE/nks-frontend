@@ -212,22 +212,23 @@ export interface SoireeEvent {
 
 export interface Classement {
   id: string;
-  candidat: CandidatPublicResponse;
+  candidatId: string;
+  codeCandidat: string;
   rangGlobal: number;
-  totalPoints: number;
+  totalPointsCumules: number;
   officiel: boolean;
 }
 
 export interface ResultatPhase {
   id: string;
-  /** Manquait dans ce modèle alors que ResultatPhase.candidat existe bien côté backend (LAZY) — corrigé le 16/08/2026, erreur de build ng serve NG... TS2339 sinon. */
-  candidat: CandidatPublicResponse;
+  candidatId: string;
+  codeCandidat: string;
   rang: number;
-  pointsVotes: number;
+  pointsVotesEnLigne: number;
   pointsJury: number;
-  pointsPublic: number;
+  pointsPublicSurPlace: number;
   totalPoints: number;
-  statut: StatutQualification;
+  statutQualification: StatutQualification;
 }
 
 /**
