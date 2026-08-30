@@ -7,11 +7,10 @@ import { VideoService } from '@core/services/video.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { EditionService } from '@core/services/edition.service';
 import { Video, StatutVideo } from '@core/models';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 @Component({
   selector: 'app-mes-videos',
-  imports: [DatePipe, RouterModule, TopbarComponent],
+  imports: [DatePipe, RouterModule],
   templateUrl: './mes-videos.component.html',
   styleUrls: ['./mes-videos.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,

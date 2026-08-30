@@ -14,18 +14,8 @@ $gold:    t.$nks-gold;
   padding-bottom: 80px;
 }
 
-// ── Topbar ─────────────────────────────────────────────────────────────────
-.topbar {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid $border;
-  gap: 12px;
-
-  &__back   { color: $gold; font-size: 20px; text-decoration: none; }
-  &__title  { flex: 1; font-family: t.$font-title; color: $gold; font-size: 16px; }
-  &__logout { background: none; border: none; color: $muted; font-size: 13px; cursor: pointer; padding: 6px; }
-}
+.page-header { padding: 20px 16px 4px; }
+.page-header__title { font-family: t.$font-title; font-size: 22px; color: $text; margin: 0; }
 
 // ── Skeleton ───────────────────────────────────────────────────────────────
 .skeleton-wrapper { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
@@ -97,7 +87,7 @@ $gold:    t.$nks-gold;
   flex-direction: column;
   gap: 6px;
 
-  h1 { font-size: 18px; font-weight: 700; color: $text; margin: 0; }
+  h2 { font-size: 18px; font-weight: 700; color: $text; margin: 0; }
 }
 
 .code-badge {
@@ -137,47 +127,6 @@ $gold:    t.$nks-gold;
     color: inherit;
     font-weight: 600;
     text-decoration: none;
-  }
-}
-
-// ── Nav grid ───────────────────────────────────────────────────────────────
-.nav-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 16px;
-}
-
-.nav-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px 16px;
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: t.$radius-lg;
-  text-decoration: none;
-  transition: border-color t.$dur-fast t.$ease-out, background t.$dur-fast t.$ease-out,
-    box-shadow t.$dur-base t.$ease-out, transform t.$dur-fast t.$ease-out;
-  position: relative;
-
-  &:hover, &:focus-visible {
-    border-color: $gold;
-    background: rgba($gold, 0.05);
-    box-shadow: t.$shadow-glow-gold;
-    transform: translateY(-2px);
-  }
-
-  &:active { transform: translateY(0); }
-
-  &__icon  { font-size: 28px; }
-  &__label { font-size: 13px; font-weight: 600; color: $text; }
-  &__arrow {
-    position: absolute;
-    top: 12px;
-    right: 14px;
-    color: $muted;
-    font-size: 18px;
   }
 }
 
@@ -221,10 +170,13 @@ $gold:    t.$nks-gold;
 
   &__header, &__row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 2fr;
     padding: 10px 14px;
     gap: 8px;
     align-items: center;
+    font-size: 12px;
+
+    @media (min-width: 480px) { font-size: 13px; }
   }
 
   &__header {
@@ -281,6 +233,9 @@ $gold:    t.$nks-gold;
   &--success { background: rgba(t.$nks-success, 0.15); color: t.$nks-success; }
   &--warning { background: rgba(t.$nks-warning, 0.15); color: t.$nks-warning; }
   &--danger  { background: rgba(t.$nks-error, 0.15); color: t.$nks-error; }
+  // Repêchage : bonne nouvelle pour le candidat, jamais un statut d'alerte —
+  // ni le vert QUALIFIE (prêterait à confusion) ni le rouge/orange des deux autres.
+  &--info    { background: rgba(t.$nks-info, 0.15); color: t.$nks-info; }
   &--default { background: rgba(255, 255, 255, 0.08); color: $muted; }
 }
 
@@ -297,7 +252,22 @@ $gold:    t.$nks-gold;
 }
 
 // ── Desktop ────────────────────────────────────────────────────────────────
-@media (min-width: 640px) {
-  .nav-grid { grid-template-columns: repeat(4, 1fr); }
-  .scores-section, .info-section, .logout-section { max-width: 640px; margin: 0 auto; }
+// $bascule (900px) : même seuil que le reste du site public. La sidebar/coquille
+// (candidat-shell.component) gère déjà la largeur de page ; ce plafond garde en
+// plus une largeur de lecture confortable pour le contenu à l'intérieur.
+@media (min-width: 900px) {
+  .page-header,
+  .profil-banner,
+  .alert,
+  .scores-section,
+  .info-section {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .alert { margin-block: 12px; }
+
+  // La sidebar (candidat-shell) a déjà son propre bouton de déconnexion sur desktop —
+  // celui-ci ne reste utile que sur mobile, où la sidebar n'existe pas.
+  .logout-section { display: none; }
 }

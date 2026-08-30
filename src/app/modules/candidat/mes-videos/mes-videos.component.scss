@@ -4,11 +4,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .videos-page { min-height: 100dvh; background: $bg; padding-bottom: 40px; }
 
-.topbar {
-  display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid $border;
-  &__back  { color: $gold; font-size: 20px; text-decoration: none; }
-  &__title { font-family: t.$font-title; color: $gold; font-size: 16px; }
-}
+.page-header { padding: 20px 16px 4px; }
+.page-header__title { font-family: t.$font-title; font-size: 22px; color: $text; margin: 0; }
 
 .skeleton-wrapper { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .skeleton {
@@ -73,6 +70,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   &--default { background: rgba(255,255,255,0.08); color: $muted; }
 }
 
-@media (min-width: 640px) {
-  .videos-list { max-width: 640px; margin: 0 auto; }
+// $bascule (900px) : même seuil que le reste du site public et que les autres pages du panel candidat.
+@media (min-width: 900px) {
+  .page-header, .videos-list, .empty-state { max-width: 720px; margin-inline: auto; }
 }

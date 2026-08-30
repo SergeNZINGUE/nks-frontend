@@ -7,7 +7,6 @@ import { Subscription, catchError, of } from 'rxjs';
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatureDetailResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 /**
  * Paiement des frais d'inscription — CdC §3.1.2 :
@@ -31,7 +30,7 @@ import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 const MONTANT_INSCRIPTION_FCFA = 15_000;
 @Component({
   selector: 'app-mes-paiements',
-  imports: [RouterModule, ReactiveFormsModule, TopbarComponent],
+  imports: [RouterModule, ReactiveFormsModule],
   templateUrl: './mes-paiements.component.html',
   styleUrls: ['./mes-paiements.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,

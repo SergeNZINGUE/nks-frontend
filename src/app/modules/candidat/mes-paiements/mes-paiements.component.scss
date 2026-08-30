@@ -4,6 +4,9 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .paiements-page { min-height: 100dvh; background: $bg; padding-bottom: 40px; }
 
+.page-header { padding: 20px 16px 4px; }
+.page-header__title { font-family: t.$font-title; font-size: 22px; color: $text; margin: 0; }
+
 .skeleton-wrapper { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .skeleton {
   height: 88px; background: linear-gradient(90deg, $surface 25%, t.$nks-bg-card 50%, $surface 75%);
@@ -105,12 +108,12 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 .gap-notice {
   margin: 16px 16px 0; padding: 10px 14px; border-radius: t.$radius-md; font-size: 12px;
   background: rgba(t.$nks-info, 0.08); border: 1px solid rgba(t.$nks-info, 0.25); color: t.$nks-info;
-  code { font-family: monospace; background: rgba(255,255,255,0.07); padding: 1px 5px; border-radius: 3px; }
 }
 
-@media (min-width: 640px) {
-  .info-section, .paiement-section, .paiement-form, .alert, .gap-notice {
-    max-width: 640px; margin-left: auto; margin-right: auto;
+// $bascule (900px) : même seuil que le reste du site public et que les autres pages du panel candidat.
+@media (min-width: 900px) {
+  .page-header, .info-section, .paiement-section, .paiement-form, .alert, .gap-notice, .empty-state {
+    max-width: 720px; margin-inline: auto;
   }
   .alert, .gap-notice { margin-top: 0; }
 }

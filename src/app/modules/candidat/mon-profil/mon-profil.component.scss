@@ -4,11 +4,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .profil-page { min-height: 100dvh; background: $bg; padding-bottom: 40px; }
 
-.topbar {
-  display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid $border;
-  &__back  { color: $gold; font-size: 20px; text-decoration: none; }
-  &__title { font-family: t.$font-title; color: $gold; font-size: 16px; }
-}
+.page-header { padding: 20px 16px 4px; }
+.page-header__title { font-family: t.$font-title; font-size: 22px; color: $text; margin: 0; }
 
 .skeleton-wrapper { padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
 .skeleton {
@@ -99,6 +96,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-@media (min-width: 640px) {
-  .content { max-width: 560px; margin: 0 auto; }
+// $bascule (900px) : même seuil que le reste du site public et que le dashboard candidat.
+@media (min-width: 900px) {
+  .page-header, .content { max-width: 720px; margin-inline: auto; }
 }

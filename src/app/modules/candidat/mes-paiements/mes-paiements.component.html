@@ -1,6 +1,6 @@
 <div class="paiements-page">
 
-  <app-topbar title="Paiements" icon="💳" backLink="/mon-espace" backLabel="Retour à mon espace" />
+  <div class="page-header"><h1 class="page-header__title">Paiements</h1></div>
 
   <!-- Chargement -->
   @if (isLoading) {
@@ -111,10 +111,8 @@
     }
     <!-- Limitation connue -->
     <div class="gap-notice">
-      🔧 <strong>Historique des transactions indisponible</strong> — le backend ne
-      propose pas d'endpoint permettant à un candidat de lister ses propres paiements
-      (<code>GET /paiements</code> est réservé aux administrateurs). Chaque transaction
-      fait l'objet d'une confirmation par SMS et e-mail.
+      ℹ️ L'historique détaillé de tes paiements n'est pas encore disponible ici.
+      Tu reçois une confirmation par SMS et par e-mail à chaque transaction.
     </div>
   }
 

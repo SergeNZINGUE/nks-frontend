@@ -7,17 +7,25 @@ import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { EditionService } from '@core/services/edition.service';
 import { AuthService } from '@core/services/auth.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import {
   CandidatureDetailResponse,
   CandidatPublicResponse,
+  NomPhase,
   ResultatPhase,
   StatutCandidature,
 } from '@core/models';
 
+/** Même dictionnaire que resultats.component.ts (admin) — garder les deux alignés si une phase est renommée. */
+const LABEL_PHASE: Record<string, string> = {
+  PRESELECTION:  'Présélection',
+  ELIMINATOIRES: 'Éliminatoires',
+  DEMI_FINALE:   'Demi-finale',
+  FINALE:        'Finale',
+};
+
 @Component({
   selector: 'app-candidat-dashboard',
-  imports: [DatePipe, RouterModule, TopbarComponent],
+  imports: [DatePipe, RouterModule],
   templateUrl: './candidat-dashboard.component.html',
   styleUrls: ['./candidat-dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -110,6 +118,10 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   get meilleurRang(): number | null {
     if (!this.scores.length) return null;
     return Math.min(...this.scores.map(s => s.rang));
+  }
+
+  labelPhase(n: NomPhase | string): string {
+    return LABEL_PHASE[n] ?? n;
   }
 
   deconnecter(): void {

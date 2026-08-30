@@ -4,17 +4,11 @@ Dashboard — Espace Candidat NKS
 
 <div class="dashboard-page">
 
-  <!-- Topbar -->
-  <app-topbar title="Mon espace" backLink="/" backLabel="Retour à l'accueil"
-    [logout]="true" (logoutClick)="deconnecter()" />
-
   <!-- ── Loading ──────────────────────────────────────────────── -->
   @if (isLoading) {
     <div class="skeleton-wrapper">
       <div class="skeleton skeleton--banner"></div>
       <div class="skeleton-grid">
-        <div class="skeleton skeleton--card"></div>
-        <div class="skeleton skeleton--card"></div>
         <div class="skeleton skeleton--card"></div>
         <div class="skeleton skeleton--card"></div>
       </div>
@@ -23,6 +17,7 @@ Dashboard — Espace Candidat NKS
 
   <!-- ── Erreur (backend off) ─────────────────────────────────── -->
   @if (!isLoading && !candidature) {
+    <div class="page-header"><h1 class="page-header__title">Mon espace</h1></div>
     <div class="empty-state">
       <p class="empty-icon">🔌</p>
       <p>Impossible de charger ta candidature.</p>
@@ -33,6 +28,8 @@ Dashboard — Espace Candidat NKS
 
   <!-- ── Contenu principal ─────────────────────────────────────── -->
   @if (!isLoading && candidature) {
+    <div class="page-header"><h1 class="page-header__title">Bonjour, {{ candidature.prenom }}</h1></div>
+
     <!-- Bannière profil -->
     <div class="profil-banner" [class.banner--alerte]="candidature.statut === 'EN_ATTENTE_PAIEMENT'">
       <div class="avatar">
@@ -44,7 +41,7 @@ Dashboard — Espace Candidat NKS
         }
       </div>
       <div class="profil-info">
-        <h1>{{ candidature.prenom }} {{ candidature.nom }}</h1>
+        <h2>{{ candidature.prenom }} {{ candidature.nom }}</h2>
         <span class="code-badge">{{ candidature.codeCandidat }}</span>
         <span class="badge badge--{{ statutClass }}">{{ statutLabel }}</span>
       </div>
@@ -62,29 +59,6 @@ Dashboard — Espace Candidat NKS
         ❌ Candidature rejetée — <em>{{ candidature.motifRejet ?? 'aucun motif précisé' }}</em>
       </div>
     }
-    <!-- Grille de navigation -->
-    <nav class="nav-grid">
-      <a routerLink="/mon-espace/profil" class="nav-card">
-        <span class="nav-card__icon">👤</span>
-        <span class="nav-card__label">Mon profil</span>
-        <span class="nav-card__arrow">›</span>
-      </a>
-      <a routerLink="/mon-espace/videos" class="nav-card">
-        <span class="nav-card__icon">🎬</span>
-        <span class="nav-card__label">Mes vidéos</span>
-        <span class="nav-card__arrow">›</span>
-      </a>
-      <a routerLink="/mon-espace/paiements" class="nav-card">
-        <span class="nav-card__icon">💳</span>
-        <span class="nav-card__label">Paiements</span>
-        <span class="nav-card__arrow">›</span>
-      </a>
-      <a routerLink="/galerie" class="nav-card">
-        <span class="nav-card__icon">🌍</span>
-        <span class="nav-card__label">Galerie publique</span>
-        <span class="nav-card__arrow">›</span>
-      </a>
-    </nav>
     <!-- Scores par phase -->
     @if (scores.length > 0) {
       <section class="scores-section">
@@ -105,19 +79,22 @@ Dashboard — Espace Candidat NKS
           <div class="scores-table__header">
             <span>Phase</span>
             <span>Votes</span>
+            <span>Public</span>
             <span>Jury</span>
             <span>Total</span>
             <span>Statut</span>
           </div>
-          @for (s of scores; track s; let i = $index) {
+          @for (s of scores; track s) {
             <div class="scores-table__row">
-              <span>Phase {{ i + 1 }}</span>
+              <span>{{ labelPhase(s.nomPhase) }}</span>
               <span>{{ s.pointsVotesEnLigne }}</span>
+              <span>{{ s.pointsPublicSurPlace }}</span>
               <span>{{ s.pointsJury }}</span>
               <span class="score-total">{{ s.totalPoints }}</span>
               <span class="badge" [class.badge--success]="s.statutQualification === 'QUALIFIE'"
                 [class.badge--danger]="s.statutQualification === 'ELIMINE'"
-                [class.badge--warning]="s.statutQualification === 'EN_ATTENTE'">
+                [class.badge--warning]="s.statutQualification === 'EN_ATTENTE'"
+                [class.badge--info]="s.statutQualification === 'REPECHAGE'">
                 {{ s.statutQualification }}
               </span>
             </div>
@@ -143,9 +120,13 @@ Dashboard — Espace Candidat NKS
         </div>
       </div>
     </section>
+    <!-- Raccourci galerie publique -->
+    <section class="info-section">
+      <a routerLink="/galerie" class="btn btn--ghost">🌍 Voir la galerie publique</a>
+    </section>
   }
 
-  <!-- Bouton déconnexion bas de page -->
+  <!-- Déconnexion — seul accès pour les mobiles (la sidebar desktop en a déjà un). -->
   @if (!isLoading) {
     <div class="logout-section">
       <button class="btn btn--ghost btn--danger-ghost" (click)="deconnecter()">

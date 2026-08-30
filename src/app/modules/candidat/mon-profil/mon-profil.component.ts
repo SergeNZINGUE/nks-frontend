@@ -10,11 +10,10 @@ import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
 import { CandidatPublicResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 @Component({
   selector: 'app-mon-profil',
-  imports: [ReactiveFormsModule, RouterModule, TopbarComponent],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './mon-profil.component.html',
   styleUrls: ['./mon-profil.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
