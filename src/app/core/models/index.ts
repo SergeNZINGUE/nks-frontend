@@ -223,6 +223,10 @@ export interface ResultatPhase {
   id: string;
   candidatId: string;
   codeCandidat: string;
+  /** ResultatPhaseResponse.phaseId côté backend — jamais mappé côté front avant (GAP audit panel candidat) */
+  phaseId: string;
+  /** ResultatPhaseResponse.nomPhase — nom brut de l'enum Phase.nom (ex. "ELIMINATOIRES"), à passer par un libellé FR avant affichage */
+  nomPhase: NomPhase;
   rang: number;
   pointsVotesEnLigne: number;
   pointsJury: number;

@@ -14,7 +14,7 @@ import { RouterModule } from '@angular/router';
   selector: 'app-topbar',
   imports: [RouterModule],
   template: `
-<header class="topbar">
+<header class="topbar" [class.topbar--back-desktop]="showBackOnDesktop()">
   @if (backLink() && !backEmit()) {
     <a
       [routerLink]="backLink()"
@@ -39,9 +39,11 @@ import { RouterModule } from '@angular/router';
   }
 
   <h1 class="topbar__title">
-    @if (icon()) {
+    @if (logo()) {
+      <img src="assets/logos/nks.png" alt="" class="topbar__logo" />
+    } @else if (icon()) {
       <span aria-hidden="true">{{ icon() }}&nbsp;</span>
-      }{{ title() }}
+    }{{ title() }}
     </h1>
 
     @if (logout()) {
@@ -64,8 +66,10 @@ import { RouterModule } from '@angular/router';
 export class TopbarComponent {
   /** Titre affiché au centre */
   readonly title = input.required<string>();
-  /** Emoji ou glyphe décoratif, masqué aux lecteurs d'écran */
+  /** Emoji ou glyphe décoratif, masqué aux lecteurs d'écran — ignoré si logo() est vrai */
   readonly icon = input<string | null>(null);
+  /** Affiche le logo NKS (assets/logos/nks.png) à la place de icon() */
+  readonly logo = input(false);
   /** Cible du bouton retour (routerLink) */
   readonly backLink = input<string | unknown[] | null>(null);
   /** Si vrai, le retour émet (back) au lieu de naviguer */
@@ -74,6 +78,13 @@ export class TopbarComponent {
   readonly backLabel = input('Retour');
   /** Affiche le bouton de déconnexion */
   readonly logout = input(false);
+  /**
+   * Garde la flèche retour visible même à partir de 900px. Par défaut la flèche
+   * disparaît sur desktop car app-site-header prend le relais (cf. topbar.component.scss)
+   * — mais les espaces authentifiés (candidat, jury...) n'incluent pas ce header
+   * public et n'ont sinon plus aucun moyen de revenir en arrière sur grand écran.
+   */
+  readonly showBackOnDesktop = input(false);
 
   readonly back = output<void>();
   readonly logoutClick = output<void>();

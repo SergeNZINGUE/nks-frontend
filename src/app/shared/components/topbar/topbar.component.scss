@@ -33,6 +33,13 @@
     @media (min-width: 768px) { font-size: 20px; }
   }
 
+  &__logo {
+    height: 22px;
+    width: auto;
+    vertical-align: middle;
+    margin-right: $sp-2;
+  }
+
   &__back,
   &__action {
     background: none;
@@ -96,5 +103,13 @@
     }
 
     &__action { margin-left: auto; }
+
+    // Espaces authentifiés sans app-site-header (candidat, jury...) : la flèche
+    // retour reste le seul chemin de navigation sur desktop, donc on la garde.
+    &.topbar--back-desktop .topbar__back {
+      display: inline-flex;
+      position: static;
+      margin-right: $sp-2;
+    }
   }
 }
