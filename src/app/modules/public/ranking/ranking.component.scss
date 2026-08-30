@@ -5,92 +5,273 @@
 // écran, plutôt qu'en hex brut dans le HTML : seul le classement en a l'usage.
 $nks-silver: #C0C0C0;
 $nks-bronze: #CD7F32;
+$bascule: 900px;
 
 .ranking {
-  &__update  { padding: $sp-2 $sp-4; font-size: 12px; }
+  &__loading { padding: $sp-4; display: flex; flex-direction: column; gap: $sp-2; }
   &__list    { padding: $sp-3 $sp-4; display: flex; flex-direction: column; gap: $sp-2; }
-  &__loading { padding: $sp-4; }
-  &__empty   { text-align: center; padding: $sp-8; }
+}
+
+// ═══ BANDEAU LIVE ════════════════════════════════════════════════════════════
+.ranking__bandeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $sp-2 $sp-4;
+  padding: $sp-2 $sp-4 $sp-3;
+  font-size: 12px;
+  color: $nks-text-secondary;
+}
+
+.ranking__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: $nks-success;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+
+.ranking__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: $nks-success;
+  box-shadow: 0 0 0 0 rgba($nks-success, 0.6);
+  animation: ranking-pulse 1.8s ease-out infinite;
+}
+
+@keyframes ranking-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba($nks-success, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba($nks-success, 0); }
+  100% { box-shadow: 0 0 0 0 rgba($nks-success, 0); }
+}
+
+.ranking__total { margin-left: auto; }
+
+// ═══ LOADING ═════════════════════════════════════════════════════════════════
+.ranking__loading-podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $sp-2;
+  align-items: end;
+  margin-bottom: $sp-2;
+}
+
+.ranking__skeleton-podium {
+  height: 160px;
+  border-radius: $radius-lg;
+
+  &--tall { height: 200px; }
 }
 
 .ranking__skeleton-item {
   height: 60px;
   border-radius: $radius-md;
-  margin-bottom: $sp-2;
 }
 
-.ranking-item {
+.ranking__empty {
+  text-align: center;
+  padding: $sp-8 $sp-4;
+
+  &-icone { font-size: 40px; margin: 0 0 $sp-2; }
+}
+
+// ═══ PODIUM ══════════════════════════════════════════════════════════════════
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $sp-2;
+  align-items: end;
+  padding: $sp-4;
+
+  @media (min-width: $bascule) {
+    max-width: 780px;
+    margin-inline: auto;
+    gap: $sp-4;
+    padding: $sp-6 $sp-4;
+  }
+}
+
+.podium-carte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-2;
+  background: $nks-bg-surface;
+  border: 1px solid $nks-border;
+  border-radius: $radius-lg;
+  padding: $sp-4 $sp-2;
+  text-align: center;
+
+  &__lien {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-1;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  &__medaille { font-size: 22px; line-height: 1; }
+  &__avatar   { width: 56px; height: 56px; font-size: 18px; margin: $sp-1 0; }
+  &__code     { font-size: 10px; font-family: monospace; color: $nks-text-secondary; letter-spacing: 0.05em; }
+
+  &__nom {
+    font-family: $font-title;
+    font-size: 14px;
+    color: $nks-text;
+    margin: 2px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  &__votes {
+    margin: 0;
+    font-size: 11px;
+    color: $nks-text-secondary;
+
+    strong { font-family: $font-title; font-size: 17px; color: $nks-text; margin-right: 3px; }
+  }
+
+  &__voter { margin-top: $sp-1; width: 100%; }
+
+  // 2e et 3e : teintes neutres, jamais dorées — seule la 1re place porte la couleur de marque.
+  &--argent {
+    border-color: rgba($nks-silver, 0.5);
+    background: rgba($nks-silver, 0.06);
+
+    .podium-carte__medaille { filter: drop-shadow(0 0 6px rgba($nks-silver, 0.4)); }
+    .podium-carte__votes strong { color: $nks-silver; }
+  }
+
+  &--bronze {
+    border-color: rgba($nks-bronze, 0.5);
+    background: rgba($nks-bronze, 0.08);
+
+    .podium-carte__medaille { filter: drop-shadow(0 0 6px rgba($nks-bronze, 0.4)); }
+    .podium-carte__votes strong { color: $nks-bronze; }
+  }
+
+  // 1re place : carte plus grande, glow doré — direction 2026.
+  &--or {
+    border-color: $nks-gold;
+    background: rgba($nks-gold, 0.1);
+    box-shadow: $shadow-glow-gold;
+    padding-top: $sp-6;
+    padding-bottom: $sp-5;
+
+    .podium-carte__medaille { font-size: 30px; }
+    .podium-carte__avatar   { width: 76px; height: 76px; font-size: 24px; border: 2px solid rgba($nks-gold, 0.5); }
+    .podium-carte__nom      { font-size: 17px; }
+    .podium-carte__votes strong { color: $nks-gold; font-size: 20px; }
+  }
+}
+
+// ═══ RESTE DU CLASSEMENT ═════════════════════════════════════════════════════
+.ranking-row {
   display: flex;
   align-items: center;
-  gap: $sp-3;
-  padding: $sp-3 $sp-4;
-  text-decoration: none;
-  border: 1px solid $nks-border;
-  transition: border-color $dur-fast $ease-out, transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+  gap: $sp-2;
+  background: $nks-bg-surface;
+  border: 1px solid transparent;
+  border-radius: $radius-md;
+  padding: $sp-2 $sp-3;
+  transition: border-color $dur-fast $ease-out;
 
-  &:hover {
-    border-color: $nks-gold;
-    transform: translateY(-2px);
+  &:hover { border-color: rgba($nks-gold, 0.3); }
+
+  &__lien {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 28px 32px 1fr auto;
+    align-items: center;
+    gap: $sp-3;
+    text-decoration: none;
+    color: inherit;
+
+    @media (min-width: $bascule) { grid-template-columns: 28px 32px 1fr 120px auto; }
   }
 
-  // Podium — spec §7.6 : les 3 premiers sont traités à part, chacun avec sa
-  // teinte (or / argent / bronze). Le reste du classement reste compact.
-  &--top {
-    border-color: rgba($nks-gold, 0.4);
-    background: rgba($nks-gold, 0.05);
-    padding: $sp-4;
+  &__rang { font-size: 13px; color: $nks-text-secondary; text-align: center; }
+  &__avatar { width: 32px; height: 32px; font-size: 11px; }
+
+  &__nom {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $nks-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  // Rang 1 : glow doré plus marqué que les autres — direction 2026 (round 2).
-  &--rang1 {
-    border-color: $nks-gold;
-    background: rgba($nks-gold, 0.15);
-    box-shadow: $shadow-glow-gold;
+  &__code { font-size: 10px; font-weight: 400; font-family: monospace; color: $nks-text-secondary; }
 
-    &:hover { box-shadow: $shadow-glow-gold, $shadow-gold; }
+  &__piste {
+    display: none;
+    height: 6px;
+    border-radius: $radius-full;
+    background: rgba($nks-text, 0.08);
+    overflow: hidden;
 
-    .ranking-item__name { font-size: 17px; }
+    @media (min-width: $bascule) { display: block; }
   }
 
-  // Argent et bronze : teintes neutres, jamais dorées, pour que la 1re place
-  // reste la seule à porter la couleur de marque. Juste un peu de profondeur
-  // au survol, cohérente avec la direction 2026.
-  &--rang2 {
-    border-color: rgba($nks-silver, 0.5);
-    background: rgba($nks-silver, 0.08);
-
-    &:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+  &__remplissage {
+    display: block;
+    height: 100%;
+    border-radius: $radius-full;
+    background: $nks-gradient-gold;
   }
 
-  &--rang3 {
-    border-color: rgba($nks-bronze, 0.5);
-    background: rgba($nks-bronze, 0.1);
+  &__score { font-family: $font-title; font-size: 14px; color: $nks-gold; text-align: right; }
 
-    &:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
-  }
-
-  &__rank  { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
-  &__info  { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-  &__code  { font-size: 11px; font-weight: 700; }
-  &__name  { font-size: 15px; font-weight: 600; color: $nks-text; }
-  &__score { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
-  &__score-value { font-size: 20px; font-weight: 800; }
-  &__score-unit  { font-size: 11px; }
+  &__voter { flex-shrink: 0; }
 }
 
 // ── Desktop ─────────────────────────────────────────────────────────────────
-// Le classement reste une colonne lisible : l'étirer sur 1280 px éloignerait
-// le rang du score. Spec §13.2 (top 3 empilé, puis lignes compactes).
-@media (min-width: 900px) {
+@media (min-width: $bascule) {
   .ranking {
-    &__update,
-    &__list,
-    &__empty {
+    &__bandeau,
+    &__list {
       width: 100%;
       max-width: 780px;
       margin-inline: auto;
     }
+  }
+}
 
-    &__update { text-align: center; }
+// ── Petits écrans (iPhone SE et similaires, ≤380px) ──────────────────────────
+// Le podium reste 3 colonnes égales même ici (empiler la 1re place casserait la
+// mise en scène du podium) : on réduit juste avatars/paddings/police pour que les
+// 3 cartes ne débordent pas sur les téléphones les plus étroits.
+@media (max-width: 380px) {
+  .podium { gap: $sp-1; padding: $sp-3 $sp-2; }
+
+  .podium-carte {
+    padding: $sp-2 4px;
+
+    &__avatar { width: 44px; height: 44px; font-size: 14px; }
+    &__nom    { font-size: 12px; }
+    &__code   { font-size: 9px; }
+    &__votes  { font-size: 10px; strong { font-size: 14px; } }
+    &__voter  { font-size: 12px; padding: $sp-1 $sp-2; }
+
+    &--or {
+      padding-top: $sp-4;
+      .podium-carte__avatar { width: 58px; height: 58px; font-size: 18px; }
+      .podium-carte__nom    { font-size: 13px; }
+      .podium-carte__votes strong { font-size: 16px; }
+    }
   }
 }

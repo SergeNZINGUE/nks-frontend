@@ -4,46 +4,106 @@
   <app-topbar title="Classement en temps réel" icon="🏆" backLink="/" backLabel="Retour à l'accueil" />
 
   @if (!loading) {
-    <p class="ranking__update text-muted">
-      Mis à jour à {{ lastUpdate | date:'HH:mm:ss' }}
-    </p>
+    <div class="ranking__bandeau">
+      <span class="ranking__live"><span class="ranking__live-dot" aria-hidden="true"></span>En direct</span>
+      <span class="ranking__maj">Mis à jour à {{ lastUpdate | date:'HH:mm:ss' }}</span>
+      @if (classement.length) {
+        <span class="ranking__total">{{ totalPoints | number:'1.0-0' }} pts distribués · {{ classement.length }} candidats</span>
+      }
+    </div>
   }
 
   @if (loading) {
     <div class="ranking__loading">
-      @for (_ of [1,2,3,4,5]; track _) {
+      <div class="ranking__loading-podium">
+        <div class="skeleton ranking__skeleton-podium"></div>
+        <div class="skeleton ranking__skeleton-podium ranking__skeleton-podium--tall"></div>
+        <div class="skeleton ranking__skeleton-podium"></div>
+      </div>
+      @for (_ of [1,2,3,4]; track _) {
         <div class="skeleton ranking__skeleton-item"></div>
       }
     </div>
   }
 
   @if (!loading) {
-    <div class="ranking__list">
-      @for (item of classement; track item; let i = $index) {
-        <a
-          [routerLink]="['/candidat', item.candidatId]"
-          class="ranking-item card"
-          [class.ranking-item--top]="i < 3"
-          [class.ranking-item--rang1]="i === 0"
-          [class.ranking-item--rang2]="i === 1"
-          [class.ranking-item--rang3]="i === 2"
+    @if (!classement.length) {
+      <div class="ranking__empty">
+        <p class="ranking__empty-icone" aria-hidden="true">🎤</p>
+        <p class="text-muted">Aucun classement disponible pour le moment.</p>
+      </div>
+    } @else {
+      <!-- ═══ PODIUM — les 3 premiers, mis en scène ═══ -->
+      <div class="podium">
+        @for (item of podium; track item; let i = $index) {
+          <article
+            class="podium-carte"
+            [class.podium-carte--or]="i === 0"
+            [class.podium-carte--argent]="i === 1"
+            [class.podium-carte--bronze]="i === 2"
+            [style.order]="i === 0 ? 2 : i === 1 ? 1 : 3"
           >
-          <span class="ranking-item__rank">{{ rankIcon(i) }}</span>
-          <div class="ranking-item__info">
-            <span class="ranking-item__code text-gold">{{ item.codeCandidat }}</span>
-          </div>
-          <div class="ranking-item__score">
-            <span class="text-gold ranking-item__score-value">{{ item.totalPointsCumules | number:'1.1-1' }}</span>
-            <span class="text-muted ranking-item__score-unit">pts</span>
-          </div>
-        </a>
-      }
-      @if (!classement.length) {
-        <div class="ranking__empty">
-          <p class="text-muted">Aucun classement disponible pour le moment.</p>
+            <a [routerLink]="['/candidat', item.candidatId]" class="podium-carte__lien">
+              <span class="podium-carte__medaille" aria-hidden="true">{{ rankIcon(i) }}</span>
+              <div class="avatar podium-carte__avatar">
+                @if (photoValide(item)) {
+                  <img [src]="profilClasse(item)?.photoUrl" [alt]="profilClasse(item)?.prenom + ' ' + profilClasse(item)?.nom" (error)="onPhotoErreur(item)" />
+                } @else {
+                  {{ initiales(item) }}
+                }
+              </div>
+              <span class="podium-carte__code">{{ item.codeCandidat }}</span>
+              <h3 class="podium-carte__nom">
+                @if (profilClasse(item); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ item.codeCandidat }} }
+              </h3>
+              <p class="podium-carte__votes"><strong>{{ item.totalPointsCumules | number:'1.0-0' }}</strong> pts</p>
+            </a>
+            @if (phaseActiveId && profilClasse(item)) {
+              <button type="button" class="btn btn--primary btn--sm podium-carte__voter" (click)="ouvrirVote(item)">
+                Voter <app-star-mark [size]="14" />
+              </button>
+            }
+          </article>
+        }
+      </div>
+
+      <!-- ═══ RESTE DU CLASSEMENT — à partir du 4e rang ═══ -->
+      @if (reste.length) {
+        <div class="ranking__list">
+          @for (item of reste; track item; let i = $index) {
+            <div class="ranking-row">
+              <a [routerLink]="['/candidat', item.candidatId]" class="ranking-row__lien">
+                <span class="ranking-row__rang">#{{ i + 4 }}</span>
+                <div class="avatar ranking-row__avatar">
+                  @if (photoValide(item)) {
+                    <img [src]="profilClasse(item)?.photoUrl" [alt]="profilClasse(item)?.prenom + ' ' + profilClasse(item)?.nom" (error)="onPhotoErreur(item)" />
+                  } @else {
+                    {{ initiales(item) }}
+                  }
+                </div>
+                <span class="ranking-row__nom">
+                  @if (profilClasse(item); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ item.codeCandidat }} }
+                  <small class="ranking-row__code">{{ item.codeCandidat }}</small>
+                </span>
+                <span class="ranking-row__piste">
+                  <span class="ranking-row__remplissage" [style.width.%]="largeurBarre(item)"></span>
+                </span>
+                <b class="ranking-row__score">{{ item.totalPointsCumules | number:'1.0-1' }}</b>
+              </a>
+              @if (phaseActiveId && profilClasse(item)) {
+                <button type="button" class="btn btn--secondary btn--sm ranking-row__voter" (click)="ouvrirVote(item)">
+                  Voter
+                </button>
+              }
+            </div>
+          }
         </div>
       }
-    </div>
+    }
+  }
+
+  @if (candidatVote && phaseActiveId) {
+    <app-vote-modal [candidat]="candidatVote" [phaseId]="phaseActiveId" (closed)="fermerVote()" />
   }
 
   <app-site-footer />
