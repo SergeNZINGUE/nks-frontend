@@ -15,7 +15,7 @@ import { SoireeEvent } from '@core/models';
 <div class="jury-page">
 
   <!-- Topbar -->
-  <app-topbar title="Espace Jury" icon="⭐" [logout]="true" (logoutClick)="deconnecter()" />
+  <app-topbar title="Espace Jury" [logo]="true" [logout]="true" (logoutClick)="deconnecter()" />
 
   <!-- Loading -->
   @if (isLoading) {

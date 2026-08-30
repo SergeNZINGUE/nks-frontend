@@ -1,6 +1,6 @@
 <div class="reservation-page">
 
-  <app-topbar title="Réservation" icon="🎟" backLink="/billetterie" backLabel="Retour à la billetterie" />
+  <app-topbar title="Réservation" icon="🎟" backLink="/billetterie" backLabel="Retour à la billetterie" [showBackOnDesktop]="true" />
 
   <!-- Stepper -->
   @if (etape !== 'confirmation') {
@@ -151,8 +151,8 @@
     <div class="confirmation">
       <div class="confirmation__icon">🎉</div>
       <h2>Réservation enregistrée !</h2>
-      @if (redirectionEnCours) {
-        <p>Redirection vers le paiement sécurisé LigdiCash…</p>
+      @if (paiementOuvert) {
+        <p>Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.</p>
       } @else {
         <p>Finalise ton paiement pour recevoir ton ticket.</p>
       }
@@ -162,8 +162,8 @@
         <div class="detail-row"><span>Statut</span><strong>{{ confirmation.statut }}</strong></div>
       </div>
       @if (confirmation.urlPaiement) {
-        <a [href]="confirmation.urlPaiement" class="btn btn--primary btn--full btn--lg">
-          Ouvrir la page de paiement <app-star-mark [size]="14" />
+        <a [href]="confirmation.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
+          {{ paiementOuvert ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
         </a>
       }
       <p class="confirmation__hint">

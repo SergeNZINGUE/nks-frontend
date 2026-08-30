@@ -43,7 +43,7 @@ const CRITERES_CDC: CritereLocal[] = [
   template: `
 <div class="notation-page">
 
-  <app-topbar title="Notation" icon="✏️" backLink="/jury" backLabel="Retour à l'espace jury" />
+  <app-topbar title="Notation" icon="✏️" backLink="/jury" backLabel="Retour à l'espace jury" [showBackOnDesktop]="true" />
 
   <!-- Skeleton -->
   @if (isLoading) {

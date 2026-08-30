@@ -4,15 +4,15 @@
   @if (success(); as res) {
     <div class="vote-modal__success">
       <div class="vote-modal__success-icon" aria-hidden="true">✅</div>
-      @if (redirectionEnCours()) {
-        <p>Redirection vers le paiement sécurisé LigdiCash…</p>
+      @if (paiementOuvert()) {
+        <p>Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.</p>
       } @else {
         <p>Vous allez recevoir une demande de paiement sur votre téléphone.</p>
       }
       <p class="vote-modal__success-montant">{{ res.montantTotal | number:'1.0-0' }} FCFA</p>
       @if (res.urlPaiement) {
-        <a [href]="res.urlPaiement" class="btn btn--primary btn--full btn--lg">
-          Ouvrir la page de paiement <app-star-mark [size]="14" />
+        <a [href]="res.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
+          {{ paiementOuvert() ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
         </a>
       }
       <button type="button" class="btn btn--secondary btn--full" (click)="fermer()">Fermer</button>

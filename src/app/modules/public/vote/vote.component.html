@@ -17,12 +17,12 @@
       <div class="vote-carte vote-success">
         <div class="vote-success__icon">✅</div>
         <h2>Vote enregistré</h2>
-        @if (redirectionEnCours) {
+        @if (paiementOuvert) {
           <p>
-            Redirection vers le paiement sécurisé LigdiCash…
+            Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.
           </p>
         }
-        @if (!redirectionEnCours) {
+        @if (!paiementOuvert) {
           <p>
             Vous allez recevoir une demande de paiement sur votre téléphone.
           </p>
@@ -31,8 +31,9 @@
         @if (success.urlPaiement) {
           <a
             [href]="success.urlPaiement"
+            target="_blank" rel="noopener"
             class="btn btn--primary btn--full btn--lg">
-            Ouvrir la page de paiement <app-star-mark [size]="14" />
+            {{ paiementOuvert ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
           </a>
         }
         <a [routerLink]="['/candidat', candidat?.id]" class="btn btn--secondary btn--full">

@@ -38,7 +38,8 @@ export class VoteModalComponent {
 
   submitting = signal(false);
   success = signal<InitierVoteResponse | null>(null);
-  redirectionEnCours = signal(false);
+  /** true une fois la page de paiement ouverte dans un nouvel onglet — l'onglet courant ne navigue jamais. */
+  paiementOuvert = signal(false);
   error = signal<string | null>(null);
   photoErreur = signal(false);
 
@@ -88,8 +89,12 @@ export class VoteModalComponent {
         this.success.set(res);
         this.submitting.set(false);
         if (res.urlPaiement) {
-          this.redirectionEnCours.set(true);
-          setTimeout(() => window.location.assign(res.urlPaiement), 1200);
+          // Nouvel onglet, jamais le même : l'appelant (galerie, page de vote) doit rester
+          // affiché en arrière-plan. Ouverture synchrone (pas de setTimeout) : au-delà d'un
+          // délai, la plupart des navigateurs ne considèrent plus l'appel comme issu du geste
+          // utilisateur et bloquent la popup.
+          window.open(res.urlPaiement, '_blank', 'noopener');
+          this.paiementOuvert.set(true);
         }
       },
       error: err => {

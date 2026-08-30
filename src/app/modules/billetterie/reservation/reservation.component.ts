@@ -33,7 +33,8 @@ export class ReservationComponent implements OnInit, OnDestroy {
   categories: CategorieTicket[] = [];
   categorieSelectionnee: CategorieTicket | null = null;
   confirmation: ReservationResponse | null = null;
-  redirectionEnCours = false;
+  /** true une fois la page de paiement ouverte dans un nouvel onglet — cet onglet ne navigue jamais. */
+  paiementOuvert = false;
   erreur: string | null = null;
 
   formInfos!: FormGroup;
@@ -124,9 +125,11 @@ export class ReservationComponent implements OnInit, OnDestroy {
           this.etape = 'confirmation';
           // BUG identique déjà corrigé dans vote.component.ts : urlPaiement était ignoré,
           // le parcours s'arrêtait sur l'écran de confirmation sans jamais déclencher le paiement.
+          // Nouvel onglet, jamais le même : ouverture synchrone (pas de setTimeout), au-delà
+          // d'un délai la plupart des navigateurs bloquent l'appel comme une popup non sollicitée.
           if (res.urlPaiement) {
-            this.redirectionEnCours = true;
-            setTimeout(() => window.location.assign(res.urlPaiement), 1200);
+            window.open(res.urlPaiement, '_blank', 'noopener');
+            this.paiementOuvert = true;
           }
         },
         error: err => {
