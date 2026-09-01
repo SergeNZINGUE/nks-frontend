@@ -54,7 +54,11 @@
   border-radius: $radius-full;
   font-weight: 600;
   white-space: nowrap;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  .icon { width: 12px; height: 12px; }
 
   &--QUALIFIE, &--ACTIF, &--officiel, &--CONFIRMEE  { background: rgba($nks-success, 0.15); color: $nks-success; border: 1px solid rgba($nks-success, 0.3); }
   &--ELIMINE, &--INACTIF, &--ANNULEE, &--EXPIREE, &--FAILED, &--EXPIRED { background: rgba($nks-error, 0.15);   color: $nks-error;   border: 1px solid rgba($nks-error, 0.3); }

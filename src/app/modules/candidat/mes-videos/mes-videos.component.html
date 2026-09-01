@@ -14,7 +14,7 @@
   <!-- Erreur -->
   @if (!isLoading && erreur) {
     <div class="empty-state">
-      <p class="empty-icon">⚠️</p>
+      <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
       <p>{{ erreur }}</p>
     </div>
   }
@@ -22,9 +22,52 @@
   <!-- Vide -->
   @if (!isLoading && !erreur && videos.length === 0) {
     <div class="empty-state">
-      <p class="empty-icon">🎬</p>
+      <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
       <p>Aucune vidéo enregistrée.</p>
       <p class="empty-hint">Ta vidéo de présélection apparaîtra ici après soumission.</p>
+    </div>
+  }
+
+  <!-- Upload — uniquement si une phase (hors Présélection) est en cours -->
+  @if (!isLoading && !erreur && phaseCible) {
+    <div class="upload-card">
+      <h2 class="upload-card__title">
+        @if (videoExistantePourPhase) {
+          Remplacer ta vidéo pour cette phase
+        } @else {
+          Ajouter ta vidéo pour cette phase
+        }
+      </h2>
+      <p class="upload-card__hint">
+        @if (videoExistantePourPhase) {
+          Envoyer un nouveau fichier remplacera ta vidéo actuelle pour cette phase.
+        }
+        MP4 uniquement, 100 Mo maximum, {{ VIDEO_DUREE_MIN_S }} à {{ VIDEO_DUREE_MAX_S }} secondes.
+      </p>
+
+      @if (uploadErreur) {
+        <div class="upload-erreur" role="alert">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          {{ uploadErreur }}
+        </div>
+      }
+
+      <div class="upload-form">
+        <input type="text" class="upload-titre" placeholder="Titre de la chanson (optionnel)"
+          maxlength="150" [(ngModel)]="titreChanson" [disabled]="isUploading" />
+
+        <label class="upload-btn" [class.upload-btn--loading]="isUploading">
+          @if (!isUploading) {
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            <span>Choisir un fichier</span>
+          }
+          @if (isUploading) {
+            <span class="spinner spinner--inline"></span>
+            <span>Envoi en cours…</span>
+          }
+          <input type="file" accept="video/mp4" (change)="onFichierChoisi($event)" [disabled]="isUploading" />
+        </label>
+      </div>
     </div>
   }
 
@@ -39,7 +82,9 @@
               <img [src]="v.urlThumbnail" [alt]="v.titreChanson" />
             }
             @if (!v.urlThumbnail) {
-              <span class="thumb-placeholder">🎵</span>
+              <span class="thumb-placeholder">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </span>
             }
             <span class="duration">{{ dureeFormatee(v.dureeSecondes) }}</span>
           </div>
@@ -51,10 +96,14 @@
           </div>
           <!-- Lien -->
           @if (v.statut === 'DISPONIBLE' && v.urlStreaming) {
-            <a [href]="v.urlStreaming" target="_blank" class="video-link" title="Voir la vidéo">▶</a>
+            <a [href]="v.urlStreaming" target="_blank" rel="noopener" class="video-link" title="Voir la vidéo">
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m7 4 15 8-15 8V4z"/></svg>
+            </a>
           }
           @if (v.statut === 'DISPONIBLE' && !v.urlStreaming) {
-            <span class="video-link video-link--indispo" title="Lien de lecture pas encore disponible">⏳</span>
+            <span class="video-link video-link--indispo" title="Lien de lecture pas encore disponible">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
           }
         </div>
       }

@@ -43,6 +43,22 @@
   margin-inline: auto;
 }
 
+.sms-relance {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  flex-wrap: wrap;
+  padding: 0 $sp-4 $sp-4;
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__resultat { font-size: 13px; color: $nks-text-secondary; }
+  &__echecs { color: $nks-error; }
+}
+
+.sms-unitaire-ok { font-size: 12px; color: $nks-success; }
+.sms-unitaire-err { font-size: 12px; color: $nks-error; }
+
 .chip {
   background: rgba($nks-text, 0.05);
   border: 1px solid rgba($nks-text, 0.1);
@@ -97,12 +113,27 @@
   padding: $sp-4;
   border-radius: $radius-md;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
 
   &--err {
     background: rgba($nks-error, 0.12);
     border: 1px solid rgba($nks-error, 0.3);
     color: $nks-error;
   }
+}
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans les écrans admin partagés.
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.modal__err {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  color: $nks-error;
+  font-size: 13px;
+  margin: $sp-2 0 0;
 }
 
 .table {

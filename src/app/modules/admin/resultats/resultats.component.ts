@@ -36,7 +36,10 @@ const LABEL_PHASE: Record<string, string> = {
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -58,18 +61,26 @@ const LABEL_PHASE: Record<string, string> = {
 
         <div class="form__actions" style="margin-top: 12px;">
           <button type="button" class="btn btn--primary" [disabled]="calculEnCours" (click)="calculerClassement()">
-            {{ calculEnCours ? 'Calcul…' : '🔄 Calculer le classement de cette phase' }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            {{ calculEnCours ? 'Calcul…' : 'Calculer le classement de cette phase' }}
           </button>
           <button type="button" class="btn btn--ghost" [disabled]="!phaseSelectionneeId || exportVotesEnCours" (click)="exporterVotesCsv()">
-            {{ exportVotesEnCours ? 'Export…' : '⬇ Exporter les votes (CSV)' }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            {{ exportVotesEnCours ? 'Export…' : 'Exporter les votes (CSV)' }}
           </button>
         </div>
 
         @if (erreurPhase) {
-          <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurPhase }}</div>
+          <div class="field-error" role="alert" style="margin-top: 12px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurPhase }}
+          </div>
         }
         @if (erreurExportVotes) {
-          <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurExportVotes }}</div>
+          <div class="field-error" role="alert" style="margin-top: 12px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurExportVotes }}
+          </div>
         }
 
         @if (resultatsPhase.length > 0) {
@@ -91,7 +102,10 @@ const LABEL_PHASE: Record<string, string> = {
                     <td>
                       @if (r.statutQualification === 'ELIMINE') {
                         <button type="button" class="btn btn--sm" [disabled]="repechageEnCoursId === r.id" (click)="ouvrirRepechage(r)">
-                          {{ repechageEnCoursId === r.id ? '…' : '↩ Repêcher' }}
+                          @if (repechageEnCoursId !== r.id) {
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+                          }
+                          {{ repechageEnCoursId === r.id ? '…' : 'Repêcher' }}
                         </button>
                       }
                     </td>
@@ -111,7 +125,10 @@ const LABEL_PHASE: Record<string, string> = {
         }
 
         @if (!chargementGlobal && erreurGlobal) {
-          <div class="field-error" role="alert">⚠️ {{ erreurGlobal }}</div>
+          <div class="field-error" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurGlobal }}
+          </div>
         }
 
         @if (!chargementGlobal && !erreurGlobal && classementGlobal.length === 0) {
@@ -130,7 +147,10 @@ const LABEL_PHASE: Record<string, string> = {
                     <td><strong>{{ c.totalPointsCumules | number:'1.0-1' }}</strong></td>
                     <td>
                       @if (c.officiel) {
-                        <span class="badge-tbl badge-tbl--officiel">✓ Officiel</span>
+                        <span class="badge-tbl badge-tbl--officiel">
+                          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                          Officiel
+                        </span>
                       } @else {
                         <span class="badge-tbl badge-tbl--EN_ATTENTE">Provisoire</span>
                       }
@@ -144,7 +164,8 @@ const LABEL_PHASE: Record<string, string> = {
 
         <div class="form__actions" style="margin-top: 16px;">
           <button type="button" class="btn btn--ok" [disabled]="publicationEnCours" (click)="demandePublication = true">
-            {{ publicationEnCours ? 'Publication…' : '📣 Publier les résultats officiels de l\\'édition' }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            {{ publicationEnCours ? 'Publication…' : 'Publier les résultats officiels de l\\'édition' }}
           </button>
         </div>
         @if (messagePublication) {
@@ -181,7 +202,10 @@ const LABEL_PHASE: Record<string, string> = {
           </div>
         }
         @if (erreurRepechage) {
-          <div class="modal__err" role="alert">⚠️ {{ erreurRepechage }}</div>
+          <div class="modal__err" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurRepechage }}
+          </div>
         }
         <div class="modal__actions">
           <button type="button" class="btn btn--ghost" (click)="fermerRepechage()">Annuler</button>
@@ -305,11 +329,11 @@ export class ResultatsComponent implements OnInit, OnDestroy {
     let echec = false;
     this.sub.add(
       this.classementSvc.publier(this.edition.id).pipe(
-        catchError(() => { echec = true; this.messagePublication = '⚠️ Échec de la publication.'; return of(undefined); }),
+        catchError(() => { echec = true; this.messagePublication = 'Échec de la publication.'; return of(undefined); }),
         finalize(() => { this.publicationEnCours = false; this.demandePublication = false; })
       ).subscribe(() => {
         if (!echec) {
-          this.messagePublication = '✓ Résultats publiés.';
+          this.messagePublication = 'Résultats publiés.';
           this.chargerGlobal();
         }
       })

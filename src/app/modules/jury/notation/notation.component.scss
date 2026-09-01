@@ -10,6 +10,33 @@
   padding-bottom: $sp-12;
 }
 
+.page-header {
+  padding: $sp-5 $sp-4 0;
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $nks-text-secondary;
+    text-decoration: none;
+    margin-bottom: $sp-2;
+
+    svg { width: 16px; height: 16px; }
+
+    &:hover { color: $nks-gold; }
+  }
+
+  &__title {
+    font-family: $font-title;
+    font-size: 22px;
+    color: $nks-text;
+    margin: 0 0 4px;
+  }
+}
+
 .skeletons {
   padding: $sp-4;
   display: flex;
@@ -72,7 +99,23 @@
 }
 
 .code    { font-size: 12px; color: $nks-text-secondary; font-family: monospace; }
-.chanson { font-size: 13px; color: rgba($nks-text, 0.6); overflow-wrap: anywhere; }
+.chanson {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba($nks-text, 0.6);
+  overflow-wrap: anywhere;
+}
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans tout l'écran.
+.icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+
+  &--lg { width: 32px; height: 32px; margin-bottom: $sp-2; }
+}
 
 .score-bar {
   position: sticky;
@@ -110,21 +153,38 @@
 
   &__val {
     font-family: $font-title;
-    color: $nks-gold;
-    font-size: 16px;
+    font-weight: 900;
+    font-size: 22px;
     white-space: nowrap;
+    background: $nks-gradient-gold;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba($nks-gold, 0.45));
+  }
+
+  &__max {
+    font-size: 13px;
+    font-weight: 400;
+    color: $nks-text-secondary;
+    -webkit-text-fill-color: $nks-text-secondary;
   }
 }
 
 .banner-ok,
 .banner-err,
 .banner-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-2;
   margin: $sp-3 $sp-4;
   padding: $sp-3;
   border-radius: $radius-sm;
   font-size: 13px;
   max-width: 600px;
   margin-inline: auto;
+
+  .icon { margin-top: 2px; }
 }
 
 .banner-ok   { background: rgba($nks-success, 0.08); border: 1px solid rgba($nks-success, 0.25); color: $nks-success; }
@@ -275,7 +335,26 @@
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: $sp-16 $sp-6;
   color: $nks-text-secondary;
+
+  .btn { margin-top: $sp-4; flex: none; }
 }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba($nks-gold, 0.3);
+  border-top-color: $nks-gold;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+
+  &--inline { vertical-align: middle; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

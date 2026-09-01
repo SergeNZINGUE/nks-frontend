@@ -102,11 +102,11 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {
-      EN_ATTENTE:          '⏳ En attente d\'examen',
-      VALIDEE:             '✅ Validée',
-      EN_ATTENTE_PAIEMENT: '💳 Paiement requis',
-      ACTIVE:              '🌟 Active',
-      REJETEE:             '❌ Rejetée',
+      EN_ATTENTE:          'En attente d\'examen',
+      VALIDEE:             'Validée',
+      EN_ATTENTE_PAIEMENT: 'Paiement requis',
+      ACTIVE:              'Active',
+      REJETEE:             'Rejetée',
     };
     return map[s] ?? s;
   }

@@ -103,10 +103,10 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   get statutLabel(): string {
     const map: Record<StatutCandidature, string> = {
       EN_ATTENTE: 'En attente de validation',
-      EN_ATTENTE_PAIEMENT: '⚠️ Paiement en attente',
-      VALIDEE: '✅ Validée',
-      ACTIVE: '✅ Active',
-      REJETEE: '❌ Rejetée',
+      EN_ATTENTE_PAIEMENT: 'Paiement en attente',
+      VALIDEE: 'Validée',
+      ACTIVE: 'Active',
+      REJETEE: 'Rejetée',
     };
     return map[this.candidature?.statut as StatutCandidature] ?? (this.candidature?.statut ?? '');
   }

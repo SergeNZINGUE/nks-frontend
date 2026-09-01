@@ -20,10 +20,15 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .content { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
 
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans tout l'écran.
+.icon { width: 15px; height: 15px; flex-shrink: 0; }
+
 .toast {
+  display: flex; align-items: flex-start; gap: 8px;
   padding: 12px 16px; border-radius: t.$radius-md; font-size: 14px;
   &--success { background: rgba(t.$nks-success, 0.12); color: t.$nks-success; border: 1px solid rgba(t.$nks-success, 0.3); }
   &--error   { background: rgba(t.$nks-error, 0.12);  color: t.$nks-error; border: 1px solid rgba(t.$nks-error, 0.3); }
+  .icon { margin-top: 2px; }
 }
 
 .avatar-section { display: flex; align-items: center; gap: 16px; }
@@ -42,8 +47,10 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 .avatar-edit {
   position: absolute; bottom: 0; right: 0;
   width: 28px; height: 28px; border-radius: 50%;
-  background: $gold; color: $bg; font-size: 13px;
+  background: $gold; color: $bg;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
+
+  .icon { width: 14px; height: 14px; }
   transition: box-shadow t.$dur-fast t.$ease-out, filter t.$dur-fast t.$ease-out;
   input { display: none; }
   &:hover { filter: brightness(1.08); box-shadow: t.$shadow-glow-gold; }

@@ -26,28 +26,31 @@ export interface PaiementBrut {
  * (UUID non énumérable) reçu par l'utilisateur anonyme au retour LigdiCash.
  * Volontairement minimal — jamais d'email/téléphone/utilisateurId ici.
  *
- * ⚠️ Endpoint `GET /paiements/{id}/statut-public` NON ENCORE IMPLÉMENTÉ côté
- * backend au 27/08/2026 — nécessaire pour que la page de retour de paiement
- * (`/paiement/retour`) fonctionne pour un votant/candidat non connecté, cf.
- * doc LigdiCash transmise à Serge. `GET /paiements/{id}` existant est
- * `@PreAuthorize("isAuthenticated()")` et ne convient donc pas ici : un
- * votant qui vient de payer via LigdiCash n'a pas de JWT.
+ * Endpoint `GET /paiements/{id}/statut-public` implémenté côté backend le
+ * 30/08/2026 (commit bd90d11, `PaiementController.statutPublic()`), public
+ * (pas de `@PreAuthorize`) — `GET /paiements/{id}` existant est réservé aux
+ * utilisateurs authentifiés et ne convenait pas ici (votant anonyme sans JWT).
+ * `motif` reste toujours `null` pour l'instant côté backend
+ * (`StatutPublicPaiementResponse.from(paiement, null)` — le paramètre motif
+ * n'est jamais renseigné) : le champ existe dans la réponse mais n'est pas
+ * encore alimenté.
  */
 export interface StatutPaiementPublic {
+  id: string;
   statut: 'PENDING' | 'COMPLETED' | 'FAILED' | 'EXPIRED' | 'REFUNDED';
   montant: number;
-  /** Motif lisible en cas d'échec (ex. "Solde insuffisant") — absent tant que le backend n'expose pas code_reponse/motif_rejet (cf. écarts schéma BDD, doc LigdiCash). */
-  motif?: string | null;
+  typePaiement: 'INSCRIPTION' | 'VOTE' | 'BILLET';
+  motif: string | null;
 }
 
-/** PaiementController — endpoints admin (§13.7). Routes réelles vérifiées contre le code source backend le 15/08/2026. */
+/** PaiementController — endpoints admin (§13.7). Routes réelles vérifiées contre le code source backend le 30/08/2026. */
 @Injectable({ providedIn: 'root' })
 export class PaiementService {
   private http = inject(HttpClient);
 
   private readonly base = `${environment.apiUrl}/paiements`;
 
-  /** GET /paiements/{id}/statut-public — public, sans JWT. Voir doc `StatutPaiementPublic` : endpoint à créer côté backend. */
+  /** GET /paiements/{id}/statut-public — public, sans JWT. PaiementController.statutPublic(). */
   statutPublic(id: string): Observable<StatutPaiementPublic> {
     return this.http.get<StatutPaiementPublic>(`${this.base}/${id}/statut-public`);
   }

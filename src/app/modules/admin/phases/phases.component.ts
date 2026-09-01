@@ -65,7 +65,10 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
   }
 
   @if (!isLoading && erreur) {
-    <div class="empty-state" role="alert">⚠️ {{ erreur }}</div>
+    <div class="empty-state" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreur }}
+    </div>
   }
 
   @if (!isLoading && !erreur) {
@@ -139,7 +142,10 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
           </label>
 
           @if (erreurCreation) {
-            <div class="field-error" role="alert">⚠️ {{ erreurCreation }}</div>
+            <div class="field-error" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ erreurCreation }}
+            </div>
           }
 
           <div class="form__actions">
@@ -165,7 +171,7 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
               <div class="phase-card__nom">
                 {{ labelPhase(p.nom) }}
                 @if (p.typePhase && p.nom !== 'PRESELECTION') {
-                  <span class="format-tag">{{ p.typePhase === 'DUO' ? '👥 Duo' : '👤 Individuel' }}</span>
+                  <span class="format-tag">{{ p.typePhase === 'DUO' ? 'Duo' : 'Individuel' }}</span>
                 }
               </div>
               <div class="phase-card__dates">{{ p.dateDebut | date:'dd/MM/yy HH:mm' }} → {{ p.dateFin | date:'dd/MM/yy HH:mm' }}</div>
@@ -177,9 +183,18 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                  votes/jury/public n'a aucun sens pour cette phase, on ne l'affiche pas. -->
             @if (p.nom !== 'PRESELECTION') {
               <div class="ponderation">
-                <span class="pond-item">🗳️ Votes <strong>{{ p.poidsVotesEnLigne }}%</strong></span>
-                <span class="pond-item">🎤 Jury <strong>{{ p.poidsJury }}%</strong></span>
-                <span class="pond-item">👥 Public <strong>{{ p.poidsPublicSurPlace }}%</strong></span>
+                <span class="pond-item">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+                  Votes <strong>{{ p.poidsVotesEnLigne }}%</strong>
+                </span>
+                <span class="pond-item">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                  Jury <strong>{{ p.poidsJury }}%</strong>
+                </span>
+                <span class="pond-item">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Public <strong>{{ p.poidsPublicSurPlace }}%</strong>
+                </span>
               </div>
             }
 
@@ -226,10 +241,14 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
             <div class="phase-card__footer">
               @if (p.nom !== 'PRESELECTION') {
                 <div class="vote-status" [class.vote-status--on]="p.voteActif">
-                  {{ p.voteActif ? '🟢 Votes ouverts' : '🔴 Votes fermés' }}
+                  <span class="dot" aria-hidden="true"></span>
+                  {{ p.voteActif ? 'Votes ouverts' : 'Votes fermés' }}
                 </div>
               } @else {
-                <div class="vote-status">📋 Phase de candidatures — pas de vote</div>
+                <div class="vote-status">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                  Phase de candidatures — pas de vote
+                </div>
               }
               <div class="phase-card__actions">
                 <button type="button" class="btn btn--sm" (click)="ouvrirEdition(p)" [disabled]="p.statut === 'TERMINEE'">
@@ -237,7 +256,10 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                 </button>
                 @if (p.statut === 'EN_ATTENTE') {
                   <button type="button" class="btn btn--sm btn--ok" [disabled]="activationEnCours === p.id" (click)="phaseAActiver = p">
-                    {{ activationEnCours === p.id ? '…' : '▶ Activer' }}
+                    @if (activationEnCours !== p.id) {
+                      <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m7 4 15 8-15 8V4z"/></svg>
+                    }
+                    {{ activationEnCours === p.id ? '…' : 'Activer' }}
                   </button>
                 }
                 @if (p.nom !== 'PRESELECTION') {

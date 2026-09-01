@@ -53,10 +53,29 @@
   border-radius: $radius-sm;
   font-size: 14px;
   margin-bottom: $sp-4;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
 
   &--ok  { background: rgba($nks-success, 0.08); border: 1px solid rgba($nks-success, 0.25); color: $nks-success; }
   &--err { background: rgba($nks-error, 0.1);    border: 1px solid rgba($nks-error, 0.3);    color: $nks-error; }
 }
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis.
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba($nks-gold, 0.3);
+  border-top-color: $nks-gold;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+
+  &--inline { vertical-align: middle; margin-right: 6px; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .notif-form {
   display: flex;
@@ -163,6 +182,8 @@
   }
 
   &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  span { display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
 
   @media (max-width: 480px) { align-self: stretch; width: 100%; }
 }

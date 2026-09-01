@@ -4,7 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, forkJoin, of, catchError, switchMap, finalize } from 'rxjs';
 
-import { AdminService } from '@core/services/admin.service';
+import { AdminService, SmsBulkResponse, SMS_CANDIDATURE_VALIDEE, normaliserTelephone } from '@core/services/admin.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { VideoService } from '@core/services/video.service';
 import { MediaService } from '@core/services/media.service';
@@ -49,6 +49,27 @@ interface DetailComplement {
     }
   </div>
 
+  <!-- Rattrapage SMS confirmation — visible uniquement sur le filtre "En attente de paiement" -->
+  @if (filtreCourant === 'EN_ATTENTE_PAIEMENT') {
+    <div class="sms-relance">
+      <button type="button" class="btn btn--ghost btn--sm" [disabled]="smsEnCours" (click)="renvoyerSms()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        {{ smsEnCours ? 'Envoi…' : 'Renvoyer le SMS de confirmation à tous' }}
+      </button>
+      @if (smsResultat) {
+        <span class="sms-relance__resultat">
+          {{ smsResultat.nbEnvoyes }} envoyé(s)
+          @if (smsResultat.nbEchecs > 0) {
+            <span class="sms-relance__echecs">, {{ smsResultat.nbEchecs }} échec(s)</span>
+          }
+        </span>
+      }
+      @if (smsErreur) {
+        <span class="sms-relance__echecs">{{ smsErreur }}</span>
+      }
+    </div>
+  }
+
   <!-- Loading -->
   @if (isLoading) {
     <div class="skeletons" role="status" aria-label="Chargement des candidatures">
@@ -89,15 +110,46 @@ interface DetailComplement {
           <span role="cell" class="row__date">{{ c.dateSoumission | date:'dd/MM/yyyy HH:mm' }}</span>
           <span role="cell" class="row__actions">
             <button type="button" class="btn btn--ghost btn--sm" (click)="ouvrirDossier(c)">
-              📁 Voir le dossier
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              Voir le dossier
             </button>
             @if (c.statut === 'EN_ATTENTE') {
               <button type="button" class="btn btn--ok btn--sm" (click)="valider(c)" [disabled]="actionEnCours === c.id">
-                {{ actionEnCours === c.id ? '…' : '✓ Valider' }}
+                @if (actionEnCours !== c.id) {
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                }
+                {{ actionEnCours === c.id ? '…' : 'Valider' }}
               </button>
               <button type="button" class="btn btn--err btn--sm" (click)="ouvrirModalRejet(c)" [disabled]="actionEnCours === c.id">
-                ✗ Rejeter
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                Rejeter
               </button>
+            }
+            @if (c.statut === 'EN_ATTENTE_PAIEMENT') {
+              <button type="button" class="btn btn--ghost btn--sm" [disabled]="smsUnitaireEnCoursId === c.id" (click)="renvoyerSmsUnitaire(c)">
+                @if (smsUnitaireEnCoursId !== c.id) {
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                }
+                {{ smsUnitaireEnCoursId === c.id ? '…' : 'Renvoyer le SMS' }}
+              </button>
+              @if (smsUnitaireResultatId === c.id) {
+                <span class="sms-unitaire-ok">Envoyé</span>
+              }
+              @if (smsUnitaireErreurId === c.id) {
+                <span class="sms-unitaire-err">Échec</span>
+              }
+              <button type="button" class="btn btn--ghost btn--sm" [disabled]="whatsappUnitaireEnCoursId === c.id" (click)="renvoyerWhatsappUnitaire(c)">
+                @if (whatsappUnitaireEnCoursId !== c.id) {
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                }
+                {{ whatsappUnitaireEnCoursId === c.id ? '…' : 'Renvoyer via WhatsApp' }}
+              </button>
+              @if (whatsappUnitaireResultatId === c.id) {
+                <span class="sms-unitaire-ok">Envoyé</span>
+              }
+              @if (whatsappUnitaireErreurId === c.id) {
+                <span class="sms-unitaire-err">Échec</span>
+              }
             }
           </span>
         </div>
@@ -127,7 +179,10 @@ interface DetailComplement {
             <p class="modal__loading">Chargement du dossier…</p>
           }
           @if (comp.erreur) {
-            <p class="modal__err" role="alert">⚠️ {{ comp.erreur }}</p>
+            <p class="modal__err" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ comp.erreur }}
+            </p>
           }
           @if (comp.photoUrl; as photo) {
             <img [src]="photo" [alt]="d.prenom + ' ' + d.nom" class="modal__photo" />
@@ -139,7 +194,11 @@ interface DetailComplement {
         <div class="dossier__champ"><strong>Soumise le :</strong> {{ d.dateSoumission | date:'dd/MM/yyyy HH:mm' }}</div>
 
         @if (complement(d.id)?.candidat; as cd) {
-          <div class="dossier__champ"><strong>Chanson de présélection :</strong> 🎵 {{ cd.chansonPreselection }}</div>
+          <div class="dossier__champ">
+            <strong>Chanson de présélection :</strong>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            {{ cd.chansonPreselection }}
+          </div>
           @if (cd.biographie) {
             <div class="dossier__champ"><strong>Bio :</strong> {{ cd.biographie }}</div>
           }
@@ -155,7 +214,8 @@ interface DetailComplement {
         @if (d.captureFbTiktokUrl) {
           <div class="dossier__champ">
             <a [href]="d.captureFbTiktokUrl" target="_blank" rel="noopener" class="lien-inline">
-              🖼️ Voir la capture d'abonnement Facebook/TikTok
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              Voir la capture d'abonnement Facebook/TikTok
             </a>
           </div>
         }
@@ -165,21 +225,33 @@ interface DetailComplement {
             <strong>Vidéo de présélection :</strong>
             @for (v of complement(d.id)?.videos; track v.id) {
               <div class="dossier__video-meta">
-                <span>🎬 {{ v.titreChanson }} — {{ dureeFormatee(v.dureeSecondes) }} — {{ statutVideoLabel(v.statut) }}</span>
+                <span>
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                  {{ v.titreChanson }} — {{ dureeFormatee(v.dureeSecondes) }} — {{ statutVideoLabel(v.statut) }}
+                </span>
                 @if (v.urlStreaming) {
-                  <a [href]="v.urlStreaming" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">▶ Voir la vidéo</a>
+                  <a [href]="v.urlStreaming" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m7 4 15 8-15 8V4z"/></svg>
+                    Voir la vidéo
+                  </a>
                 } @else {
                   <span class="text-muted">Lien de lecture non disponible</span>
                 }
                 @if (v.statut === 'DISPONIBLE') {
                   <button type="button" class="btn btn--err btn--sm" [disabled]="masquageEnCoursId === v.id" (click)="videoAMasquer = v">
-                    {{ masquageEnCoursId === v.id ? '…' : '🙈 Masquer la vidéo' }}
+                    @if (masquageEnCoursId !== v.id) {
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                    }
+                    {{ masquageEnCoursId === v.id ? '…' : 'Masquer la vidéo' }}
                   </button>
                 }
               </div>
             }
             @if (erreurMasquage) {
-              <div class="modal__err" role="alert">⚠️ {{ erreurMasquage }}</div>
+              <div class="modal__err" role="alert">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                {{ erreurMasquage }}
+              </div>
             }
           </div>
         }
@@ -193,10 +265,14 @@ interface DetailComplement {
         <div class="modal__actions">
           @if (d.statut === 'EN_ATTENTE') {
             <button type="button" class="btn btn--ok" (click)="valider(d)" [disabled]="actionEnCours === d.id">
-              {{ actionEnCours === d.id ? '…' : '✓ Valider' }}
+              @if (actionEnCours !== d.id) {
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              }
+              {{ actionEnCours === d.id ? '…' : 'Valider' }}
             </button>
             <button type="button" class="btn btn--err" (click)="ouvrirModalRejet(d)" [disabled]="actionEnCours === d.id">
-              ✗ Rejeter
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              Rejeter
             </button>
           }
           <button type="button" class="btn btn--ghost" (click)="fermerDossier()">Fermer</button>
@@ -265,6 +341,19 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   actionEnCours: string | null = null;
   candidatureArejeter: CandidatureDetailResponse | null = null;
   motifCtrl = new FormControl('', [Validators.required, Validators.minLength(10)]);
+
+  smsEnCours = false;
+  smsResultat: SmsBulkResponse | null = null;
+  smsErreur: string | null = null;
+
+  smsUnitaireEnCoursId: string | null = null;
+  smsUnitaireResultatId: string | null = null;
+  smsUnitaireErreurId: string | null = null;
+
+  /** Endpoint backend pas encore implémenté (POST /whatsapp/envoyer, cf. AdminService) — échoue en 404 pour l'instant. */
+  whatsappUnitaireEnCoursId: string | null = null;
+  whatsappUnitaireResultatId: string | null = null;
+  whatsappUnitaireErreurId: string | null = null;
 
   /** Édition EN_COURS — nécessaire pour résoudre codeCandidat → CandidatPublicResponse (GET /candidats/code/{code}?editionId=). */
   private editionId: string | null = null;
@@ -338,7 +427,52 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
 
   setFiltre(f: Filtre): void {
     this.filtreCourant = f;
+    this.smsResultat = null;
+    this.smsErreur = null;
     this.chargerPage(0);
+  }
+
+  renvoyerSms(): void {
+    this.smsEnCours = true;
+    this.smsResultat = null;
+    this.smsErreur = null;
+    this.sub.add(
+      this.adminSvc.renvoyerSmsConfirmation().pipe(
+        catchError(err => { this.smsErreur = messageErreur(err, "Échec de l'envoi."); return of(null); })
+      ).subscribe(res => {
+        this.smsEnCours = false;
+        if (res) this.smsResultat = res;
+      })
+    );
+  }
+
+  renvoyerSmsUnitaire(c: CandidatureDetailResponse): void {
+    this.smsUnitaireEnCoursId = c.id;
+    this.smsUnitaireResultatId = null;
+    this.smsUnitaireErreurId = null;
+    this.sub.add(
+      this.adminSvc.envoyerSmsUnitaire(normaliserTelephone(c.telephone), SMS_CANDIDATURE_VALIDEE).pipe(
+        catchError(() => { this.smsUnitaireErreurId = c.id; return of(null); })
+      ).subscribe(res => {
+        this.smsUnitaireEnCoursId = null;
+        if (res) this.smsUnitaireResultatId = c.id;
+      })
+    );
+  }
+
+  /** POST /whatsapp/envoyer pas encore implémenté côté backend — échoue en 404 tant que Serge ne l'a pas ajouté. */
+  renvoyerWhatsappUnitaire(c: CandidatureDetailResponse): void {
+    this.whatsappUnitaireEnCoursId = c.id;
+    this.whatsappUnitaireResultatId = null;
+    this.whatsappUnitaireErreurId = null;
+    this.sub.add(
+      this.adminSvc.envoyerWhatsappUnitaire(normaliserTelephone(c.telephone), SMS_CANDIDATURE_VALIDEE).pipe(
+        catchError(() => { this.whatsappUnitaireErreurId = c.id; return of(null); })
+      ).subscribe(res => {
+        this.whatsappUnitaireEnCoursId = null;
+        if (res) this.whatsappUnitaireResultatId = c.id;
+      })
+    );
   }
 
   chargerPage(p: number): void {
@@ -418,9 +552,9 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
 
   statutVideoLabel(statut: string): string {
     const map: Record<string, string> = {
-      EN_COURS_UPLOAD: '⏳ En cours',
-      DISPONIBLE:      '✅ Disponible',
-      MASQUEE:         '🙈 Masquée',
+      EN_COURS_UPLOAD: 'En cours',
+      DISPONIBLE:      'Disponible',
+      MASQUEE:         'Masquée',
     };
     return map[statut] ?? statut;
   }

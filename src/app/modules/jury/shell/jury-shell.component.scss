@@ -1,0 +1,216 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.shell {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+
+  @media (min-width: 900px) {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+// ─── Sidebar (desktop uniquement) ───────────────────────────────────────────
+.sidebar {
+  display: none;
+
+  @media (min-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    background: $nks-bg-surface;
+    border-right: 1px solid rgba($nks-text, 0.08);
+  }
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-5 $sp-5 $sp-4;
+  border-bottom: 1px solid rgba($nks-text, 0.08);
+}
+
+.sidebar__brand-icon { height: 32px; width: auto; flex-shrink: 0; }
+
+.sidebar__brand-text {
+  font-family: $font-title;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+
+  span { color: $nks-gold; }
+}
+
+.sidebar__brand-sub { font-size: 11px; color: $nks-text-secondary; opacity: 0.7; margin-top: 1px; }
+
+.sidebar__nav {
+  flex: 1;
+  padding: $sp-4 $sp-3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-sm;
+  color: $nks-text-secondary;
+  text-decoration: none;
+  font-size: 14px;
+  min-height: 44px;
+  transition: background $dur-fast $ease-out, color $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+  &:hover { background: rgba($nks-text, 0.05); color: $nks-text; }
+
+  &--active {
+    background: linear-gradient(135deg, rgba($nks-gold, 0.18), rgba($nks-gold, 0.06));
+    box-shadow: inset 0 0 0 1px rgba($nks-gold, 0.25);
+    color: $nks-gold;
+    font-weight: 600;
+  }
+}
+
+.sidebar__item-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar__item-label { flex: 1; }
+
+.sidebar__footer {
+  padding: $sp-4 $sp-3;
+  border-top: 1px solid rgba($nks-text, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1;
+}
+
+.sidebar__footer-link {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  color: $nks-text-secondary;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: $font-body;
+  min-height: 44px;
+  transition: background $dur-fast $ease-out, color $dur-fast $ease-out;
+
+  &:hover { background: rgba($nks-text, 0.05); color: $nks-text; }
+  &--danger:hover { color: $nks-error; background: rgba($nks-error, 0.08); }
+}
+
+// ─── Contenu principal ───────────────────────────────────────────────────────
+.shell__main { min-width: 0; }
+
+.shell__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 $sp-4;
+  background: $nks-glass-bg;
+  backdrop-filter: blur($nks-glass-blur);
+  -webkit-backdrop-filter: blur($nks-glass-blur);
+  border-bottom: 1px solid $nks-border;
+
+  @media (min-width: 900px) { display: none; }
+}
+
+.shell__brand-mobile {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  text-decoration: none;
+  color: $nks-text;
+  font-family: $font-title;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.shell__brand-icon { height: 24px; width: auto; }
+
+.shell__topbar-spacer { flex: 1; }
+
+.shell__logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  background: transparent;
+  border: 1px solid rgba($nks-text, 0.12);
+  color: $nks-text-secondary;
+  cursor: pointer;
+  transition: background $dur-fast $ease-out, color $dur-fast $ease-out, border-color $dur-fast $ease-out;
+
+  svg { width: 16px; height: 16px; }
+
+  &:hover { color: $nks-error; border-color: rgba($nks-error, 0.4); background: rgba($nks-error, 0.08); }
+}
+
+// $bottom-nav-height (64px) : la même variable que app-bottom-nav (site public) et
+// app-candidat-shell, pour que le contenu ne soit jamais masqué par la barre fixe.
+.shell__content {
+  padding-bottom: $bottom-nav-height;
+
+  @media (min-width: 900px) { padding-bottom: 0; }
+}
+
+// ─── Barre basse (mobile uniquement) — même recette que app-bottom-nav ─────
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: $bottom-nav-height;
+  background: $nks-bg-primary;
+  border-top: 1px solid $nks-border;
+  display: flex;
+  align-items: stretch;
+  z-index: 200;
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: $nks-text-secondary;
+    transition: color $dur-fast $ease-out;
+
+    &--active { color: $nks-gold; }
+  }
+
+  &__icon { width: 20px; height: 20px; }
+  &__label {
+    font-size: 10px;
+    font-weight: 600;
+    transition: color $dur-fast $ease-out;
+  }
+
+  &__item--active &__label {
+    background: $nks-gradient-gold;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @media (min-width: 900px) { display: none; }
+}

@@ -14,9 +14,17 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-.empty-state { padding: 48px 24px; text-align: center; color: $muted;
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 24px; text-align: center; color: $muted;
   .empty-hint { font-size: 13px; margin-top: 4px; }
+}
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans tout l'écran.
+.icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+
+  &--lg { width: 40px; height: 40px; margin-bottom: 12px; }
 }
 
 .videos-list { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -35,7 +43,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   background: t.$nks-bg-card; position: relative; flex-shrink: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb-placeholder { font-size: 24px; }
+  .thumb-placeholder { .icon { width: 22px; height: 22px; } }
   .duration {
     position: absolute; bottom: 4px; right: 4px;
     background: rgba(0,0,0,0.7); color: $text; font-size: 10px;
@@ -51,8 +59,10 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 .video-link {
   width: 36px; height: 36px; border-radius: 50%; background: rgba($gold, 0.15);
   border: 1px solid $gold; color: $gold; display: flex; align-items: center;
-  justify-content: center; text-decoration: none; font-size: 14px; flex-shrink: 0;
+  justify-content: center; text-decoration: none; flex-shrink: 0;
   transition: background t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+  .icon { width: 14px; height: 14px; }
 
   &:hover { background: rgba($gold, 0.22); box-shadow: t.$shadow-glow-gold; }
 
@@ -70,7 +80,62 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   &--default { background: rgba(255,255,255,0.08); color: $muted; }
 }
 
+.upload-card {
+  margin: 0 16px 16px;
+  padding: 16px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-md;
+
+  &__title { font-family: t.$font-title; font-size: 16px; color: $text; margin: 0 0 4px; }
+  &__hint  { font-size: 12px; color: $muted; margin: 0 0 12px; }
+}
+
+.upload-erreur {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: t.$nks-error;
+  background: rgba(t.$nks-error, 0.1); border: 1px solid rgba(t.$nks-error, 0.3);
+  border-radius: t.$radius-sm; padding: 10px 12px; margin-bottom: 12px;
+}
+
+.upload-form { display: flex; flex-direction: column; gap: 10px; }
+
+.upload-titre {
+  width: 100%; padding: 10px 12px; border-radius: t.$radius-sm;
+  border: 1px solid $border; background: $bg; color: $text;
+  font-size: 14px; font-family: t.$font-body;
+
+  &:focus { outline: none; border-color: $gold; }
+  &::placeholder { color: $muted; }
+}
+
+.upload-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border-radius: t.$radius-sm;
+  background: t.$nks-gradient-gold; color: t.$nks-bg-primary;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: filter t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+  &:hover { filter: brightness(1.06); box-shadow: t.$shadow-glow-gold; }
+  &--loading { cursor: wait; opacity: 0.85; }
+
+  input[type="file"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+  }
+}
+
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(t.$nks-bg-primary, 0.3); border-top-color: t.$nks-bg-primary;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+
+  &--inline { vertical-align: middle; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 // $bascule (900px) : même seuil que le reste du site public et que les autres pages du panel candidat.
 @media (min-width: 900px) {
-  .page-header, .videos-list, .empty-state { max-width: 720px; margin-inline: auto; }
+  .page-header, .videos-list, .empty-state, .upload-card { max-width: 720px; margin-inline: auto; }
 }

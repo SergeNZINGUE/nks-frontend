@@ -40,7 +40,10 @@ interface PouleSession extends PouleResponse {
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="empty-state" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="empty-state" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -56,7 +59,7 @@ interface PouleSession extends PouleResponse {
           <label for="phaseSelect">Phase</label>
           <select id="phaseSelect" [value]="phaseSelectionneeId" (change)="selectionnerPhase($any($event.target).value)">
             @for (p of phasesEligibles; track p.id) {
-              <option [value]="p.id">{{ labelPhase(p.nom) }} — {{ p.typePhase === 'DUO' ? '👥 Duo' : '👤 Individuel' }}</option>
+              <option [value]="p.id">{{ labelPhase(p.nom) }} — {{ p.typePhase === 'DUO' ? 'Duo' : 'Individuel' }}</option>
             }
           </select>
         </div>
@@ -65,9 +68,10 @@ interface PouleSession extends PouleResponse {
       @if (phaseSelectionnee) {
 
         <div class="gap-banner" role="note">
-          ⚠️ Limitation backend connue : il n'existe aucun endpoint pour <strong>relister les poules déjà créées</strong> après un rechargement de page
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <span>Limitation backend connue : il n'existe aucun endpoint pour <strong>relister les poules déjà créées</strong> après un rechargement de page
           (seuls les duos sont relistables via <code>GET /duos/phase/{{ '{' }}id{{ '}' }}</code>). Les poules créées dans cette session restent visibles ci-dessous
-          tant que tu ne rafraîchis pas la page — elles existent toujours en base au rechargement, mais cet écran ne peut plus les retrouver.
+          tant que tu ne rafraîchis pas la page — elles existent toujours en base au rechargement, mais cet écran ne peut plus les retrouver.</span>
         </div>
 
         @if (chargementCandidats) {
@@ -91,7 +95,10 @@ interface PouleSession extends PouleResponse {
                   <input id="nomPoule" type="text" formControlName="nom" placeholder="Poule A" maxlength="50" />
                 </div>
                 @if (erreurPoule) {
-                  <div class="field-error" role="alert">⚠️ {{ erreurPoule }}</div>
+                  <div class="field-error" role="alert">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    {{ erreurPoule }}
+                  </div>
                 }
                 <div class="form__actions">
                   <button type="submit" class="btn btn--primary" [disabled]="formPoule.invalid || creationPouleEnCours">
@@ -134,7 +141,10 @@ interface PouleSession extends PouleResponse {
                           <p class="field-hint">Tous les candidats actifs sont déjà affectés à une poule de cette phase.</p>
                         }
                         @if (erreurAffectation) {
-                          <div class="field-error" role="alert">⚠️ {{ erreurAffectation }}</div>
+                          <div class="field-error" role="alert">
+                          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                          {{ erreurAffectation }}
+                        </div>
                         }
                         <div class="form__actions">
                           <button type="button" class="btn btn--sm btn--primary" [disabled]="selectionAffectation.size === 0 || affectationEnCours"
@@ -186,7 +196,10 @@ interface PouleSession extends PouleResponse {
                   <input id="chansonCommune" type="text" formControlName="chansonCommune" maxlength="255" />
                 </div>
                 @if (erreurDuo) {
-                  <div class="field-error" role="alert">⚠️ {{ erreurDuo }}</div>
+                  <div class="field-error" role="alert">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    {{ erreurDuo }}
+                  </div>
                 }
                 <div class="form__actions">
                   <button type="submit" class="btn btn--primary" [disabled]="formDuo.invalid || creationDuoEnCours">
@@ -206,7 +219,10 @@ interface PouleSession extends PouleResponse {
                     <div>
                       <div class="phase-card__nom">{{ d.candidat1.prenom }} {{ d.candidat1.nom }} &amp; {{ d.candidat2.prenom }} {{ d.candidat2.nom }}</div>
                       @if (d.chansonCommune) {
-                        <div class="phase-card__dates">🎵 {{ d.chansonCommune }}</div>
+                        <div class="phase-card__dates">
+                          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                          {{ d.chansonCommune }}
+                        </div>
                       }
                     </div>
                   </div>

@@ -87,7 +87,7 @@ export class MonProfilComponent implements OnInit, OnDestroy {
     this.mediaSvc.uploadPhoto(file).subscribe({
       next: res => {
         this.isUploadingPhoto = false;
-        this.successMsg = '📸 Photo mise à jour.';
+        this.successMsg = 'Photo mise à jour.';
         setTimeout(() => (this.successMsg = null), 3000);
         // TODO: appeler POST /medias/photo avec res.publicId quand endpoint disponible
       },
@@ -108,7 +108,7 @@ export class MonProfilComponent implements OnInit, OnDestroy {
       next: p => {
         this.isSaving = false;
         this.profil = p;
-        this.successMsg = '✅ Biographie enregistrée.';
+        this.successMsg = 'Biographie enregistrée.';
         setTimeout(() => (this.successMsg = null), 3000);
       },
       error: err => {

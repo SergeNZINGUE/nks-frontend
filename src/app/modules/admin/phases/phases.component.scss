@@ -115,8 +115,25 @@
   input { width: 16px; height: 16px; }
 }
 
-.field-error { font-size: 13px; color: $nks-error; }
+.field-error { font-size: 13px; color: $nks-error; display: flex; align-items: center; gap: $sp-2; }
 .field-hint { font-size: 12px; color: $nks-text-secondary; margin: 0; }
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans les écrans admin partagés
+// (phases, poules, résultats, soirées, billets, jury — tous important ce fichier).
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.banner--err {
+  margin-bottom: $sp-4;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-md;
+  font-size: 14px;
+  background: rgba($nks-error, 0.1);
+  border: 1px solid rgba($nks-error, 0.3);
+  color: $nks-error;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+}
 
 .format-tag {
   font-family: $font-body;
@@ -246,6 +263,9 @@
 .pond-item {
   font-size: 13px;
   color: $nks-text-secondary;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-1;
 
   strong { color: $nks-text; }
 }
@@ -254,8 +274,19 @@
   font-size: 13px;
   font-weight: 600;
   color: $nks-text-secondary;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
 
   &--on { color: $nks-success; }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: $radius-full;
+    background: currentColor;
+    flex-shrink: 0;
+  }
 }
 
 .btn {
@@ -268,6 +299,9 @@
   border: 1px solid transparent;
   min-height: 40px;
   transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
 
   &--ok {
     background: rgba($nks-success, 0.15);

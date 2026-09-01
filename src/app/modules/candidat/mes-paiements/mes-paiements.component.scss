@@ -14,10 +14,19 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-.empty-state { padding: 48px 24px; text-align: center; color: $muted;
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 24px; text-align: center; color: $muted;
   .empty-hint { font-size: 13px; margin-top: 4px; }
   .btn { margin-top: 16px; }
+}
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis dans tout l'écran.
+.icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+
+  &--sm { width: 13px; height: 13px; }
+  &--lg { width: 40px; height: 40px; margin-bottom: 12px; }
 }
 
 .info-section, .paiement-section { padding: 16px; }
@@ -49,12 +58,17 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .alert {
   margin: 0 16px 16px; padding: 12px 14px; border-radius: t.$radius-md; font-size: 13px;
-  display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  display: flex; gap: 8px; align-items: flex-start;
   &--success { background: rgba(t.$nks-success, 0.08); border: 1px solid rgba(t.$nks-success, 0.25); color: t.$nks-success; }
   &--warning { background: rgba(t.$nks-warning, 0.08); border: 1px solid rgba(t.$nks-warning, 0.25); color: t.$nks-warning; }
   &--danger  { background: rgba(t.$nks-error, 0.08);   border: 1px solid rgba(t.$nks-error, 0.25);   color: t.$nks-error; }
 
-  &__link { color: inherit; text-decoration: underline; font-weight: 600; }
+  .icon { margin-top: 2px; }
+
+  &__link {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 6px; color: inherit; text-decoration: underline; font-weight: 600;
+  }
 }
 
 .paiement-form {
@@ -93,7 +107,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 .btn {
   padding: 12px 24px; border-radius: t.$radius-sm; font-size: 15px; font-weight: 700;
   font-family: t.$font-body; cursor: pointer; border: none; min-height: 48px;
-  text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   transition: box-shadow t.$dur-fast t.$ease-out, filter t.$dur-fast t.$ease-out;
 
   &--primary {
@@ -106,8 +120,11 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 
 .gap-notice {
+  display: flex; align-items: flex-start; gap: 8px;
   margin: 16px 16px 0; padding: 10px 14px; border-radius: t.$radius-md; font-size: 12px;
   background: rgba(t.$nks-info, 0.08); border: 1px solid rgba(t.$nks-info, 0.25); color: t.$nks-info;
+
+  .icon { margin-top: 1px; }
 }
 
 // $bascule (900px) : même seuil que le reste du site public et que les autres pages du panel candidat.

@@ -42,7 +42,10 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -114,10 +117,16 @@ type EtatUpload = 'idle' | 'uploading' | 'done' | 'error';
           </fieldset>
 
           @if (erreurEnvoi) {
-            <div class="field-error" role="alert">⚠️ {{ erreurEnvoi }}</div>
+            <div class="field-error" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ erreurEnvoi }}
+            </div>
           }
           @if (succes) {
-            <div class="field-success" role="status">✔ Partenaire enregistré.</div>
+            <div class="field-success" role="status">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              Partenaire enregistré.
+            </div>
           }
 
           <div class="form__actions">

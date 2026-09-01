@@ -27,7 +27,10 @@ import { messageErreur } from '@core/utils/http-error.util';
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -45,7 +48,10 @@ import { messageErreur } from '@core/utils/http-error.util';
         </div>
         <div class="field"><label for="specialite">Spécialité (optionnel)</label><input id="specialite" type="text" formControlName="specialite" maxlength="150" /></div>
         @if (erreurCreation) {
-          <div class="field-error" role="alert">⚠️ {{ erreurCreation }}</div>
+          <div class="field-error" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurCreation }}
+          </div>
         }
         <div class="form__actions">
           <button type="submit" class="btn btn--primary" [disabled]="formJury.invalid || creationEnCours">
@@ -61,7 +67,10 @@ import { messageErreur } from '@core/utils/http-error.util';
         <div class="skeletons" role="status"><div class="sk" aria-hidden="true"></div></div>
       }
       @if (!chargementListe && erreurListe) {
-        <div class="field-error" role="alert">⚠️ {{ erreurListe }}</div>
+        <div class="field-error" role="alert">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          {{ erreurListe }}
+        </div>
       }
       @if (!chargementListe && !erreurListe && jurys.length === 0) {
         <div class="empty-state">Aucun juré pour cette édition.</div>
@@ -111,11 +120,15 @@ import { messageErreur } from '@core/utils/http-error.util';
           {{ chargementNotes ? 'Chargement…' : 'Charger les notes' }}
         </button>
         <button type="button" class="btn btn--err" [disabled]="!soireeSelectionneeId || clotureEnCours" (click)="demandeCloture = true">
-          {{ clotureEnCours ? 'Clôture…' : '🔒 Clôturer la notation de cette soirée' }}
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          {{ clotureEnCours ? 'Clôture…' : 'Clôturer la notation de cette soirée' }}
         </button>
       </div>
       @if (erreurNotes) {
-        <div class="field-error" role="alert" style="margin-top: 12px;">⚠️ {{ erreurNotes }}</div>
+        <div class="field-error" role="alert" style="margin-top: 12px;">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          {{ erreurNotes }}
+        </div>
       }
       @if (messageCloture) {
         <div class="field-hint" role="status" aria-live="polite" style="margin-top: 8px;">{{ messageCloture }}</div>
@@ -130,7 +143,13 @@ import { messageErreur } from '@core/utils/http-error.util';
                 <td>{{ n.juryId.slice(0, 8) }}…</td>
                 <td>{{ n.critereNom }}</td>
                 <td>{{ n.valeur }}</td>
-                <td>{{ n.verrouille ? '🔒' : '—' }}</td>
+                <td>
+                  @if (n.verrouille) {
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  } @else {
+                    —
+                  }
+                </td>
               </tr>
             }
           </tbody>
@@ -253,7 +272,7 @@ export class JuryComponent implements OnInit, OnDestroy {
         if (!jury) return;
         this.jurys = [...this.jurys, jury];
         this.formJury.reset({ prenom: '', nom: '', email: '', telephone: '', specialite: '' });
-        this.messageJury = `✓ Juré ${jury.prenom} ${jury.nom} créé.`;
+        this.messageJury = `Juré ${jury.prenom} ${jury.nom} créé.`;
       })
     );
   }
@@ -263,13 +282,13 @@ export class JuryComponent implements OnInit, OnDestroy {
     this.messageJury = null;
     this.sub.add(
       this.jurySvc.desactiverAdmin(j.id).pipe(
-        catchError(() => { this.messageJury = '⚠️ Échec de la désactivation.'; return of(null); }),
+        catchError(() => { this.messageJury = 'Échec de la désactivation.'; return of(null); }),
         finalize(() => { this.desactivationEnCoursId = null; this.juryADesactiver = null; })
       ).subscribe(() => {
         const idx = this.jurys.findIndex(x => x.id === j.id);
         if (idx !== -1) {
           this.jurys[idx] = { ...this.jurys[idx], statut: 'INACTIF' };
-          this.messageJury = `✓ Juré ${j.prenom} ${j.nom} désactivé.`;
+          this.messageJury = `Juré ${j.prenom} ${j.nom} désactivé.`;
         }
       })
     );
@@ -309,7 +328,7 @@ export class JuryComponent implements OnInit, OnDestroy {
       ).subscribe(() => {
         if (echec) return; // la modale reste ouverte avec l'erreur affichée
         this.demandeCloture = false;
-        this.messageCloture = '✓ Notation clôturée pour cette soirée.';
+        this.messageCloture = 'Notation clôturée pour cette soirée.';
       })
     );
   }

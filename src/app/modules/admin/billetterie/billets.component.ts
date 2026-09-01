@@ -28,7 +28,8 @@ const MSG_BACKEND_CASSE =
   </div>
 
   <div class="gap-banner" role="note">
-    ⚠️ Écran câblé sur les endpoints réels de <code>BilletterieController</code>. La liste des
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    Écran câblé sur les endpoints réels de <code>BilletterieController</code>. La liste des
     réservations admin est aujourd'hui cassée côté backend (500 confirmé en test live, dès qu'il y a
     des réservations en base pour la soirée).
   </div>
@@ -38,7 +39,10 @@ const MSG_BACKEND_CASSE =
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -57,11 +61,15 @@ const MSG_BACKEND_CASSE =
       @if (soireeSelectionneeId) {
         <div class="form__actions" style="margin-top: 8px;">
           <button type="button" class="btn btn--ghost" [disabled]="exportTicketsEnCours" (click)="exporterTicketsCsv()">
-            {{ exportTicketsEnCours ? 'Export…' : '⬇ Exporter les tickets (CSV)' }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            {{ exportTicketsEnCours ? 'Export…' : 'Exporter les tickets (CSV)' }}
           </button>
         </div>
         @if (erreurExportTickets) {
-          <div class="field-error" role="alert" style="margin-top: 8px;">⚠️ {{ erreurExportTickets }}</div>
+          <div class="field-error" role="alert" style="margin-top: 8px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurExportTickets }}
+          </div>
         }
       }
     </div>
@@ -86,7 +94,10 @@ const MSG_BACKEND_CASSE =
             <div class="field"><label for="telephone">Téléphone</label><input id="telephone" type="tel" formControlName="telephone" /></div>
           </div>
           @if (erreurGratuit) {
-            <div class="field-error" role="alert">⚠️ {{ erreurGratuit }}</div>
+            <div class="field-error" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ erreurGratuit }}
+            </div>
           }
           <div class="form__actions">
             <button type="submit" class="btn btn--primary" [disabled]="formGratuit.invalid || emissionEnCours">
@@ -102,7 +113,10 @@ const MSG_BACKEND_CASSE =
           <div class="skeletons" role="status"><div class="sk" aria-hidden="true"></div></div>
         }
         @if (!chargementReservations && erreurReservations) {
-          <div class="field-error" role="alert">⚠️ {{ erreurReservations }}</div>
+          <div class="field-error" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurReservations }}
+          </div>
         }
         @if (!chargementReservations && !erreurReservations && reservations.length === 0) {
           <div class="empty-state">Aucune réservation pour cette soirée.</div>
@@ -234,7 +248,7 @@ export class BilletsComponent implements OnInit, OnDestroy {
         if (!reservation) return;
         this.reservations = [reservation, ...this.reservations];
         this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
-        this.messageGratuit = `✓ Ticket(s) émis pour ${reservation.nomReservant}.`;
+        this.messageGratuit = `Ticket(s) émis pour ${reservation.nomReservant}.`;
       })
     );
   }

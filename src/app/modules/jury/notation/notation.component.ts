@@ -6,7 +6,6 @@ import { Subscription, forkJoin, catchError, of } from 'rxjs';
 
 import { JuryService, CandidatBrut, NoteJuryBrut, SaisirNotesRequest, CritereNotationResponse } from '@core/services/jury.service';
 import { messageErreur } from '@core/utils/http-error.util';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
 /** Structure locale d'un critère (source normale : GET /jury/criteres, cf. jury.service.ts). */
 interface CritereLocal {
@@ -39,11 +38,17 @@ const CRITERES_CDC: CritereLocal[] = [
 
 @Component({
   selector: 'app-notation',
-  imports: [ReactiveFormsModule, RouterModule, TopbarComponent],
+  imports: [ReactiveFormsModule, RouterModule],
   template: `
 <div class="notation-page">
 
-  <app-topbar title="Notation" icon="✏️" backLink="/jury" backLabel="Retour à l'espace jury" [showBackOnDesktop]="true" />
+  <div class="page-header">
+    <a routerLink="/jury" class="page-header__back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      Retour au tableau de bord
+    </a>
+    <h1 class="page-header__title">Notation</h1>
+  </div>
 
   <!-- Skeleton -->
   @if (isLoading) {
@@ -58,8 +63,12 @@ const CRITERES_CDC: CritereLocal[] = [
   <!-- Erreur -->
   @if (!isLoading && erreur) {
     <div class="empty-state" role="alert">
-      <p>⚠️ {{ erreur }}</p>
-      <a routerLink="/jury" class="btn btn--ghost">← Retour</a>
+      <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <p>{{ erreur }}</p>
+      <a routerLink="/jury" class="btn btn--ghost">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Retour
+      </a>
     </div>
   }
 
@@ -71,7 +80,10 @@ const CRITERES_CDC: CritereLocal[] = [
         <h2>{{ candidatNom }}</h2>
         <span class="code">{{ candidatCode }}</span>
         @if (chanson) {
-          <span class="chanson">🎵 {{ chanson }}</span>
+          <span class="chanson">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            {{ chanson }}
+          </span>
         }
       </div>
     </div>
@@ -81,20 +93,27 @@ const CRITERES_CDC: CritereLocal[] = [
       <div class="score-bar__track">
         <div class="score-bar__fill" [style.width.%]="pourcentage"></div>
       </div>
-      <span class="score-bar__val">{{ totalPoints }} / {{ totalMax }}</span>
+      <span class="score-bar__val">{{ totalPoints }} <span class="score-bar__max">/ {{ totalMax }}</span></span>
     </div>
     @if (dejaNote) {
-      <div class="banner-ok" role="status">✅ Notes déjà soumises — tu peux les modifier.</div>
+      <div class="banner-ok" role="status">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+        Notes déjà soumises — tu peux les modifier.
+      </div>
     }
     @if (erreurSoumission) {
-      <div class="banner-err" role="alert">⚠️ {{ erreurSoumission }}</div>
+      <div class="banner-err" role="alert">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        {{ erreurSoumission }}
+      </div>
     }
     <!-- Avertissement : grille officielle chargée en repli -->
     @if (criteresFallback) {
       <div class="banner-warn">
-        ⚠️ Grille officielle du cahier des charges (§3.4) affichée en repli — aucun critère
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span>Grille officielle du cahier des charges (§3.4) affichée en repli — aucun critère
         n'a été trouvé pour cette édition en base. Vérifie que <code>criteres_notation</code>
-        a bien été rempli pour l'édition en cours avant de soumettre des notes.
+        a bien été rempli pour l'édition en cours avant de soumettre des notes.</span>
       </div>
     }
     <form [formGroup]="form" class="notation-form">
@@ -123,11 +142,12 @@ const CRITERES_CDC: CritereLocal[] = [
         <button type="button" class="btn btn--primary" [disabled]="isSubmitting || form.invalid"
           (click)="soumettre()">
           @if (!isSubmitting) {
-            <span>✅ Soumettre</span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
           }
           @if (isSubmitting) {
-            <span>⏳ Envoi…</span>
+            <span class="spinner spinner--inline"></span>
           }
+          <span>{{ isSubmitting ? 'Envoi…' : 'Soumettre' }}</span>
         </button>
       </div>
     </form>

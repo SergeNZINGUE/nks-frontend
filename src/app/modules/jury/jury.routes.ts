@@ -4,10 +4,17 @@ export const juryRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./dashboard/jury-dashboard.component').then(c => c.JuryDashboardComponent),
-  },
-  {
-    path: 'noter/:candidatId',
-    loadComponent: () => import('./notation/notation.component').then(c => c.NotationComponent),
+      import('./shell/jury-shell.component').then(c => c.JuryShellComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./dashboard/jury-dashboard.component').then(c => c.JuryDashboardComponent),
+      },
+      {
+        path: 'noter/:candidatId',
+        loadComponent: () => import('./notation/notation.component').then(c => c.NotationComponent),
+      },
+    ],
   },
 ];

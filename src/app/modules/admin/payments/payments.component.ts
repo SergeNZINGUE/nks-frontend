@@ -24,7 +24,10 @@ import { messageErreur } from '@core/utils/http-error.util';
   }
 
   @if (!isLoading && erreur) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreur }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreur }}
+    </div>
   }
 
   @if (!isLoading && !erreur) {
@@ -76,7 +79,10 @@ import { messageErreur } from '@core/utils/http-error.util';
         <label for="reference">Référence (justificatif)</label>
         <textarea id="reference" class="modal__textarea" maxlength="255" [value]="referenceSaisie" (input)="referenceSaisie = $any($event.target).value" rows="3"></textarea>
         @if (erreurConfirmation) {
-          <p class="modal__err" role="alert">⚠️ {{ erreurConfirmation }}</p>
+          <p class="modal__err" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurConfirmation }}
+          </p>
         }
         <div class="modal__actions">
           <button type="button" class="btn btn--ghost" (click)="fermerConfirmation()">Annuler</button>

@@ -90,11 +90,12 @@
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
   position: relative;
   overflow: hidden;
-  transition: box-shadow $dur-base $ease-out, border-color $dur-base $ease-out;
+  transition: box-shadow $dur-base $ease-out, border-color $dur-base $ease-out, transform $dur-fast $ease-out;
 
   &:hover {
     border-color: rgba($nks-gold, 0.35);
     box-shadow: $shadow-glow-gold;
+    transform: translateY(-2px);
   }
 
   &::before {
@@ -112,13 +113,18 @@
 
   &__val {
     font-family: $font-title;
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.1;
     overflow-wrap: anywhere;
+    // Halo dans la même teinte que le chiffre — currentColor reprend automatiquement
+    // la couleur sémantique du variant (--gold/--success/--warning/--error/--info),
+    // jamais un doré uniforme qui casserait le code couleur des KPI.
+    filter: drop-shadow(0 0 6px currentColor);
 
-    span { font-size: 12px; font-weight: 400; color: $nks-text-secondary; }
+    span { font-size: 12px; font-weight: 400; color: $nks-text-secondary; filter: none; }
 
-    @media (max-width: 380px) { font-size: 18px; }
+    @media (max-width: 380px) { font-size: 26px; }
   }
 
   &--gold    { &::before { background: $nks-gold; }    .kpi__val { color: $nks-gold; } }

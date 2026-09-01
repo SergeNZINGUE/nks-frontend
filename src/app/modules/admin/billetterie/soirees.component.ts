@@ -34,7 +34,10 @@ import { messageErreur } from '@core/utils/http-error.util';
   }
 
   @if (!isLoading && erreurChargement) {
-    <div class="banner banner--err" role="alert">⚠️ {{ erreurChargement }}</div>
+    <div class="banner banner--err" role="alert">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      {{ erreurChargement }}
+    </div>
   }
 
   @if (!isLoading && !erreurChargement) {
@@ -59,7 +62,10 @@ import { messageErreur } from '@core/utils/http-error.util';
         </div>
         <div class="field"><label for="adresse">Adresse (optionnel)</label><input id="adresse" type="text" formControlName="adresse" maxlength="255" /></div>
         @if (erreurCreation) {
-          <div class="field-error" role="alert">⚠️ {{ erreurCreation }}</div>
+          <div class="field-error" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurCreation }}
+          </div>
         }
         <div class="form__actions">
           <button type="submit" class="btn btn--primary" [disabled]="formSoiree.invalid || creationEnCours">
@@ -74,7 +80,10 @@ import { messageErreur } from '@core/utils/http-error.util';
 
     <div class="list">
       @if (erreurSoirees) {
-        <div class="field-error" role="alert">⚠️ Impossible de charger les soirées (backend indisponible — 500/503 constaté en test live). Les soirées existantes en base ne sont pas forcément absentes, juste non affichables pour l'instant.</div>
+        <div class="field-error" role="alert">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          Impossible de charger les soirées (backend indisponible — 500/503 constaté en test live). Les soirées existantes en base ne sont pas forcément absentes, juste non affichables pour l'instant.
+        </div>
       } @else if (soirees.length === 0) {
         <div class="empty-state">Aucune soirée pour cette édition.</div>
       }
@@ -115,7 +124,10 @@ import { messageErreur } from '@core/utils/http-error.util';
                   <div class="field field--sm"><label [for]="'catPlaces' + s.id">Places</label><input [id]="'catPlaces' + s.id" type="number" min="1" formControlName="nbPlacesDisponibles" /></div>
                 </div>
                 @if (erreurCategorie) {
-                  <div class="field-error" role="alert">⚠️ {{ erreurCategorie }}</div>
+                  <div class="field-error" role="alert">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    {{ erreurCategorie }}
+                  </div>
                 }
                 <div class="form__actions">
                   <button type="submit" class="btn btn--sm btn--primary" [disabled]="formCategorie.invalid || creationCategorieEnCours">
@@ -237,7 +249,7 @@ export class SoireesComponent implements OnInit, OnDestroy {
         this.soirees = [...this.soirees, soiree];
         this.categoriesParSoiree = { ...this.categoriesParSoiree, [soiree.id]: [] };
         this.formSoiree.reset({ phaseId: '', nom: '', dateHeure: '', lieu: '', adresse: '', capaciteMax: 200 });
-        this.messageSoiree = `✓ Soirée "${soiree.nom}" créée.`;
+        this.messageSoiree = `Soirée "${soiree.nom}" créée.`;
       })
     );
   }
@@ -271,7 +283,7 @@ export class SoireesComponent implements OnInit, OnDestroy {
           ...this.categoriesParSoiree,
           [soireeId]: [...(this.categoriesParSoiree[soireeId] ?? []), cat],
         };
-        this.messageSoiree = `✓ Catégorie "${cat.nom}" ajoutée.`;
+        this.messageSoiree = `Catégorie "${cat.nom}" ajoutée.`;
         this.fermerFormulaireCategorie();
       })
     );

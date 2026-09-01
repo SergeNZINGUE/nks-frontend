@@ -10,6 +10,37 @@ import {
   Page,
 } from '@core/models';
 
+/** SmsController.SmsBulkResponse — réponse de POST /sms/candidatures-validees. */
+export interface SmsBulkResponse {
+  nbEnvoyes: number;
+  nbEchecs: number;
+  echecs: { telephone: string; erreur: string }[];
+}
+
+/**
+ * Doit rester identique à `CandidatureService.SMS_CANDIDATURE_VALIDEE` (backend).
+ * Aucun endpoint n'expose ce texte — dupliqué ici uniquement pour le renvoi individuel
+ * (`POST /sms/envoyer`, message libre). Le renvoi en masse (`POST /sms/candidatures-validees`)
+ * n'a pas ce problème : le backend réutilise directement sa propre constante.
+ * Si Serge change le message côté backend, le répercuter ici.
+ */
+export const SMS_CANDIDATURE_VALIDEE =
+  "Felicitations candidature acceptee! Reglez vos frais d'inscription 15000 FCFA https://laterrasse.bf/login ou via OM:+22606071717.BIENVENUE DANS LA COMPETITION!";
+
+/**
+ * Normalise un numéro burkinabè vers E.164 (+226XXXXXXXX) — même logique que
+ * `SmsGateway.normaliserTelephone()` (backend). Nécessaire côté client pour l'envoi unitaire :
+ * `SmsRequest.to` exige déjà le format E.164 (`@Pattern`), sans normalisation serveur à cette
+ * entrée (contrairement au renvoi en masse, qui envoie le téléphone brut au gateway).
+ */
+export function normaliserTelephone(telephone: string): string {
+  const t = telephone.trim();
+  if (t.startsWith('+')) return t;
+  if (t.startsWith('00226')) return '+' + t.substring(2);
+  if (t.startsWith('226')) return '+' + t;
+  return '+226' + t;
+}
+
 /** Structure réelle de CommunicationRequest (bf.laterrasse.nks.dto.admin.CommunicationRequest) */
 export interface CommunicationRequest {
   editionId: string;
@@ -128,6 +159,32 @@ export class AdminService {
    */
   envoyerCommunication(req: CommunicationRequest): Observable<Record<string, unknown>> {
     return this.http.post<Record<string, unknown>>(`${this.api}/admin/communication/envoyer`, req);
+  }
+
+  /**
+   * POST /sms/candidatures-validees — SmsController.envoyerAuxCandidaturesValidees().
+   * Renvoie le SMS de confirmation (frais d'inscription) à toutes les candidatures
+   * EN_ATTENTE_PAIEMENT de l'édition — utile en rattrapage après un incident du
+   * fournisseur SMS (ex. bascule Twilio → HDR Stream le 28/08/2026).
+   */
+  renvoyerSmsConfirmation(): Observable<SmsBulkResponse> {
+    return this.http.post<SmsBulkResponse>(`${this.api}/sms/candidatures-validees`, {});
+  }
+
+  /** POST /sms/envoyer — SmsController.envoyer(). Envoi unitaire admin — `to` doit déjà être en E.164. */
+  envoyerSmsUnitaire(to: string, message: string): Observable<{ success: boolean; sid: string }> {
+    return this.http.post<{ success: boolean; sid: string }>(`${this.api}/sms/envoyer`, { to, message });
+  }
+
+  /**
+   * POST /whatsapp/envoyer — N'EXISTE PAS ENCORE côté backend au 01/09/2026.
+   * `application.yml` définit `nks.sms.whatsapp-url` mais aucune classe Java ne le lit — aucun
+   * gateway, aucun contrôleur. Contrat calqué sur `SmsRequest`/`SmsController.envoyer()` (même
+   * forme que `envoyerSmsUnitaire`) en attendant l'implémentation de Serge. Tant que l'endpoint
+   * n'existe pas, l'appel échoue en 404 — le bouton affiche alors « Échec », comportement voulu.
+   */
+  envoyerWhatsappUnitaire(to: string, message: string): Observable<{ success: boolean; sid: string }> {
+    return this.http.post<{ success: boolean; sid: string }>(`${this.api}/whatsapp/envoyer`, { to, message });
   }
 
   /**

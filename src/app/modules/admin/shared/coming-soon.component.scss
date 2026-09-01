@@ -13,9 +13,11 @@
   color: $nks-text;
 
   &__icon {
-    font-size: 48px;
     margin-bottom: $sp-4;
     opacity: 0.6;
+    color: $nks-gold;
+
+    svg { width: 48px; height: 48px; }
   }
 
   &__title {
@@ -34,7 +36,9 @@
   }
 
   &__badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-1;
     padding: $sp-2 $sp-4;
     border-radius: $radius-full;
     background: rgba($nks-warning, 0.12);
@@ -44,5 +48,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+
+    .icon { width: 14px; height: 14px; }
   }
 }

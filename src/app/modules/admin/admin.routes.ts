@@ -52,7 +52,7 @@ export const adminRoutes: Routes = [
         loadComponent: comingSoon,
         data: {
           titre: 'Votes',
-          icon: '🗳️',
+          icon: 'vote',
           description: "Suivi et modération des votes en ligne / payants n'est pas encore conçu côté admin.",
         },
       },
@@ -78,7 +78,7 @@ export const adminRoutes: Routes = [
         loadComponent: comingSoon,
         data: {
           titre: 'Utilisateurs & rôles',
-          icon: '👤',
+          icon: 'user',
           description: "Gestion des comptes (admin, jury, agent d'accueil) et de leurs rôles n'est pas encore conçue.",
         },
       },
@@ -91,7 +91,7 @@ export const adminRoutes: Routes = [
         loadComponent: comingSoon,
         data: {
           titre: 'Paramètres plateforme',
-          icon: '⚙️',
+          icon: 'settings',
           description: "Paramètres globaux (tarifs, textes légaux, consentement RGPD) n'est pas encore conçu.",
         },
       },

@@ -4,18 +4,18 @@ import { RouterModule, Router } from '@angular/router';
 import { Subscription, forkJoin, catchError, of } from 'rxjs';
 
 import { JuryService, CandidatBrut, NoteJuryBrut } from '@core/services/jury.service';
-import { AuthService } from '@core/services/auth.service';
-import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SoireeEvent } from '@core/models';
 
 @Component({
   selector: 'app-jury-dashboard',
-  imports: [DatePipe, RouterModule, TopbarComponent],
+  imports: [DatePipe, RouterModule],
   template: `
 <div class="jury-page">
 
-  <!-- Topbar -->
-  <app-topbar title="Espace Jury" [logo]="true" [logout]="true" (logoutClick)="deconnecter()" />
+  <div class="page-header">
+    <h1 class="page-header__title">Tableau de bord</h1>
+    <p class="page-header__subtitle">Notez les candidats de vos soirées assignées.</p>
+  </div>
 
   <!-- Loading -->
   @if (isLoading) {
@@ -30,8 +30,12 @@ import { SoireeEvent } from '@core/models';
   <!-- Erreur -->
   @if (!isLoading && erreur) {
     <div class="empty-state" role="alert">
-      <p>⚠️ {{ erreur }}</p>
-      <a routerLink="/" class="btn btn--ghost">← Accueil</a>
+      <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <p>{{ erreur }}</p>
+      <a routerLink="/" class="btn btn--ghost">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Accueil
+      </a>
     </div>
   }
 
@@ -39,7 +43,10 @@ import { SoireeEvent } from '@core/models';
   @if (!isLoading && !erreur && soirees.length === 0) {
     <div class="empty-state">
       <p>Aucune soirée assignée à votre compte.</p>
-      <a routerLink="/" class="btn btn--ghost">← Accueil</a>
+      <a routerLink="/" class="btn btn--ghost">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Accueil
+      </a>
     </div>
   }
 
@@ -96,10 +103,13 @@ import { SoireeEvent } from '@core/models';
                   <div class="card__nom">{{ nomCandidat(c) }}</div>
                   <div class="card__code">{{ c.codeCandidat }}</div>
                   @if (c.chansonPreselection) {
-                    <div class="card__chanson">🎵 {{ c.chansonPreselection }}</div>
+                    <div class="card__chanson">
+                      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      {{ c.chansonPreselection }}
+                    </div>
                   }
                 </div>
-                <div class="card__arrow" aria-hidden="true">→</div>
+                <svg class="card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             }
           </div>
@@ -112,13 +122,15 @@ import { SoireeEvent } from '@core/models';
           <div class="cards">
             @for (c of candidatsNotes; track c) {
               <button type="button" class="card card--done" (click)="noter(c)">
-                <div class="card__avatar card__avatar--done">✓</div>
+                <div class="card__avatar card__avatar--done">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
                 <div class="card__info">
                   <div class="card__nom">{{ nomCandidat(c) }}</div>
                   <div class="card__code">{{ c.codeCandidat }}</div>
                   <div class="card__score">Score : {{ totalScore(c.id) }} pts</div>
                 </div>
-                <div class="card__arrow" aria-hidden="true">✏️</div>
+                <svg class="card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
               </button>
             }
           </div>
@@ -126,7 +138,8 @@ import { SoireeEvent } from '@core/models';
       }
       @if (!isLoadingCandidats && candidats.length === 0) {
         <div class="empty-state" style="padding-top:40px">
-          Aucun candidat assigné à cette soirée.
+          <p>Aucun candidat n'est encore affecté à cette soirée.</p>
+          <p class="empty-state__hint">Les candidats apparaissent ici une fois qu'un administrateur les a regroupés en poules ou en duos pour cette soirée — rien à faire de ton côté en attendant.</p>
         </div>
       }
     }
@@ -139,7 +152,6 @@ import { SoireeEvent } from '@core/models';
 })
 export class JuryDashboardComponent implements OnInit, OnDestroy {
   private jurySvc = inject(JuryService);
-  private authSvc = inject(AuthService);
   private router = inject(Router);
 
   isLoading = true;
@@ -227,10 +239,5 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/jury/noter', c.id], {
       queryParams: { soireeId: this.soireeSelectionnee.id },
     });
-  }
-
-  deconnecter(): void {
-    this.authSvc.logout();
-    this.router.navigate(['/']);
   }
 }
