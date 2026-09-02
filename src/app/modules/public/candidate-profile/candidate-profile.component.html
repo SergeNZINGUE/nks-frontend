@@ -33,12 +33,12 @@
       </div>
       <h2 class="profile__name">{{ candidat.prenom }} {{ candidat.nom }}</h2>
       <span class="text-gold profile__code">Code : {{ candidat.codeCandidat }}</span>
-      <span class="badge badge--actif">★ {{ candidat.statutProfil }}</span>
+      <span class="badge badge--actif"><app-star-mark [size]="10" /> {{ candidat.statutProfil }}</span>
     </div>
     <!-- VOTES -->
     @if (votes) {
       <div class="card card--gold-border profile__votes">
-        <div class="profile__votes-count text-gold">🗳️ {{ votes.total | number }} votes</div>
+        <div class="profile__votes-count text-gold"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg> {{ votes.total | number }} votes</div>
         <div class="profile__votes-detail text-muted">
           Payants : {{ votes.votesPayants | number }} ·
           Sociaux : {{ votes.votesSociaux | number }} ·
@@ -64,7 +64,7 @@
     <!-- CHANSON -->
     <div class="profile__section">
       <p class="section-label">Chanson de présélection</p>
-      <p class="text-gold">🎵 {{ candidat.chansonPreselection }}</p>
+      <p class="text-gold"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> {{ candidat.chansonPreselection }}</p>
     </div>
     <!-- HISTORIQUE PHASES -->
     @if (scores.length) {

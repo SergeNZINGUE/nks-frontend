@@ -52,7 +52,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
     <!-- ── Hero ─────────────────────────────────────────────────────── -->
     <header class="inscription-hero">
       <div class="inscription-hero__inner">
-        <span class="inscription-hero__badge">★ ÉDITION {{ annee }}</span>
+        <span class="inscription-hero__badge"><app-star-mark [size]="12" /> ÉDITION {{ annee }}</span>
         <h1 class="inscription-hero__titre">
           Deviens la prochaine <span class="inscription-hero__titre-or">Star</span>
         </h1>
@@ -81,7 +81,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
                   <span>{{ i + 1 }}</span>
                 }
                 @if (step > i + 1) {
-                  <span>✓</span>
+                  <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 }
               </span>
               <span class="stepper__label">{{ label }}</span>
@@ -119,7 +119,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
         <!-- Erreur globale -->
         @if (erreur) {
           <div class="alert alert--danger" role="alert">
-            ⚠️ {{ erreur }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> {{ erreur }}
           </div>
         }
         <!-- ── Étape 1 : Infos personnelles ─────────────────────────── -->
@@ -200,7 +200,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               <!-- Placeholder -->
               @if (!photoPreview) {
                 <div class="upload-placeholder">
-                  <span class="upload-icon">📷</span>
+                  <span class="upload-icon"><svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
                   <p>Choisir une photo</p>
                 </div>
               }
@@ -221,12 +221,12 @@ administrateur → notification → puis paiement depuis l'espace candidat.
             }
             @if (photoState === 'done') {
               <div class="upload-status done">
-                ✅ Photo uploadée — {{ formatSize(photoResult?.tailleOctets ?? 0) }}
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Photo uploadée — {{ formatSize(photoResult?.tailleOctets ?? 0) }}
               </div>
             }
             @if (photoState === 'error') {
               <div class="upload-status error">
-                ❌ Échec — réessaie
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Échec — réessaie
               </div>
             }
             @if (step2.get('photoUploaded')?.touched && step2.get('photoUploaded')?.invalid) {
@@ -247,7 +247,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
             </p>
             <div class="upload-zone upload-zone--video" [class.upload-zone--done]="videoState === 'done'">
               <div class="upload-placeholder">
-                <span class="upload-icon">🎬</span>
+                <span class="upload-icon"><svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></span>
                 @if (!videoFileName) {
                   <p>Choisir une vidéo MP4</p>
                 }
@@ -270,18 +270,18 @@ administrateur → notification → puis paiement depuis l'espace candidat.
             }
             @if (videoState === 'done') {
               <div class="upload-status done">
-                ✅ Vidéo uploadée — {{ formatSize(videoResult?.tailleOctets ?? 0) }}
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Vidéo uploadée — {{ formatSize(videoResult?.tailleOctets ?? 0) }}
                 · durée {{ videoDureeSecondes }} s
               </div>
             }
             @if (videoState === 'error') {
               <div class="upload-status error">
-                ❌ Échec — réessaie
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Échec — réessaie
               </div>
             }
             <div class="info-box">
-              <p>🎤 Chante <strong>a cappella ou avec fond musical</strong>.</p>
-              <p>📱 Cadre vertical conseillé. Éclairage soigné.</p>
+              <p><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg> Chante <strong>a cappella ou avec fond musical</strong>.</p>
+              <p><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg> Cadre vertical conseillé. Éclairage soigné.</p>
             </div>
             @if (step3.get('videoUploaded')?.touched && step3.get('videoUploaded')?.invalid) {
               <span
@@ -350,7 +350,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
                 }
                 @if (!capturePreview) {
                   <div class="upload-placeholder">
-                    <span class="upload-icon" aria-hidden="true">📱</span>
+                    <span class="upload-icon" aria-hidden="true"><svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg></span>
                     <p>Choisir une capture d'écran</p>
                   </div>
                 }
@@ -370,12 +370,12 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               }
               @if (captureState === 'done') {
                 <div class="upload-status done" role="status">
-                  ✅ Capture envoyée — {{ formatSize(captureResult?.tailleOctets ?? 0) }}
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Capture envoyée — {{ formatSize(captureResult?.tailleOctets ?? 0) }}
                 </div>
               }
               @if (captureState === 'error') {
                 <div class="upload-status error" role="alert">
-                  ❌ Échec — réessaie
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Échec — réessaie
                 </div>
               }
               @if (step4.get('captureUploaded')?.touched && step4.get('captureUploaded')?.invalid) {
@@ -398,16 +398,16 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               </div>
               <div class="recap-row">
                 <span>Photo</span>
-                <strong class="status-ok">✅ {{ formatSize(photoResult?.tailleOctets ?? 0) }}</strong>
+                <strong class="status-ok"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ formatSize(photoResult?.tailleOctets ?? 0) }}</strong>
               </div>
               <div class="recap-row">
                 <span>Vidéo</span>
-                <strong class="status-ok">✅ {{ videoDureeSecondes }} s</strong>
+                <strong class="status-ok"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ videoDureeSecondes }} s</strong>
               </div>
               <div class="recap-row">
                 <span>Capture d'abonnement</span>
                 <strong [class.status-ok]="captureState === 'done'">
-                  {{ captureState === 'done' ? '✅ Envoyée' : '— manquante' }}
+                  {{ captureState === 'done' ? 'Envoyée' : '— manquante' }}
                 </strong>
               </div>
             </div>
@@ -452,7 +452,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
           [disabled]="isSubmitting"
           >
           @if (!isSubmitting) {
-            <span>📤 Soumettre ma candidature</span>
+            <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Soumettre ma candidature</span>
           }
           @if (isSubmitting) {
             <span>

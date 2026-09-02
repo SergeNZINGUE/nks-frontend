@@ -86,7 +86,7 @@ export class CandidateProfileComponent implements OnInit {
 
   statutLabel(statut: string): string {
     const map: Record<string, string> = {
-      QUALIFIE: 'Qualifié ✓', ELIMINE: 'Éliminé ✗',
+      QUALIFIE: 'Qualifié', ELIMINE: 'Éliminé',
       REPECHAGE: 'Repêché ↑', EN_ATTENTE: 'En attente…',
     };
     return map[statut] ?? statut;

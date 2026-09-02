@@ -523,7 +523,22 @@ $bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
 
   &--top { border-color: rgba($nks-gold, 0.4); background: rgba($nks-gold, 0.06); }
 
-  &__rang { font-size: 16px; text-align: center; }
+  // Médaille SVG pour le top 3, rang textuel au-delà. Teintes alignées sur le
+  // podium de /classement (or/argent/bronze) — currentColor sur le SVG.
+  &__rang {
+    font-size: 13px;
+    text-align: center;
+    color: $nks-text-secondary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg { width: 18px; height: 18px; }
+
+    &--or     { color: $nks-gold; }
+    &--argent { color: #C0C0C0; }
+    &--bronze { color: #CD7F32; }
+  }
 
   &__nom {
     font-size: 12px;

@@ -45,10 +45,10 @@ export class SoireesComponent implements OnInit, OnDestroy {
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {
-      PLANIFIEE: '📅 Planifiée',
-      EN_COURS:  '🔴 En cours',
-      TERMINEE:  '✅ Terminée',
-      ANNULEE:   '❌ Annulée',
+      PLANIFIEE: 'Planifiée',
+      EN_COURS:  'En cours',
+      TERMINEE:  'Terminée',
+      ANNULEE:   'Annulée',
     };
     return map[s] ?? s;
   }

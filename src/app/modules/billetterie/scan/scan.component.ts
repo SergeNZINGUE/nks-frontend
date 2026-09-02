@@ -119,15 +119,6 @@ export class ScanComponent implements OnInit, OnDestroy {
     return this.resultat ? (map[this.resultat.resultat] ?? 'default') : '';
   }
 
-  get resultatIcon(): string {
-    const map: Record<string, string> = {
-      VALIDE:       '✅',
-      INVALIDE:     '❌',
-      DEJA_UTILISE: '⚠️',
-    };
-    return this.resultat ? (map[this.resultat.resultat] ?? '?') : '';
-  }
-
   get resultatTexte(): string {
     const map: Record<string, string> = {
       VALIDE:       'Ticket valide — accès autorisé',

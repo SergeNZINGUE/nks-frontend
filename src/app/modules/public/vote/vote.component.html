@@ -2,7 +2,7 @@
 
 <div class="page vote-page">
 
-  <app-topbar title="Voter" icon="🗳️" backLink="/galerie" backLabel="Retour à la galerie" />
+  <app-topbar title="Voter" backLink="/galerie" backLabel="Retour à la galerie" />
 
   <div class="vote-shell">
 
@@ -15,7 +15,9 @@
     <!-- SUCCÈS -->
     @if (success) {
       <div class="vote-carte vote-success">
-        <div class="vote-success__icon">✅</div>
+        <div class="vote-success__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        </div>
         <h2>Vote enregistré</h2>
         @switch (issuePaiement) {
           @case ('confirme') {
@@ -118,7 +120,10 @@
             <span class="form-field__hint">Ce numéro sera débité pour le paiement.</span>
           </div>
           <!-- SÉCURITÉ -->
-          <p class="vote-security">🔒 Paiement sécurisé — LigdiCash.</p>
+          <p class="vote-security">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Paiement sécurisé — LigdiCash.
+          </p>
           <!-- ERREUR -->
           @if (error) {
             <div class="vote-error" role="alert">{{ error }}</div>

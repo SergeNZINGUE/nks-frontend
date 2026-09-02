@@ -153,7 +153,16 @@
   color: $nks-text-secondary;
   text-align: center;
 
+  .icon { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+
   &__detail { display: block; opacity: 0.8; }
+}
+
+.vote-success__icon {
+  color: $nks-success;
+  line-height: 1;
+
+  svg { width: 48px; height: 48px; }
 }
 
 .vote-error {

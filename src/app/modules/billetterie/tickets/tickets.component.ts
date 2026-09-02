@@ -87,8 +87,8 @@ export class TicketsComponent implements OnDestroy {
   statutLabel(s: string): string {
     const map: Record<string, string> = {
       PENDING:    '⏳ En attente',
-      CONFIRMEE:  '✅ Confirmée',
-      ANNULEE:    '❌ Annulée',
+      CONFIRMEE:  'Confirmée',
+      ANNULEE:    'Annulée',
       EXPIREE:    '⏰ Expirée',
     };
     return map[s] ?? s;

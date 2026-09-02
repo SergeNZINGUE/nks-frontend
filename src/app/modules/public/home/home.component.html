@@ -52,7 +52,7 @@
         <!-- Colonne gauche : accroche -->
         <div class="hero__accroche">
           @if (edition) {
-            <span class="hero__badge">★ ÉDITION {{ edition.nom }}</span>
+            <span class="hero__badge"><app-star-mark [size]="12" /> ÉDITION {{ edition.nom }}</span>
           }
           <img src="assets/logos/nks.png" alt="" class="hero__logo" />
           <h1 class="hero__titre">
@@ -142,7 +142,7 @@
             @if (classement[0]; as leader) {
               <article class="spotlight__leader">
                 <a [routerLink]="['/candidat', leader.candidatId]" class="spotlight__leader-lien">
-                  <span class="spotlight__leader-couronne">🏆 En tête</span>
+                  <span class="spotlight__leader-couronne"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> En tête</span>
                   <div class="avatar spotlight__leader-avatar">{{ initialesClassement(leader) }}</div>
                   <span class="spotlight__leader-code">{{ leader.codeCandidat }}</span>
                   <h3 class="spotlight__leader-nom">
@@ -190,7 +190,7 @@
                 </div>
                 <div class="soiree__infos">
                   <h3 class="soiree__nom">{{ s.nom }}</h3>
-                  <p class="soiree__lieu">📍 {{ s.lieu }} · {{ s.dateHeure | date:'HH\'h\'mm' }}</p>
+                  <p class="soiree__lieu"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> {{ s.lieu }} · {{ s.dateHeure | date:'HH\'h\'mm' }}</p>
                 </div>
                 <a [routerLink]="['/billetterie', 'reserver', s.id]" class="btn btn--primary btn--sm">
                   Réserver
@@ -208,8 +208,15 @@
             <div class="classement-bars">
               @for (item of classement; track item; let i = $index) {
                 <a [routerLink]="['/candidat', item.candidatId]" class="classement-bar" [class.classement-bar--top]="i === 0">
-                  <span class="classement-bar__rang" aria-hidden="true">
-                    {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1) }}
+                  <span class="classement-bar__rang" aria-hidden="true"
+                    [class.classement-bar__rang--or]="i === 0"
+                    [class.classement-bar__rang--argent]="i === 1"
+                    [class.classement-bar__rang--bronze]="i === 2">
+                    @if (i < 3) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                    } @else {
+                      #{{ i + 1 }}
+                    }
                   </span>
                   <span class="classement-bar__nom">{{ item.codeCandidat }}</span>
                   <span class="classement-bar__piste">

@@ -31,7 +31,15 @@
   &--err { border-color: rgba($nks-error, 0.35); }
 }
 
-.paiement-retour__icone { font-size: 48px; line-height: 1; }
+.paiement-retour__icone {
+  line-height: 1;
+  color: $nks-text-secondary;
+
+  svg { width: 48px; height: 48px; }
+
+  &--ok  { color: $nks-success; }
+  &--err { color: $nks-error; }
+}
 
 .paiement-retour__spinner {
   font-size: 32px;

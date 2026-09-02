@@ -138,12 +138,21 @@
   }
 }
 
+.vote-modal__success-icon {
+  color: $nks-success;
+  line-height: 1;
+
+  svg { width: 44px; height: 44px; }
+}
+
 .vote-modal__securite {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
   color: $nks-text-secondary;
   text-align: center;
+
+  .icon { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
 
   &-detail { display: block; opacity: 0.8; }
 }

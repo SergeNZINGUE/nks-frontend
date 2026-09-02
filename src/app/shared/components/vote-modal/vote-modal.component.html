@@ -3,7 +3,9 @@
   <!-- SUCCÈS -->
   @if (success(); as res) {
     <div class="vote-modal__success">
-      <div class="vote-modal__success-icon" aria-hidden="true">✅</div>
+      <div class="vote-modal__success-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+      </div>
       @switch (issuePaiement()) {
         @case ('confirme') {
           <p class="vote-modal__issue vote-modal__issue--ok">Paiement confirmé — vos votes sont crédités.</p>
@@ -98,7 +100,10 @@
         <span class="form-field__hint">Ce numéro sera débité pour le paiement.</span>
       </div>
 
-      <p class="vote-modal__securite">🔒 Paiement sécurisé — LigdiCash.</p>
+      <p class="vote-modal__securite">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Paiement sécurisé — LigdiCash.
+      </p>
 
       @if (error()) {
         <div class="vote-modal__erreur" role="alert">{{ error() }}</div>

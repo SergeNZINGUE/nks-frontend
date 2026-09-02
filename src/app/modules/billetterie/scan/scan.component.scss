@@ -22,11 +22,17 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   border: 2px solid transparent; margin-bottom: 20px;
   display: flex; flex-direction: column; align-items: center; gap: 12px;
 
-  &--success { background: rgba(t.$nks-success, 0.12); border-color: rgba(t.$nks-success, 0.4); }
-  &--danger  { background: rgba(t.$nks-error, 0.12);  border-color: rgba(t.$nks-error, 0.4); }
-  &--warning { background: rgba(t.$nks-warning, 0.12); border-color: rgba(t.$nks-warning, 0.4); }
+  // L'icône SVG hérite de currentColor : la couleur du variant la teinte automatiquement.
+  &--success { background: rgba(t.$nks-success, 0.12); border-color: rgba(t.$nks-success, 0.4); color: t.$nks-success; }
+  &--danger  { background: rgba(t.$nks-error, 0.12);  border-color: rgba(t.$nks-error, 0.4);  color: t.$nks-error; }
+  &--warning { background: rgba(t.$nks-warning, 0.12); border-color: rgba(t.$nks-warning, 0.4); color: t.$nks-warning; }
 
-  &__icon  { font-size: 56px; line-height: 1; }
+  &__icon {
+    line-height: 1;
+    display: flex;
+
+    svg { width: 56px; height: 56px; }
+  }
   &__texte { font-family: t.$font-title; font-size: 20px; color: $text; }
   &__detail {
     display: flex; justify-content: space-between; width: 100%;

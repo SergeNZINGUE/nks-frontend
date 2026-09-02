@@ -143,10 +143,6 @@ export class RankingComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  rankIcon(i: number): string {
-    return ['🥇', '🥈', '🥉'][i] ?? `#${i + 1}`;
-  }
-
   /** Largeur proportionnelle de la barre — 100% pour le 1er, relative ensuite. */
   largeurBarre(item: Classement): number {
     const max = this.classement[0]?.totalPointsCumules;

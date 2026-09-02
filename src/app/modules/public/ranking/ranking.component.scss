@@ -76,7 +76,12 @@ $bascule: 900px;
   text-align: center;
   padding: $sp-8 $sp-4;
 
-  &-icone { font-size: 40px; margin: 0 0 $sp-2; }
+  &-icone {
+    margin: 0 0 $sp-2;
+    color: $nks-text-secondary;
+
+    .icon { width: 40px; height: 40px; }
+  }
 }
 
 // ═══ PODIUM ══════════════════════════════════════════════════════════════════
@@ -117,7 +122,15 @@ $bascule: 900px;
     color: inherit;
   }
 
-  &__medaille { font-size: 22px; line-height: 1; }
+  // Médaille SVG en currentColor : chaque variant du podium la teinte avec son
+  // propre jeton ($nks-gold / $nks-silver / $nks-bronze), ce que les emojis
+  // 🥇🥈🥉 ne permettaient pas — leur couleur native ne suivait pas la charte.
+  &__medaille {
+    line-height: 1;
+    color: $nks-gold;
+
+    svg { width: 24px; height: 24px; }
+  }
   &__avatar   { width: 56px; height: 56px; font-size: 18px; margin: $sp-1 0; }
   &__code     { font-size: 10px; font-family: monospace; color: $nks-text-secondary; letter-spacing: 0.05em; }
 
@@ -147,7 +160,7 @@ $bascule: 900px;
     border-color: rgba($nks-silver, 0.5);
     background: rgba($nks-silver, 0.06);
 
-    .podium-carte__medaille { filter: drop-shadow(0 0 6px rgba($nks-silver, 0.4)); }
+    .podium-carte__medaille { color: $nks-silver; filter: drop-shadow(0 0 6px rgba($nks-silver, 0.4)); }
     .podium-carte__votes strong { color: $nks-silver; }
   }
 
@@ -155,7 +168,7 @@ $bascule: 900px;
     border-color: rgba($nks-bronze, 0.5);
     background: rgba($nks-bronze, 0.08);
 
-    .podium-carte__medaille { filter: drop-shadow(0 0 6px rgba($nks-bronze, 0.4)); }
+    .podium-carte__medaille { color: $nks-bronze; filter: drop-shadow(0 0 6px rgba($nks-bronze, 0.4)); }
     .podium-carte__votes strong { color: $nks-bronze; }
   }
 
@@ -167,7 +180,7 @@ $bascule: 900px;
     padding-top: $sp-6;
     padding-bottom: $sp-5;
 
-    .podium-carte__medaille { font-size: 30px; }
+    .podium-carte__medaille svg { width: 32px; height: 32px; }
     .podium-carte__avatar   { width: 76px; height: 76px; font-size: 24px; border: 2px solid rgba($nks-gold, 0.5); }
     .podium-carte__nom      { font-size: 17px; }
     .podium-carte__votes strong { color: $nks-gold; font-size: 20px; }

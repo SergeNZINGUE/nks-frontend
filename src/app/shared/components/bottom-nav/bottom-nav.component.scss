@@ -27,15 +27,22 @@
     &--active { color: $nks-gold; }
   }
 
-  &__icon  { font-size: 20px; line-height: 1; }
+  // Icône SVG inline : hérite de `color` via currentColor, donc l'onglet actif
+  // la passe en or automatiquement (ce que l'ancien glyphe emoji ne permettait pas).
+  &__icon {
+    line-height: 1;
+    display: flex;
+
+    svg { width: 20px; height: 20px; }
+  }
+
   &__label {
     font-size: 10px;
     font-weight: 600;
     transition: color $dur-fast $ease-out;
   }
 
-  // Le glyphe emoji (couleur native, non recolorable en CSS) reste plein or ;
-  // seul le libellé texte porte le dégradé — cohérent avec le principe "dégradé
+  // Seul le libellé texte porte le dégradé — cohérent avec le principe "dégradé
   // au lieu d'aplat sur les éléments d'accent actifs".
   &__item--active &__label {
     background: $nks-gradient-gold;

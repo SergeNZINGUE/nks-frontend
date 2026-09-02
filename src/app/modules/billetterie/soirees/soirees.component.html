@@ -2,7 +2,7 @@
 
 <div class="soirees-page">
 
-  <app-topbar title="Billetterie" icon="🎤" backLink="/" backLabel="Retour à l'accueil" />
+  <app-topbar title="Billetterie" backLink="/" backLabel="Retour à l'accueil" />
 
   <!-- Skeleton -->
   @if (isLoading) {
@@ -16,7 +16,7 @@
   <!-- Erreur -->
   @if (!isLoading && erreur) {
     <div class="empty-state">
-      <p class="empty-icon">🔌</p>
+      <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></p>
       <p>{{ erreur }}</p>
     </div>
   }
@@ -24,7 +24,7 @@
   <!-- Liste vide -->
   @if (!isLoading && !erreur && soirees.length === 0) {
     <div class="empty-state">
-      <p class="empty-icon">🎵</p>
+      <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></p>
       <p>Aucune soirée programmée pour le moment.</p>
     </div>
   }
@@ -41,9 +41,9 @@
             <span class="badge badge--{{ statutClass(s.statut) }}">{{ statutLabel(s.statut) }}</span>
           </div>
           <div class="soiree-card__meta">
-            <span class="meta-item">📍 {{ s.lieu }}</span>
-            <span class="meta-item">🗓 {{ s.dateHeure | date:'EEEE d MMMM yyyy, HH:mm':'':'fr' }}</span>
-            <span class="meta-item">🪑 {{ s.capaciteMax }} places max</span>
+            <span class="meta-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> {{ s.lieu }}</span>
+            <span class="meta-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> {{ s.dateHeure | date:'EEEE d MMMM yyyy, HH:mm':'':'fr' }}</span>
+            <span class="meta-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> {{ s.capaciteMax }} places max</span>
           </div>
           @if (s.adresse) {
             <div class="soiree-card__adresse">{{ s.adresse }}</div>
@@ -53,7 +53,7 @@
               <a
                 [routerLink]="['/billetterie/reserver', s.id]"
                 class="btn btn--primary">
-                🎟 Réserver ma place
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Réserver ma place
               </a>
             }
             @if (s.statut !== 'PLANIFIEE') {
