@@ -151,17 +151,26 @@
     <div class="confirmation">
       <div class="confirmation__icon">🎉</div>
       <h2>Réservation enregistrée !</h2>
-      @if (paiementOuvert) {
-        <p>Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.</p>
-      } @else {
-        <p>Finalise ton paiement pour recevoir ton ticket.</p>
+      @switch (issuePaiement) {
+        @case ('confirme') {
+          <p class="confirmation__issue confirmation__issue--ok">Paiement confirmé — tes billets sont émis.</p>
+        }
+        @case ('echoue') {
+          <p class="confirmation__issue confirmation__issue--err">Le paiement n'a pas abouti. Tes places ont été remises en vente.</p>
+        }
+        @case ('attente') {
+          <p>Paiement ouvert dans un nouvel onglet — cette page se met à jour dès la confirmation.</p>
+        }
+        @default {
+          <p>Finalise ton paiement pour recevoir ton ticket.</p>
+        }
       }
       <div class="confirmation__details">
         <div class="detail-row"><span>Référence</span><strong>{{ confirmation.reservationId }}</strong></div>
         <div class="detail-row"><span>Montant</span><strong>{{ confirmation.montantTotal | number }} FCFA</strong></div>
         <div class="detail-row"><span>Statut</span><strong>{{ confirmation.statut }}</strong></div>
       </div>
-      @if (confirmation.urlPaiement) {
+      @if (confirmation.urlPaiement && issuePaiement !== 'confirme') {
         <a [href]="confirmation.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
           {{ paiementOuvert ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
         </a>

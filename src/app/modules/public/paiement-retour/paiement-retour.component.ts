@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription, interval, of } from 'rxjs';
 import { catchError, startWith, switchMap, takeWhile } from 'rxjs/operators';
@@ -26,7 +26,7 @@ const TENTATIVES_MAX = 40; // ~2 min à 3s d'intervalle — au-delà, le paiemen
  */
 @Component({
   selector: 'app-paiement-retour',
-  imports: [DecimalPipe, RouterModule, SiteHeaderComponent, TopbarComponent, SiteFooterComponent, BottomNavComponent],
+  imports: [DecimalPipe, NgTemplateOutlet, RouterModule, SiteHeaderComponent, TopbarComponent, SiteFooterComponent, BottomNavComponent],
   template: `
 <app-site-header />
 
@@ -59,6 +59,7 @@ const TENTATIVES_MAX = 40; // ~2 min à 3s d'intervalle — au-delà, le paiemen
         <h2>Paiement non abouti</h2>
         <p class="text-muted">{{ statut.motif ?? (statut.statut === 'EXPIRED' ? 'Le délai de paiement a expiré.' : 'Le paiement a été refusé.') }}</p>
         <a routerLink="/" class="btn btn--secondary btn--full">Retour à l'accueil</a>
+        <ng-container [ngTemplateOutlet]="recours" />
       </div>
     }
 
@@ -68,6 +69,7 @@ const TENTATIVES_MAX = 40; // ~2 min à 3s d'intervalle — au-delà, le paiemen
         <h2>Toujours en attente</h2>
         <p class="text-muted">La confirmation prend plus de temps que prévu. Réessayez dans quelques instants — votre paiement, s'il a bien été effectué, sera pris en compte automatiquement dès sa confirmation.</p>
         <button type="button" class="btn btn--primary btn--full" (click)="relancer()">Vérifier à nouveau</button>
+        <ng-container [ngTemplateOutlet]="recours" />
       </div>
     }
 
@@ -85,6 +87,21 @@ const TENTATIVES_MAX = 40; // ~2 min à 3s d'intervalle — au-delà, le paiemen
   <app-site-footer />
   <app-bottom-nav />
 </div>
+
+<!--
+  Recours : affiché sur les deux issues non-heureuses. Sans référence à citer,
+  un utilisateur qui vient d'être débité n'a aucun moyen de réclamer.
+-->
+<ng-template #recours>
+  <div class="paiement-retour__recours">
+    <p class="paiement-retour__reference">
+      Référence à conserver : <strong>{{ referenceCourte }}</strong>
+    </p>
+    <a [href]="lienSupport" target="_blank" rel="noopener" class="paiement-retour__support">
+      Contacter l'assistance NKS
+    </a>
+  </div>
+</ng-template>
 `,
   styleUrls: ['./paiement-retour.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -96,6 +113,18 @@ export class PaiementRetourComponent implements OnInit, OnDestroy {
   etat: 'verification' | 'succes' | 'echec' | 'toujours-en-attente' | 'erreur' = 'verification';
   statut: StatutPaiementPublic | null = null;
   messageErreur = '';
+
+  /**
+   * Numéro d'assistance NKS (Orange Money / WhatsApp), déjà communiqué aux candidats
+   * dans le SMS de validation de candidature côté backend — même canal, même numéro.
+   */
+  private static readonly TEL_SUPPORT = '22606071717';
+  readonly lienSupport = `https://wa.me/${PaiementRetourComponent.TEL_SUPPORT}`;
+
+  /** 8 premiers caractères de l'UUID : suffisant pour retrouver le paiement, court à recopier. */
+  get referenceCourte(): string {
+    return this.paiementId ? this.paiementId.slice(0, 8).toUpperCase() : '—';
+  }
 
   private paiementId = '';
   private sub = new Subscription();

@@ -175,3 +175,12 @@
     color: $nks-gold;
   }
 }
+
+// Issue du paiement constatée depuis cet onglet (le paiement se fait dans un autre).
+.vote-modal__issue {
+  font-weight: 600;
+  margin: 0 0 4px;
+
+  &--ok  { color: $nks-success; }
+  &--err { color: $nks-error; }
+}

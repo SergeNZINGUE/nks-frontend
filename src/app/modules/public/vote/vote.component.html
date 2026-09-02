@@ -17,18 +17,22 @@
       <div class="vote-carte vote-success">
         <div class="vote-success__icon">✅</div>
         <h2>Vote enregistré</h2>
-        @if (paiementOuvert) {
-          <p>
-            Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.
-          </p>
-        }
-        @if (!paiementOuvert) {
-          <p>
-            Vous allez recevoir une demande de paiement sur votre téléphone.
-          </p>
+        @switch (issuePaiement) {
+          @case ('confirme') {
+            <p class="vote-success__issue vote-success__issue--ok">Paiement confirmé — vos votes sont crédités.</p>
+          }
+          @case ('echoue') {
+            <p class="vote-success__issue vote-success__issue--err">Le paiement n'a pas abouti. Aucun vote n'a été crédité.</p>
+          }
+          @case ('attente') {
+            <p>Paiement ouvert dans un nouvel onglet — cette page se met à jour dès la confirmation.</p>
+          }
+          @default {
+            <p>Vous allez recevoir une demande de paiement sur votre téléphone.</p>
+          }
         }
         <p class="vote-success__montant">{{ success.montantTotal | number:'1.0-0' }} FCFA</p>
-        @if (success.urlPaiement) {
+        @if (success.urlPaiement && issuePaiement !== 'confirme') {
           <a
             [href]="success.urlPaiement"
             target="_blank" rel="noopener"

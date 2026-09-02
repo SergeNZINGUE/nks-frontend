@@ -14,6 +14,7 @@ import {
   ResultatPhase,
   StatutCandidature,
 } from '@core/models';
+import { environment } from '@env/environment';
 
 /** Même dictionnaire que resultats.component.ts (admin) — garder les deux alignés si une phase est renommée. */
 const LABEL_PHASE: Record<string, string> = {
@@ -83,6 +84,10 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
+  /** Affiché dans le CTA de paiement — même source que mes-paiements.component.ts. */
+  readonly montantInscriptionFormate =
+    `${environment.inscriptionPriceFcfa.toLocaleString('fr-FR')} FCFA`;
+
   get initiales(): string {
     const c = this.candidature;
     if (!c) return '?';

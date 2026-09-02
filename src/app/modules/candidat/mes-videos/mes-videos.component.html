@@ -28,6 +28,18 @@
     </div>
   }
 
+  <!-- Aucune phase ouverte à l'envoi : expliquer l'attente plutôt que ne rien afficher -->
+  @if (!isLoading && !erreur && !phaseCible) {
+    <div class="upload-card upload-card--attente">
+      <h2 class="upload-card__title">Aucune phase ouverte à l'envoi</h2>
+      <p class="upload-card__hint">
+        Tu pourras déposer une nouvelle vidéo dès qu'une phase de compétition
+        (Éliminatoires, Demi-finale, Finale) sera ouverte par l'organisation.
+        Rien à faire de ton côté en attendant.
+      </p>
+    </div>
+  }
+
   <!-- Upload — uniquement si une phase (hors Présélection) est en cours -->
   @if (!isLoading && !erreur && phaseCible) {
     <div class="upload-card">

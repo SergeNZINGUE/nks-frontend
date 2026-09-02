@@ -140,3 +140,11 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 @media (min-width: 640px) {
   .step-content { padding: 0 24px; }
 }
+
+// Issue du paiement constatée depuis cet onglet (le paiement se fait dans un autre).
+.confirmation__issue {
+  font-weight: 600;
+
+  &--ok  { color: t.$nks-success; }
+  &--err { color: t.$nks-error; }
+}

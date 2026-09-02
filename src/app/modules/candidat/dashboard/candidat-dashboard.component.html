@@ -48,15 +48,15 @@ Dashboard — Espace Candidat NKS
     </div>
     <!-- Alerte paiement en attente -->
     @if (candidature.statut === 'EN_ATTENTE_PAIEMENT') {
-      <div class="alert alert--warning">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-        <span>
-          Ton paiement d'inscription est en attente. Finalise-le pour activer ta candidature.
-          <a routerLink="/mon-espace/paiements" class="alert__link">
-            Voir les paiements
-            <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </a>
-        </span>
+      <div class="alert alert--warning alert--cta">
+        <div class="alert__corps">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <span>Ta candidature est acceptée. Règle tes frais d'inscription pour activer ton profil public.</span>
+        </div>
+        <a routerLink="/mon-espace/paiements" class="btn btn--primary btn--full">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          Payer mes frais d'inscription — {{ montantInscriptionFormate }}
+        </a>
       </div>
     }
     <!-- Alerte candidature rejetée -->

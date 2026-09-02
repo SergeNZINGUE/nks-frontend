@@ -147,7 +147,44 @@ $gold:    t.$nks-gold;
     font-weight: 600;
     text-decoration: none;
   }
+
+  // Variante porteuse d'un CTA : l'action de paiement est l'action la plus
+  // importante du parcours candidat — bouton primaire, pas lien texte.
+  &--cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  &__corps {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
+
+// Bouton de paiement dans l'alerte — doré plein, comme les CTA primaires du site.
+.alert .btn--primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: t.$radius-sm;
+  background: t.$nks-gradient-gold;
+  color: t.$nks-bg-primary;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  min-height: 48px;
+  transition: filter t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+  .icon { margin-top: 0; }
+
+  &:hover { filter: brightness(1.06); box-shadow: t.$shadow-glow-gold; }
+}
+
+.btn--full { width: 100%; }
 
 // ── Scores ─────────────────────────────────────────────────────────────────
 .scores-section {

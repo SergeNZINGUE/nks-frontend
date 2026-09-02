@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { catchError, of, switchMap } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { catchError, of, startWith, switchMap, takeWhile } from 'rxjs';
 
 import { BilletterieService } from '@core/services/billetterie.service';
+import { PaiementService } from '@core/services/paiement.service';
 import { CategorieTicket, ReservationResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
@@ -25,6 +26,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private billetterieSvc = inject(BilletterieService);
+  private paiementSvc = inject(PaiementService);
 
   soireeId: string | null = null;
   etape: Etape = 'categorie';
@@ -35,6 +37,12 @@ export class ReservationComponent implements OnInit, OnDestroy {
   confirmation: ReservationResponse | null = null;
   /** true une fois la page de paiement ouverte dans un nouvel onglet — cet onglet ne navigue jamais. */
   paiementOuvert = false;
+  /**
+   * Issue du paiement constatée depuis CET onglet. Sans ce suivi, l'écran de confirmation
+   * resterait indéfiniment sur « ouvert dans un nouvel onglet » sans jamais dire si les
+   * billets ont été émis — sur mobile, l'acheteur ne revient souvent que sur cet onglet-ci.
+   */
+  issuePaiement: 'attente' | 'confirme' | 'echoue' | null = null;
   erreur: string | null = null;
 
   formInfos!: FormGroup;
@@ -130,12 +138,39 @@ export class ReservationComponent implements OnInit, OnDestroy {
           if (res.urlPaiement) {
             window.open(res.urlPaiement, '_blank', 'noopener');
             this.paiementOuvert = true;
+            if (res.paiementId) this.suivrePaiement(res.paiementId);
           }
         },
         error: err => {
           this.isSubmitting = false;
           this.erreur = messageErreur(err, 'Erreur lors de la réservation. Réessaie.');
         },
+      })
+    );
+  }
+
+  /**
+   * Interroge GET /paiements/{id}/statut-public (public, sans JWT — l'acheteur de billet
+   * n'a pas de compte). Même cadence que PaiementRetourComponent : 3s, ~2 min.
+   */
+  private suivrePaiement(paiementId: string): void {
+    this.issuePaiement = 'attente';
+    let tentative = 0;
+    this.sub.add(
+      interval(3000).pipe(
+        startWith(0),
+        switchMap(() => {
+          tentative++;
+          return this.paiementSvc.statutPublic(paiementId).pipe(catchError(() => of(null)));
+        }),
+        takeWhile(res => {
+          if (!res) return tentative < 40;           // coupure réseau ponctuelle : on retente
+          return res.statut === 'PENDING' && tentative < 40;
+        }, true),
+      ).subscribe(res => {
+        if (!res) return;
+        if (res.statut === 'COMPLETED') this.issuePaiement = 'confirme';
+        else if (res.statut !== 'PENDING') this.issuePaiement = 'echoue';
       })
     );
   }

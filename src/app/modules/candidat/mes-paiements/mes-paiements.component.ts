@@ -7,6 +7,7 @@ import { Subscription, catchError, of } from 'rxjs';
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatureDetailResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
+import { environment } from '@env/environment';
 
 /**
  * Paiement des frais d'inscription — CdC §3.1.2 :
@@ -23,11 +24,11 @@ import { messageErreur } from '@core/utils/http-error.util';
  *   PRIX_INSCRIPTION_FCFA n'est exposé par aucun endpoint (aucun contrôleur ne sert
  *   parametres_plateforme). Le montant était donc auparavant un champ libre saisi par
  *   le candidat — risque direct de fraude (montant arbitraire envoyé au paiement).
- *   Corrigé : montant figé en dur à MONTANT_INSCRIPTION_FCFA, champ lecture seule.
- *   À REMPLACER dès qu'un endpoint backend expose ce paramètre — ne pas laisser ce
- *   hardcode traîner si le montant change un jour côté organisateur.
+ *   Corrigé : montant figé, champ lecture seule. Centralisé dans `environment` depuis
+ *   le 02/09/2026 (le tableau de bord l'affiche aussi dans son CTA de paiement).
+ *   À REMPLACER dès qu'un endpoint backend expose ce paramètre.
  */
-const MONTANT_INSCRIPTION_FCFA = 15_000;
+const MONTANT_INSCRIPTION_FCFA = environment.inscriptionPriceFcfa;
 @Component({
   selector: 'app-mes-paiements',
   imports: [RouterModule, ReactiveFormsModule],

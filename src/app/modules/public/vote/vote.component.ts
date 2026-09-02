@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { switchMap } from 'rxjs';
+import { Subscription, interval, of, switchMap } from 'rxjs';
+import { catchError, startWith, takeWhile } from 'rxjs/operators';
 import { CandidatService } from '@core/services/candidat.service';
 import { VoteService } from '@core/services/vote.service';
+import { PaiementService } from '@core/services/paiement.service';
 import { EditionService } from '@core/services/edition.service';
 import { CandidatPublicResponse, InitierVoteResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
@@ -33,11 +35,12 @@ type VoteOption = { nb: number; label: string; prix: string };
 ],
     changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class VoteComponent implements OnInit {
+export class VoteComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private candidatSvc = inject(CandidatService);
   private voteSvc = inject(VoteService);
+  private paiementSvc = inject(PaiementService);
   private editionSvc = inject(EditionService);
 
   candidat: CandidatPublicResponse | null = null;
@@ -47,6 +50,15 @@ export class VoteComponent implements OnInit {
   success: InitierVoteResponse | null = null;
   /** true une fois la page de paiement ouverte dans un nouvel onglet — cet onglet ne navigue jamais. */
   paiementOuvert = false;
+
+  /**
+   * Issue du paiement constatée depuis CET onglet. Le paiement se déroule dans un onglet
+   * séparé (décision produit) : sans ce suivi, l'onglet d'origine resterait indéfiniment
+   * sur « ouvert dans un nouvel onglet » sans jamais dire si les votes ont été crédités.
+   */
+  issuePaiement: 'attente' | 'confirme' | 'echoue' | null = null;
+
+  private sub = new Subscription();
   error: string | null = null;
 
   /**
@@ -123,6 +135,7 @@ export class VoteComponent implements OnInit {
         if (res.urlPaiement) {
           window.open(res.urlPaiement, '_blank', 'noopener');
           this.paiementOuvert = true;
+          this.suivrePaiement(res.paiementId);
         }
       },
       error: err => {
@@ -131,6 +144,34 @@ export class VoteComponent implements OnInit {
       },
     });
   }
+
+  /**
+   * Interroge GET /paiements/{id}/statut-public (public, sans JWT — le votant est anonyme)
+   * jusqu'à une issue définitive. Même cadence que PaiementRetourComponent : 3s, ~2 min.
+   */
+  private suivrePaiement(paiementId: string): void {
+    this.issuePaiement = 'attente';
+    let tentative = 0;
+    this.sub.add(
+      interval(3000).pipe(
+        startWith(0),
+        switchMap(() => {
+          tentative++;
+          return this.paiementSvc.statutPublic(paiementId).pipe(catchError(() => of(null)));
+        }),
+        takeWhile(res => {
+          if (!res) return tentative < 40;           // coupure réseau ponctuelle : on retente
+          return res.statut === 'PENDING' && tentative < 40;
+        }, true),
+      ).subscribe(res => {
+        if (!res) return;
+        if (res.statut === 'COMPLETED') this.issuePaiement = 'confirme';
+        else if (res.statut !== 'PENDING') this.issuePaiement = 'echoue';
+      })
+    );
+  }
+
+  ngOnDestroy(): void { this.sub.unsubscribe(); }
 
   initiales(): string {
     return this.candidat ? this.candidatSvc.initiales(this.candidat) : '';

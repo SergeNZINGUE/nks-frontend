@@ -89,6 +89,14 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
   &__title { font-family: t.$font-title; font-size: 16px; color: $text; margin: 0 0 4px; }
   &__hint  { font-size: 12px; color: $muted; margin: 0 0 12px; }
+
+  // Pas d'action possible : ton neutre, pas d'accent doré qui suggérerait un CTA.
+  &--attente {
+    background: transparent;
+    border-style: dashed;
+
+    .upload-card__hint { margin-bottom: 0; line-height: 1.5; }
+  }
 }
 
 .upload-erreur {

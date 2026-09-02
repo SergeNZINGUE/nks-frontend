@@ -51,3 +51,37 @@
   font-weight: 800;
   color: $nks-gold !important;
 }
+
+// ── Recours (référence + assistance) ────────────────────────────────────────
+// Affiché sur les issues « en attente » et « échec » : l'utilisateur a déjà été
+// débité, il lui faut de quoi réclamer.
+.paiement-retour__recours {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid $nks-border;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paiement-retour__reference {
+  margin: 0;
+  font-size: 13px;
+  color: $nks-text-secondary;
+
+  strong {
+    font-family: monospace;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    color: $nks-text;
+  }
+}
+
+.paiement-retour__support {
+  font-size: 13px;
+  font-weight: 600;
+  color: $nks-gold;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}

@@ -4,13 +4,22 @@
   @if (success(); as res) {
     <div class="vote-modal__success">
       <div class="vote-modal__success-icon" aria-hidden="true">✅</div>
-      @if (paiementOuvert()) {
-        <p>Le paiement sécurisé LigdiCash s'est ouvert dans un nouvel onglet.</p>
-      } @else {
-        <p>Vous allez recevoir une demande de paiement sur votre téléphone.</p>
+      @switch (issuePaiement()) {
+        @case ('confirme') {
+          <p class="vote-modal__issue vote-modal__issue--ok">Paiement confirmé — vos votes sont crédités.</p>
+        }
+        @case ('echoue') {
+          <p class="vote-modal__issue vote-modal__issue--err">Le paiement n'a pas abouti. Aucun vote n'a été crédité.</p>
+        }
+        @case ('attente') {
+          <p>Paiement ouvert dans un nouvel onglet — cette page se met à jour dès la confirmation.</p>
+        }
+        @default {
+          <p>Vous allez recevoir une demande de paiement sur votre téléphone.</p>
+        }
       }
       <p class="vote-modal__success-montant">{{ res.montantTotal | number:'1.0-0' }} FCFA</p>
-      @if (res.urlPaiement) {
+      @if (res.urlPaiement && issuePaiement() !== 'confirme') {
         <a [href]="res.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
           {{ paiementOuvert() ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
         </a>
