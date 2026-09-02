@@ -77,3 +77,13 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   &--full    { width: 100%; }
   &:disabled { opacity: 0.45; cursor: not-allowed; }
 }
+
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis. Dimensionnées
+// explicitement : contrairement à un glyphe, un SVG ignore font-size.
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: -3px;
+}

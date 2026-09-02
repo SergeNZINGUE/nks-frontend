@@ -23,7 +23,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .empty-state {
   text-align: center; padding: 60px 24px;
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  // SVG inline : dimensionné par width/height, font-size n'aurait aucun effet.
+  .empty-icon { margin-bottom: 12px; color: $muted; .icon { width: 48px; height: 48px; } }
   p { color: $muted; font-size: 14px; margin-bottom: 20px; }
 }
 
@@ -80,4 +81,14 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 @media (min-width: 640px) {
   .tickets-list { max-width: 640px; margin: 0 auto; }
+}
+
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis. Dimensionnées
+// explicitement : contrairement à un glyphe, un SVG ignore font-size.
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: -3px;
 }

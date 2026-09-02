@@ -490,8 +490,11 @@ $bascule: 900px;
   pointer-events: none;
 
   .upload-icon {
-    font-size: 40px;
+    display: flex;
     transition: transform 0.2s ease;
+
+    // SVG inline : font-size n'a aucun effet, on dimensionne explicitement.
+    .upload-icon-svg { width: 40px; height: 40px; }
   }
   p { font-size: 14px; margin: 0; }
   .file-name { font-size: 13px; color: $text; word-break: break-all; text-align: center; }
@@ -806,4 +809,14 @@ $bascule: 900px;
     // sous le formulaire, pas sous le stepper.
     padding-left: calc(280px + #{t.$sp-12} + #{t.$sp-6});
   }
+}
+
+
+// Icônes SVG inline (façon Lucide) — remplacent les emojis. Dimensionnées
+// explicitement : contrairement à un glyphe, un SVG ignore font-size.
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: -3px;
 }

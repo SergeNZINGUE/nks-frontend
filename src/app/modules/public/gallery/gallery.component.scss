@@ -189,7 +189,7 @@
   align-items: center;
   gap: $sp-3;
 
-  &-icone { font-size: 40px; }
+  &-icone { color: $nks-text-secondary; .icon { width: 40px; height: 40px; } }
 }
 
 // ── Desktop ─────────────────────────────────────────────────────────────────

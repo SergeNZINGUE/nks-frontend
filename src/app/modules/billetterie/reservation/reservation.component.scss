@@ -44,7 +44,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: .9; } }
 
 .empty-state { text-align: center; padding: 40px 24px; color: $muted;
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  // SVG inline : dimensionné par width/height, font-size n'aurait aucun effet.
+  .empty-icon { margin-bottom: 12px; .icon { width: 40px; height: 40px; } }
 }
 
 // ── Step content
@@ -121,7 +122,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 // ── Confirmation
 .confirmation {
   max-width: 480px; margin: 40px auto; padding: 0 24px; text-align: center;
-  &__icon { font-size: 64px; margin-bottom: 16px; }
+  &__icon { margin-bottom: 16px; color: t.$nks-success; svg { width: 64px; height: 64px; } }
   h2 { font-family: t.$font-title; color: $gold; font-size: 24px; margin-bottom: 8px; }
   p  { color: $muted; font-size: 14px; margin-bottom: 24px; }
   &__details {
