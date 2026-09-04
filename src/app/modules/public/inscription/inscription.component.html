@@ -156,7 +156,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               }
               @if (hasError(step1, 'dateNaissance', 'ageMinimum')) {
                 <span class="form-error">
-                  Vous devez avoir au moins 18 ans.
+                  Tu dois avoir au moins 18 ans.
                 </span>
               }
             </div>
@@ -298,11 +298,16 @@ administrateur → notification → puis paiement depuis l'espace candidat.
             <h2 class="step-title">Votre présentation</h2>
             <div class="form-group">
               <label for="chanson">Chanson de présélection *</label>
+              <!-- autocomplete="off" : le champ est en saisie libre, aucune liste n'est
+                   proposée par l'application. Sans cet attribut, le navigateur affiche les
+                   saisies précédentes dans un menu déroulant que les candidats prennent
+                   pour un catalogue de chansons imposé. -->
               <input id="chanson" type="text" formControlName="chansonPreselection"
-                placeholder="Ex: Nuit Africaine — Ismaël Lô" />
+                autocomplete="off"
+                placeholder="Saisis le titre de ta chanson" />
               @if (hasError(step4, 'chansonPreselection', 'required')) {
                 <span class="form-error">
-                  Indiquez la chanson que vous allez interprété.
+                  Indique le titre de la chanson que tu vas interpréter.
                 </span>
               }
             </div>
@@ -327,12 +332,12 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               }
               @if (hasError(step4, 'motivation', 'maxMots')) {
                 <span class="form-error">
-                  Maximum 200 mots — vous en avez {{ motivationMots }}.
+                  Maximum 200 mots — tu en as {{ motivationMots }}.
                 </span>
               }
               @if (hasError(step4, 'motivation', 'maxCaracteres')) {
                 <span class="form-error">
-                  Maximum 1500 caractères — vous en avez {{ motivationCaracteres }}.
+                  Maximum 1500 caractères — tu en as {{ motivationCaracteres }}.
                 </span>
               }
             </div>
