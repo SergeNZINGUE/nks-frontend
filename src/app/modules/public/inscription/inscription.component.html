@@ -14,13 +14,13 @@ administrateur → notification → puis paiement depuis l'espace candidat.
       <div class="success-icon" aria-hidden="true"><app-star-mark [size]="40" /></div>
       <h1 class="success-screen__titre">Candidature soumise</h1>
       <p class="code-candidat">
-        <span class="code-candidat__libelle">Votre code candidat est</span>
+        <span class="code-candidat__libelle">Ton code candidat est</span>
         <strong class="code-candidat__valeur">{{ codeCandidat }}</strong>
       </p>
       <ol class="suite">
-        <li><span class="suite__num">1</span> Le comité d'organisation examinera votre dossier.</li>
-        <li><span class="suite__num">2</span> Vous recevrez la réponse par SMS/e-mail.</li>
-        <li><span class="suite__num">3</span> Si vous êtes retenu, les frais d'inscription devrons être réglés depuis votre espace personnel pour valider votre candidature.</li>
+        <li><span class="suite__num">1</span> Le comité d'organisation examinera ton dossier.</li>
+        <li><span class="suite__num">2</span> Tu recevras la réponse par SMS/e-mail.</li>
+        <li><span class="suite__num">3</span> Si tu es retenu, tu régleras tes frais d'inscription depuis ton espace personnel pour valider ta candidature.</li>
       </ol>
       <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
     </div>
@@ -35,7 +35,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
     <div class="success-screen__carte">
       <div class="success-icon" aria-hidden="true"><app-star-mark [size]="40" /></div>
       <h1 class="success-screen__titre">Inscriptions closes</h1>
-      <p>La période d'inscription pour cette édition est terminée. Rendez vous à la prochaine édition.</p>
+      <p>La période d'inscription pour cette édition est terminée. On se retrouve à la prochaine édition.</p>
       <a routerLink="/" class="btn btn--primary btn--lg">Retour à l'accueil</a>
     </div>
   </div>
@@ -188,7 +188,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
         <!-- ── Étape 2 : Photo profil ─────────────────────────────────── -->
         @if (step === 2) {
           <section [formGroup]="step2">
-            <h2 class="step-title">Votre photo</h2>
+            <h2 class="step-title">Ta photo</h2>
             <p class="step-hint">JPG ou PNG — maximum 5 Mo</p>
             <div class="upload-zone" [class.upload-zone--done]="photoState === 'done'">
               <!-- Aperçu photo -->
@@ -241,7 +241,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
         <!-- ── Étape 3 : Vidéo présélection ──────────────────────────── -->
         @if (step === 3) {
           <section [formGroup]="step3">
-            <h2 class="step-title">Votre vidéo de présélection</h2>
+            <h2 class="step-title">Ta vidéo de présélection</h2>
             <p class="step-hint">
               Format MP4 — durée entre {{ VIDEO_DUREE_MIN_S }} et {{ VIDEO_DUREE_MAX_S }} secondes — maximum 100 Mo
             </p>
@@ -295,7 +295,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
         <!-- ── Étape 4 : Présentation ─────────────────────────────────── -->
         @if (step === 4) {
           <section [formGroup]="step4">
-            <h2 class="step-title">Votre présentation</h2>
+            <h2 class="step-title">Ta présentation</h2>
             <div class="form-group">
               <label for="chanson">Chanson de présélection *</label>
               <!-- autocomplete="off" : le champ est en saisie libre, aucune liste n'est
@@ -344,7 +344,7 @@ administrateur → notification → puis paiement depuis l'espace candidat.
             <div class="form-group">
               <label>Capture d'abonnement Facebook / TikTok *</label>
               <p class="step-hint">
-                Abonnez-vous aux pages NKS, faites une capture d'écran et déposez-la ici.
+                Abonne-toi aux pages NKS, fais une capture d'écran et dépose-la ici.
                 JPG ou PNG — maximum 5 Mo.
               </p>
               <div class="upload-zone" [class.upload-zone--done]="captureState === 'done'">
@@ -417,8 +417,8 @@ administrateur → notification → puis paiement depuis l'espace candidat.
               </div>
             </div>
             <p class="paiement-hint">
-              Les frais d'inscription seront réglés depuis votre espace personnel <strong>après validation
-            de votre candidature</strong> par le comité d'organisation.
+              Tes frais d'inscription seront réglés depuis ton espace personnel <strong>après validation
+            de ta candidature</strong> par le comité d'organisation.
           </p>
         </section>
       }
