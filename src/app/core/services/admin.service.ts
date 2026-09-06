@@ -18,14 +18,13 @@ export interface SmsBulkResponse {
 }
 
 /**
- * Doit rester identique à `CandidatureService.SMS_CANDIDATURE_VALIDEE` (backend).
- * Aucun endpoint n'expose ce texte — dupliqué ici uniquement pour le renvoi individuel
- * (`POST /sms/envoyer`, message libre). Le renvoi en masse (`POST /sms/candidatures-validees`)
- * n'a pas ce problème : le backend réutilise directement sa propre constante.
- * Si Serge change le message côté backend, le répercuter ici.
+ * Construit le SMS de confirmation de candidature avec le montant des frais lu depuis
+ * `environment.inscriptionPriceFcfa` — aligné sur la var d'env backend INSCRIPTION_FRAIS_FCFA.
+ * Utilisé uniquement pour le renvoi unitaire (POST /sms/envoyer) ; le renvoi en masse
+ * (POST /sms/candidatures-validees) utilise la constante du backend directement.
  */
 export const SMS_CANDIDATURE_VALIDEE =
-  "Felicitations candidature acceptee! Reglez vos frais d'inscription 15000 FCFA https://laterrasse.bf/login ou via OM:+22606071717.BIENVENUE DANS LA COMPETITION!";
+  `Felicitations candidature acceptee! Reglez vos frais d'inscription ${environment.inscriptionPriceFcfa} FCFA https://laterrasse.bf/login ou via OM:+22606071717.BIENVENUE DANS LA COMPETITION!`;
 
 /**
  * Normalise un numéro burkinabè vers E.164 (+226XXXXXXXX) — même logique que

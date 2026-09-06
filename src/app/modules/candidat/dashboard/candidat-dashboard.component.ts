@@ -5,6 +5,7 @@ import { Subscription, forkJoin, switchMap, catchError, of } from 'rxjs';
 
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatService } from '@core/services/candidat.service';
+import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
 import { AuthService } from '@core/services/auth.service';
 import {
@@ -34,6 +35,7 @@ const LABEL_PHASE: Record<string, string> = {
 export class CandidatDashboardComponent implements OnInit, OnDestroy {
   private candidatureSvc = inject(CandidatureService);
   private candidatSvc = inject(CandidatService);
+  private mediaSvc = inject(MediaService);
   private editionSvc = inject(EditionService);
   private authSvc = inject(AuthService);
   private router = inject(Router);
@@ -42,6 +44,7 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   erreur: string | null = null;
   candidature: CandidatureDetailResponse | null = null;
   profil: CandidatPublicResponse | null = null;
+  photoPreview: string | null = null;
   scores: ResultatPhase[] = [];
 
   private sub = new Subscription();
@@ -73,6 +76,11 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
             this.candidatSvc.scores(profil.id)
               .pipe(catchError(() => of([])))
               .subscribe(s => (this.scores = s))
+          );
+          this.sub.add(
+            this.mediaSvc.mediasCandidat(profil.id)
+              .pipe(catchError(() => of([])))
+              .subscribe(medias => (this.photoPreview = this.mediaSvc.photoProfilUrl(medias)))
           );
         }
       })

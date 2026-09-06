@@ -164,13 +164,7 @@ export interface Phase {
   juryObligatoire?: boolean;
 }
 
-/**
- * Poule — bf.laterrasse.nks.dto.poule.PouleResponse.
- * ⚠️ Pas de GET /poules?phaseId ni GET /phases/{id}/poules côté backend (PouleDuoController) :
- * une poule n'est retrouvable qu'à sa création (réponse du POST) ou via son id déjà connu
- * (GET /poules/{id}/candidats). Impossible de lister les poules existantes d'une phase après
- * rechargement de page — limitation backend, pas un choix frontend (cf. NKS_FRONTEND_AGENT_CONTEXT.md).
- */
+/** Poule — bf.laterrasse.nks.dto.poule.PouleResponse. Listable via GET /poules/phase/{phaseId}. */
 export interface PouleResponse {
   id: string;
   phaseId: string;
@@ -188,7 +182,7 @@ export interface AffectationPouleResponse {
   chansonImposee: string | null;
 }
 
-/** bf.laterrasse.nks.dto.poule.DuoResponse — listable via GET /duos/phase/{phaseId} (contrairement aux poules) */
+/** bf.laterrasse.nks.dto.poule.DuoResponse — listable via GET /duos/phase/{phaseId}. */
 export interface DuoResponse {
   id: string;
   phaseId: string;

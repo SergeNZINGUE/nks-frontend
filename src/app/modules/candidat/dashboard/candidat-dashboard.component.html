@@ -33,10 +33,10 @@ Dashboard — Espace Candidat NKS
     <!-- Bannière profil -->
     <div class="profil-banner" [class.banner--alerte]="candidature.statut === 'EN_ATTENTE_PAIEMENT'">
       <div class="avatar">
-        @if (profil?.photoUrl) {
-          <img [src]="profil!.photoUrl!" alt="Photo profil" />
+        @if (photoPreview) {
+          <img [src]="photoPreview" alt="Photo profil" />
         }
-        @if (!profil?.photoUrl) {
+        @if (!photoPreview) {
           <span>{{ initiales }}</span>
         }
       </div>

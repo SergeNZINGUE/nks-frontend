@@ -47,6 +47,20 @@ export class MediaService {
   }
 
   /**
+   * POST /medias — CANDIDAT — enregistre la photo en base après l'upload Cloudinary.
+   * Doit être appelé après uploadPhoto() pour que la photo soit persistée et visible
+   * via GET /medias/candidat/{id}.
+   */
+  enregistrerPhoto(result: MediaUploadResult): Observable<MediaPublicResponse> {
+    return this.http.post<MediaPublicResponse>(`${this.api}/medias`, {
+      type: 'PHOTO_PROFIL',
+      publicId: result.publicId,
+      url: result.url,
+      tailleOctets: result.tailleOctets,
+    });
+  }
+
+  /**
    * Upload direct vers Cloudinary avec l'URL pré-signée.
    * Le backend n'est pas impliqué — upload direct CDN.
    */

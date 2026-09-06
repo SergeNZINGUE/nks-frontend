@@ -3,12 +3,12 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, finalize, of, switchMap } from 'rxjs';
 
 import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
-import { CandidatPublicResponse } from '@core/models';
+import { CandidatPublicResponse, MediaPublicResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
@@ -48,13 +48,19 @@ export class MonProfilComponent implements OnInit, OnDestroy {
           if (!active) throw new Error('Aucune édition en cours');
           return this.candidatSvc.monProfil(active.id);
         }),
+        switchMap(p => {
+          this.profil = p;
+          if (p.biographie) this.form.patchValue({ biographie: p.biographie });
+          return this.mediaSvc.mediasCandidat(p.id).pipe(
+            catchError(() => of([] as MediaPublicResponse[])),
+          );
+        }),
         catchError(() => of(null)),
-      ).subscribe(p => {
-        this.profil = p;
+      ).subscribe(medias => {
         this.isLoading = false;
-        if (!p) { this.erreur = 'Impossible de charger ton profil.'; return; }
-        if (p.biographie) this.form.patchValue({ biographie: p.biographie });
-        if (p.photoUrl) this.photoPreview = p.photoUrl;
+        if (medias === null) { this.erreur = 'Impossible de charger ton profil.'; return; }
+        const photoUrl = this.mediaSvc.photoProfilUrl(medias);
+        if (photoUrl) this.photoPreview = photoUrl;
       })
     );
   }
@@ -84,18 +90,18 @@ export class MonProfilComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
 
     this.isUploadingPhoto = true;
-    this.mediaSvc.uploadPhoto(file).subscribe({
-      next: res => {
-        this.isUploadingPhoto = false;
+    this.sub.add(
+      this.mediaSvc.uploadPhoto(file).pipe(
+        switchMap(res => this.mediaSvc.enregistrerPhoto(res)),
+        catchError(err => { this.erreur = messageErreur(err, 'Échec upload photo.'); return of(null); }),
+        finalize(() => { this.isUploadingPhoto = false; }),
+      ).subscribe(media => {
+        if (!media) return;
+        if (media.urlStockage?.startsWith('https://')) this.photoPreview = media.urlStockage;
         this.successMsg = 'Photo mise à jour.';
         setTimeout(() => (this.successMsg = null), 3000);
-        // TODO: appeler POST /medias/photo avec res.publicId quand endpoint disponible
-      },
-      error: () => {
-        this.isUploadingPhoto = false;
-        this.erreur = 'Échec upload photo.';
-      },
-    });
+      })
+    );
   }
 
   sauvegarder(): void {
