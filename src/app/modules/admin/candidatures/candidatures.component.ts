@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, forkJoin, of, catchError, switchMap, finalize } from 'rxjs';
@@ -11,6 +11,7 @@ import { MediaService } from '@core/services/media.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { CandidatureDetailResponse, CandidatPublicResponse, Video, Page } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
+import { environment } from '@env/environment';
 
 type Filtre = 'TOUS' | 'EN_ATTENTE' | 'ACTIVE' |'VALIDEE'| 'REJETEE' | 'EN_ATTENTE_PAIEMENT';
 
@@ -24,7 +25,7 @@ interface DetailComplement {
 
 @Component({
   selector: 'app-candidatures',
-  imports: [DatePipe, RouterModule, ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [DatePipe, DecimalPipe, RouterModule, ReactiveFormsModule, ConfirmDialogComponent],
   template: `
 <div class="page">
 
@@ -266,7 +267,35 @@ interface DetailComplement {
           </div>
         }
 
+        <!-- Édition profil candidat -->
+        @if (modifProfilOuvert && complement(d.id)?.candidat; as cd) {
+          <div class="dossier__champ" style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+            <strong>Modifier le profil</strong>
+            <label for="editBio" style="display:block;margin-top:8px;font-size:.85rem">Biographie</label>
+            <textarea id="editBio" [formControl]="biographieCtrl" rows="3" maxlength="2000"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit;resize:vertical"></textarea>
+            <label for="editChanson" style="display:block;margin-top:8px;font-size:.85rem">Chanson de présélection</label>
+            <input id="editChanson" type="text" [formControl]="chansonCtrl" maxlength="255"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit" />
+            @if (erreurModifProfil) {
+              <div class="modal__err" role="alert" style="margin-top:6px">{{ erreurModifProfil }}</div>
+            }
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button type="button" class="btn btn--ghost btn--sm" (click)="modifProfilOuvert=false">Annuler</button>
+              <button type="button" class="btn btn--primary btn--sm" [disabled]="modifProfilEnCours"
+                (click)="enregistrerProfil(cd.id)">
+                {{ modifProfilEnCours ? '…' : 'Enregistrer' }}
+              </button>
+            </div>
+          </div>
+        }
+
         <div class="modal__actions">
+          @if (complement(d.id)?.candidat; as cd) {
+            @if (!modifProfilOuvert) {
+              <button type="button" class="btn btn--ghost" (click)="ouvrirModifProfil(cd)">✏ Modifier le profil</button>
+            }
+          }
           @if (d.statut === 'EN_ATTENTE') {
             <button type="button" class="btn btn--ok" (click)="valider(d)" [disabled]="actionEnCours === d.id">
               @if (actionEnCours !== d.id) {
@@ -290,6 +319,7 @@ interface DetailComplement {
       </div>
     </div>
   }
+
 
   <!-- Modal rejet -->
   @if (candidatureArejeter) {
@@ -332,10 +362,10 @@ interface DetailComplement {
           [formControl]="referenceReglementCtrl"
           placeholder="Ex : RECU-2026-042, OM-1234…"
           maxlength="500" />
-        <label for="montant" class="modal__label">Montant reçu en FCFA <span class="modal__optional">(facultatif — défaut : 15 000)</span></label>
+        <label for="montant" class="modal__label">Montant reçu en FCFA <span class="modal__optional">(facultatif — défaut : {{ environment.inscriptionPriceFcfa | number:'1.0-0' }})</span></label>
         <input id="montant" type="number" class="modal__input"
           [formControl]="montantCtrl"
-          placeholder="15000"
+          [placeholder]="environment.inscriptionPriceFcfa.toString()"
           min="1" step="100" />
         @if (montantCtrl.invalid && montantCtrl.touched) {
           <div class="modal__err" role="alert">Le montant doit être positif.</div>
@@ -369,6 +399,7 @@ interface DetailComplement {
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class CandidaturesComponent implements OnInit, OnDestroy {
+  readonly environment = environment;
   private adminSvc = inject(AdminService);
   private candidatSvc = inject(CandidatService);
   private videoSvc = inject(VideoService);
@@ -400,6 +431,12 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   candidatureAactiver: CandidatureDetailResponse | null = null;
   referenceReglementCtrl = new FormControl('');
   montantCtrl = new FormControl<number | null>(null, [Validators.min(0.01)]);
+
+  modifProfilOuvert = false;
+  biographieCtrl = new FormControl('');
+  chansonCtrl = new FormControl('', [Validators.maxLength(255)]);
+  modifProfilEnCours = false;
+  erreurModifProfil: string | null = null;
 
   /** Édition EN_COURS — nécessaire pour résoudre codeCandidat → CandidatPublicResponse (GET /candidats/code/{code}?editionId=). */
   private editionId: string | null = null;
@@ -469,6 +506,34 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
 
   fermerDossier(): void {
     this.dossierOuvert = null;
+    this.modifProfilOuvert = false;
+    this.erreurModifProfil = null;
+  }
+
+  ouvrirModifProfil(cd: CandidatPublicResponse): void {
+    this.modifProfilOuvert = true;
+    this.biographieCtrl.setValue(cd.biographie ?? '');
+    this.chansonCtrl.setValue(cd.chansonPreselection ?? '');
+    this.erreurModifProfil = null;
+  }
+
+  enregistrerProfil(candidatId: string): void {
+    if (this.chansonCtrl.invalid) return;
+    this.modifProfilEnCours = true;
+    this.erreurModifProfil = null;
+    const bio = this.biographieCtrl.value || null;
+    const chanson = this.chansonCtrl.value || null;
+    this.sub.add(
+      this.candidatSvc.mettreAJourAdmin(candidatId, bio, chanson).pipe(
+        catchError(err => { this.erreurModifProfil = messageErreur(err, 'Échec de la mise à jour du profil.'); return of(null); }),
+        finalize(() => { this.modifProfilEnCours = false; })
+      ).subscribe(res => {
+        if (!res) return;
+        const comp = this.dossierOuvert ? this.complements.get(this.dossierOuvert.id) : null;
+        if (comp) comp.candidat = res;
+        this.modifProfilOuvert = false;
+      })
+    );
   }
 
   setFiltre(f: Filtre): void {

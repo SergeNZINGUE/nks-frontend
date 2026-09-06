@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription, switchMap, catchError, of, finalize, forkJoin } from 'rxjs';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription, switchMap, catchError, of, finalize, forkJoin, map } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
 import { CandidatService } from '@core/services/candidat.service';
@@ -67,13 +67,6 @@ interface PouleSession extends PouleResponse {
 
       @if (phaseSelectionnee) {
 
-        <div class="gap-banner" role="note">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-          <span>Limitation backend connue : il n'existe aucun endpoint pour <strong>relister les poules déjà créées</strong> après un rechargement de page
-          (seuls les duos sont relistables via <code>GET /duos/phase/{{ '{' }}id{{ '}' }}</code>). Les poules créées dans cette session restent visibles ci-dessous
-          tant que tu ne rafraîchis pas la page — elles existent toujours en base au rechargement, mais cet écran ne peut plus les retrouver.</span>
-        </div>
-
         @if (chargementCandidats) {
           <div class="skeletons" role="status"><div class="sk" aria-hidden="true"></div></div>
         }
@@ -110,7 +103,7 @@ interface PouleSession extends PouleResponse {
 
             <div class="list">
               @if (poulesSession.length === 0) {
-                <div class="empty-state">Aucune poule créée dans cette session pour cette phase.</div>
+                <div class="empty-state">Aucune poule créée pour cette phase.</div>
               }
               @for (poule of poulesSession; track poule.id) {
                 <div class="phase-card">
@@ -119,14 +112,31 @@ interface PouleSession extends PouleResponse {
                       <div class="phase-card__nom">{{ poule.nom }}</div>
                       <div class="phase-card__dates">{{ poule.candidats.length }} candidat(s) affecté(s)</div>
                     </div>
+                    <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirRenommage(poule)">✏ Renommer</button>
                   </div>
                   <div class="phase-card__body">
                     @if (poule.candidats.length > 0) {
                       <ul class="candidat-list">
                         @for (a of poule.candidats; track a.id) {
-                          <li>{{ a.candidat.codeCandidat }} — {{ a.candidat.prenom }} {{ a.candidat.nom }}</li>
+                          <li style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                            <span>
+                              {{ a.candidat.codeCandidat }} — {{ a.candidat.prenom }} {{ a.candidat.nom }}
+                              @if (a.ordrePassage) { <small> · Ordre {{ a.ordrePassage }}</small> }
+                              @if (a.chansonImposee) { <small> · {{ a.chansonImposee }}</small> }
+                            </span>
+                            <span style="display:flex;gap:6px;flex-shrink:0">
+                              @if (retraitConfirmId === a.id) {
+                                <button type="button" class="btn btn--sm btn--err" [disabled]="retraitEnCours" (click)="confirmerRetrait(poule, a)">{{ retraitEnCours ? '…' : 'Confirmer' }}</button>
+                                <button type="button" class="btn btn--sm btn--ghost" (click)="retraitConfirmId = null">Annuler</button>
+                              } @else {
+                                <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirEditionAffectation(a)">✏</button>
+                                <button type="button" class="btn btn--sm btn--err" (click)="retraitConfirmId = a.id">Retirer</button>
+                              }
+                            </span>
+                          </li>
                         }
                       </ul>
+                      @if (erreurRetrait) { <div class="field-error" role="alert" style="margin-top:6px">{{ erreurRetrait }}</div> }
                     }
 
                     @if (affectationEnCoursPouleId === poule.id) {
@@ -162,6 +172,58 @@ interface PouleSession extends PouleResponse {
                   </div>
                 </div>
               }
+            </div>
+          }
+
+          <!-- Modal renommage poule -->
+          @if (pouleARenommer) {
+            <div class="modal-bg" (click)="annulerRenommage()">
+              <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-rename"
+                (click)="$event.stopPropagation()" style="max-width:400px">
+                <h2 id="titre-rename">Renommer « {{ pouleARenommer.nom }} »</h2>
+                <div class="field">
+                  <label for="nvNom">Nouveau nom</label>
+                  <input id="nvNom" type="text" [formControl]="formRenommage" maxlength="50"
+                    placeholder="Poule A" (keydown.enter)="confirmerRenommage()" />
+                </div>
+                @if (erreurRenommage) { <div class="field-error" role="alert">{{ erreurRenommage }}</div> }
+                <div class="modal__actions">
+                  <button type="button" class="btn btn--ghost" (click)="annulerRenommage()">Annuler</button>
+                  <button type="button" class="btn btn--primary" [disabled]="formRenommage.invalid || renommageEnCours"
+                    (click)="confirmerRenommage()">
+                    {{ renommageEnCours ? 'Enregistrement…' : 'Renommer' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Modal édition affectation (ordrePassage, chansonImposee) -->
+          @if (affectationEnEdition) {
+            <div class="modal-bg" (click)="fermerEditionAffectation()">
+              <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-edit-aff"
+                (click)="$event.stopPropagation()" style="max-width:480px">
+                <h2 id="titre-edit-aff">{{ affectationEnEdition.candidat.codeCandidat }} — {{ affectationEnEdition.candidat.prenom }} {{ affectationEnEdition.candidat.nom }}</h2>
+                <form [formGroup]="formAffectation" (ngSubmit)="enregistrerAffectation()" class="form">
+                  <div class="field">
+                    <label for="editOrdre">Ordre de passage <small>(optionnel)</small></label>
+                    <input id="editOrdre" type="number" min="1" formControlName="ordrePassage" />
+                  </div>
+                  <div class="field">
+                    <label for="editChanson">Chanson imposée <small>(optionnel)</small></label>
+                    <input id="editChanson" type="text" formControlName="chansonImposee" maxlength="255" />
+                  </div>
+                  @if (erreurEditionAffectation) {
+                    <div class="field-error" role="alert">{{ erreurEditionAffectation }}</div>
+                  }
+                  <div class="modal__actions">
+                    <button type="button" class="btn btn--ghost" (click)="fermerEditionAffectation()">Annuler</button>
+                    <button type="submit" class="btn btn--primary" [disabled]="formAffectation.invalid || editionAffectationEnCours">
+                      {{ editionAffectationEnCours ? 'Enregistrement…' : 'Enregistrer' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           }
 
@@ -274,6 +336,23 @@ export class PoulesComponent implements OnInit, OnDestroy {
   erreurDuo: string | null = null;
   creationDuoEnCours = false;
 
+  pouleARenommer: PouleSession | null = null;
+  formRenommage = new FormControl('', [Validators.required, Validators.maxLength(50)]);
+  erreurRenommage: string | null = null;
+  renommageEnCours = false;
+
+  retraitConfirmId: string | null = null;
+  retraitEnCours = false;
+  erreurRetrait: string | null = null;
+
+  affectationEnEdition: AffectationPouleResponse | null = null;
+  formAffectation = this.fb.nonNullable.group({
+    ordrePassage: [null as number | null],
+    chansonImposee: ['', Validators.maxLength(255)],
+  });
+  erreurEditionAffectation: string | null = null;
+  editionAffectationEnCours = false;
+
   private sub = new Subscription();
 
   ngOnInit(): void {
@@ -314,9 +393,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
     return this.candidatsDisponibles.filter(c => !enDuo.has(c.id));
   }
 
-  candidatsDisponiblesPour(poule: PouleSession): CandidatPublicResponse[] {
-    // Toutes affectations connues, tous poules confondues de la session (le backend ne permet pas
-    // de vérifier autrement les affectations déjà faites hors session — cf. bannière d'avertissement).
+  candidatsDisponiblesPour(_poule: PouleSession): CandidatPublicResponse[] {
     const dejaAffectes = new Set(this.poulesSession.flatMap(p => p.candidats.map(a => a.candidat.id)));
     return this.candidatsDisponibles.filter(c => !dejaAffectes.has(c.id));
   }
@@ -334,16 +411,29 @@ export class PoulesComponent implements OnInit, OnDestroy {
     this.chargementCandidats = true;
     const candidats$ = this.candidatSvc.galerie(this.edition.id, 0, 200, 'ACTIF');
     const duos$ = phase.typePhase === 'DUO' ? this.pouleDuoSvc.duosPhase(phase.id) : of([] as DuoResponse[]);
+    const poules$ = phase.typePhase !== 'DUO' ? this.pouleDuoSvc.poulesPhase(phase.id) : of([] as PouleResponse[]);
 
     this.sub.add(
-      forkJoin([candidats$, duos$]).pipe(
+      forkJoin([candidats$, duos$, poules$]).pipe(
+        switchMap(([pageCandidats, duos, poules]) => {
+          const poulesAvecCandidats$ = poules.length > 0
+            ? forkJoin(poules.map(p =>
+                this.pouleDuoSvc.candidatsPoule(p.id).pipe(
+                  map(candidats => ({ ...p, candidats } as PouleSession)),
+                  catchError(() => of({ ...p, candidats: [] } as PouleSession))
+                )
+              ))
+            : of([] as PouleSession[]);
+          return forkJoin([of(pageCandidats), of(duos), poulesAvecCandidats$]);
+        }),
         catchError(() => of(null)),
         finalize(() => { this.chargementCandidats = false; })
       ).subscribe(res => {
         if (!res) { this.erreurChargement = 'Erreur de chargement des candidats.'; return; }
-        const [pageCandidats, duos] = res;
+        const [pageCandidats, duos, poulesAvecCandidats] = res;
         this.candidatsDisponibles = pageCandidats.content;
         this.duos = duos;
+        this.poulesSession = poulesAvecCandidats;
       })
     );
   }
@@ -401,6 +491,84 @@ export class PoulesComponent implements OnInit, OnDestroy {
           this.poulesSession[idx] = { ...this.poulesSession[idx], candidats: [...this.poulesSession[idx].candidats, ...affectations] };
         }
         this.annulerAffectation();
+      })
+    );
+  }
+
+  // ── Renommage poule ──────────────────────────────────────────────────────
+  ouvrirRenommage(poule: PouleSession): void {
+    this.pouleARenommer = poule;
+    this.formRenommage.setValue(poule.nom);
+    this.erreurRenommage = null;
+  }
+
+  annulerRenommage(): void {
+    this.pouleARenommer = null;
+    this.erreurRenommage = null;
+  }
+
+  confirmerRenommage(): void {
+    if (this.formRenommage.invalid || !this.pouleARenommer) return;
+    this.erreurRenommage = null;
+    this.renommageEnCours = true;
+    const poule = this.pouleARenommer;
+    const nom = this.formRenommage.value!;
+    this.sub.add(
+      this.pouleDuoSvc.mettreAJourPoule(poule.id, nom).pipe(
+        catchError(err => { this.erreurRenommage = messageErreur(err, 'Échec du renommage.'); return of(null); }),
+        finalize(() => { this.renommageEnCours = false; })
+      ).subscribe(res => {
+        if (!res) return;
+        this.poulesSession = this.poulesSession.map(p =>
+          p.id === poule.id ? { ...p, nom: res.nom } : p);
+        this.annulerRenommage();
+      })
+    );
+  }
+
+  // ── Retrait affectation ───────────────────────────────────────────────────
+  confirmerRetrait(poule: PouleSession, a: AffectationPouleResponse): void {
+    this.retraitEnCours = true;
+    this.erreurRetrait = null;
+    this.sub.add(
+      this.pouleDuoSvc.retirerAffectation(a.id).pipe(
+        catchError(err => { this.erreurRetrait = messageErreur(err, 'Échec du retrait.'); return of(null as void | null); }),
+        finalize(() => { this.retraitEnCours = false; this.retraitConfirmId = null; })
+      ).subscribe(res => {
+        if (res !== undefined && res !== null) return; // erreur
+        if (this.erreurRetrait) return;
+        this.poulesSession = this.poulesSession.map(p =>
+          p.id === poule.id ? { ...p, candidats: p.candidats.filter(c => c.id !== a.id) } : p);
+      })
+    );
+  }
+
+  // ── Édition affectation ──────────────────────────────────────────────────
+  ouvrirEditionAffectation(a: AffectationPouleResponse): void {
+    this.affectationEnEdition = a;
+    this.erreurEditionAffectation = null;
+    this.formAffectation.setValue({ ordrePassage: a.ordrePassage ?? null, chansonImposee: a.chansonImposee ?? '' });
+  }
+
+  fermerEditionAffectation(): void { this.affectationEnEdition = null; }
+
+  enregistrerAffectation(): void {
+    if (!this.affectationEnEdition || this.formAffectation.invalid) return;
+    this.erreurEditionAffectation = null;
+    this.editionAffectationEnCours = true;
+    const { ordrePassage, chansonImposee } = this.formAffectation.getRawValue();
+    const id = this.affectationEnEdition.id;
+    this.sub.add(
+      this.pouleDuoSvc.mettreAJourAffectation(id, ordrePassage, chansonImposee || null).pipe(
+        catchError(err => { this.erreurEditionAffectation = messageErreur(err, 'Échec de la mise à jour.'); return of(null); }),
+        finalize(() => { this.editionAffectationEnCours = false; })
+      ).subscribe(res => {
+        if (!res) return;
+        this.poulesSession = this.poulesSession.map(p => ({
+          ...p,
+          candidats: p.candidats.map(a => a.id === id ? res : a),
+        }));
+        this.fermerEditionAffectation();
       })
     );
   }
