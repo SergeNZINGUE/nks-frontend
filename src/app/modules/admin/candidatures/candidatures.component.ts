@@ -126,6 +126,10 @@ interface DetailComplement {
               </button>
             }
             @if (c.statut === 'EN_ATTENTE_PAIEMENT') {
+              <button type="button" class="btn btn--ok btn--sm" (click)="ouvrirModalActivation(c)" [disabled]="actionEnCours === c.id">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                Activer manuellement
+              </button>
               <button type="button" class="btn btn--ghost btn--sm" [disabled]="smsUnitaireEnCoursId === c.id" (click)="renvoyerSmsUnitaire(c)">
                 @if (smsUnitaireEnCoursId !== c.id) {
                   <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -275,6 +279,12 @@ interface DetailComplement {
               Rejeter
             </button>
           }
+          @if (d.statut === 'EN_ATTENTE_PAIEMENT') {
+            <button type="button" class="btn btn--ok" (click)="ouvrirModalActivation(d)" [disabled]="actionEnCours === d.id">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+              {{ actionEnCours === d.id ? '…' : 'Activer manuellement' }}
+            </button>
+          }
           <button type="button" class="btn btn--ghost" (click)="fermerDossier()">Fermer</button>
         </div>
       </div>
@@ -304,6 +314,38 @@ interface DetailComplement {
             [disabled]="motifCtrl.invalid || actionEnCours === candidatureArejeter.id"
             (click)="confirmerRejet()">
             {{ actionEnCours === candidatureArejeter.id ? '…' : 'Confirmer le rejet' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal activation manuelle (règlement espèces ou autre) -->
+  @if (candidatureAactiver) {
+    <div class="modal-bg" (click)="fermerModalActivation()">
+      <div class="modal modal--activation" role="dialog" aria-modal="true" aria-labelledby="titre-activation"
+        (click)="$event.stopPropagation()">
+        <h2 id="titre-activation">Activer {{ candidatureAactiver.codeCandidat }} — {{ candidatureAactiver.prenom }}</h2>
+        <p class="modal__hint">Enregistre un règlement hors LigdiCash (espèces, virement, Orange Money direct…) et active immédiatement le profil candidat.</p>
+        <label for="reference" class="modal__label">Référence du règlement <span class="modal__optional">(facultatif)</span></label>
+        <input id="reference" type="text" class="modal__input"
+          [formControl]="referenceReglementCtrl"
+          placeholder="Ex : RECU-2026-042, OM-1234…"
+          maxlength="500" />
+        <label for="montant" class="modal__label">Montant reçu en FCFA <span class="modal__optional">(facultatif — défaut : 15 000)</span></label>
+        <input id="montant" type="number" class="modal__input"
+          [formControl]="montantCtrl"
+          placeholder="15000"
+          min="1" step="100" />
+        @if (montantCtrl.invalid && montantCtrl.touched) {
+          <div class="modal__err" role="alert">Le montant doit être positif.</div>
+        }
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" (click)="fermerModalActivation()">Annuler</button>
+          <button type="button" class="btn btn--ok"
+            [disabled]="montantCtrl.invalid || actionEnCours === candidatureAactiver.id"
+            (click)="confirmerActivation()">
+            {{ actionEnCours === candidatureAactiver.id ? '…' : 'Activer le profil' }}
           </button>
         </div>
       </div>
@@ -354,6 +396,10 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   whatsappUnitaireEnCoursId: string | null = null;
   whatsappUnitaireResultatId: string | null = null;
   whatsappUnitaireErreurId: string | null = null;
+
+  candidatureAactiver: CandidatureDetailResponse | null = null;
+  referenceReglementCtrl = new FormControl('');
+  montantCtrl = new FormControl<number | null>(null, [Validators.min(0.01)]);
 
   /** Édition EN_COURS — nécessaire pour résoudre codeCandidat → CandidatPublicResponse (GET /candidats/code/{code}?editionId=). */
   private editionId: string | null = null;
@@ -505,9 +551,10 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** Échap ferme la modale au premier plan (rejet, puis dossier) quel que soit l'élément ayant le focus */
+  /** Échap ferme la modale au premier plan (activation, rejet, puis dossier) quel que soit l'élément ayant le focus */
   @HostListener('document:keydown.escape')
   onEchap(): void {
+    if (this.candidatureAactiver) { this.fermerModalActivation(); return; }
     if (this.candidatureArejeter) { this.fermerModal(); return; }
     if (this.dossierOuvert) this.fermerDossier();
   }
@@ -520,6 +567,37 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   fermerModal(): void {
     this.candidatureArejeter = null;
     this.motifCtrl.reset('');
+  }
+
+  ouvrirModalActivation(c: CandidatureDetailResponse): void {
+    this.candidatureAactiver = c;
+    this.referenceReglementCtrl.reset('');
+    this.montantCtrl.reset(null);
+  }
+
+  fermerModalActivation(): void {
+    this.candidatureAactiver = null;
+    this.referenceReglementCtrl.reset('');
+    this.montantCtrl.reset(null);
+  }
+
+  confirmerActivation(): void {
+    if (!this.candidatureAactiver || this.montantCtrl.invalid) return;
+    const id = this.candidatureAactiver.id;
+    const ref = this.referenceReglementCtrl.value || null;
+    const montant = this.montantCtrl.value ?? null;
+    this.actionEnCours = id;
+    this.sub.add(
+      this.adminSvc.activerManuellement(id, ref, montant)
+        .pipe(catchError(() => of(null)))
+        .subscribe(res => {
+          this.actionEnCours = null;
+          this.fermerModalActivation();
+          if (!res) { this.erreur = "Erreur lors de l'activation manuelle"; return; }
+          this.fermerDossier();
+          this.chargerPage(this.pageCourante);
+        })
+    );
   }
 
   confirmerRejet(): void {

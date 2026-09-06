@@ -136,6 +136,18 @@ export class AdminService {
   }
 
   /**
+   * PUT /candidatures/{id}/activer-manuellement — activation après règlement en espèces ou autre.
+   * Les deux champs sont optionnels : referenceReglement (reçu, référence) et montant
+   * (défaut backend : 15 000 FCFA si absent).
+   */
+  activerManuellement(id: string, referenceReglement?: string | null, montant?: number | null): Observable<CandidatureDetailResponse> {
+    return this.http.put<CandidatureDetailResponse>(
+      `${this.api}/candidatures/${id}/activer-manuellement`,
+      { referenceReglement: referenceReglement ?? null, montant: montant ?? null }
+    );
+  }
+
+  /**
    * GET /editions/{id}/phases  (EditionController)
    * Pas de GET /phases indépendant pour l'admin
    */
