@@ -6,6 +6,7 @@ import { Subscription, forkJoin, switchMap, catchError, of } from 'rxjs';
 import { CandidatureService } from '@core/services/candidature.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
+import { ParametresService } from '@core/services/parametres.service';
 import { EditionService } from '@core/services/edition.service';
 import { AuthService } from '@core/services/auth.service';
 import {
@@ -36,6 +37,7 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   private candidatureSvc = inject(CandidatureService);
   private candidatSvc = inject(CandidatService);
   private mediaSvc = inject(MediaService);
+  private parametresSvc = inject(ParametresService);
   private editionSvc = inject(EditionService);
   private authSvc = inject(AuthService);
   private router = inject(Router);
@@ -46,6 +48,7 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   profil: CandidatPublicResponse | null = null;
   photoPreview: string | null = null;
   scores: ResultatPhase[] = [];
+  montantInscription = environment.inscriptionPriceFcfa;
 
   private sub = new Subscription();
 
@@ -55,6 +58,11 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
    * rappellerait ma-candidature une seconde fois).
    */
   ngOnInit(): void {
+    this.sub.add(
+      this.parametresSvc.publics().pipe(catchError(() => of(null)))
+        .subscribe(p => { if (p) this.montantInscription = p.prixInscriptionFcfa; })
+    );
+
     this.sub.add(
       forkJoin({
         candidature: this.candidatureSvc.maCandidature().pipe(catchError(() => of(null))),
@@ -92,9 +100,9 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-  /** Affiché dans le CTA de paiement — même source que mes-paiements.component.ts. */
-  readonly montantInscriptionFormate =
-    `${environment.inscriptionPriceFcfa.toLocaleString('fr-FR')} FCFA`;
+  get montantInscriptionFormate(): string {
+    return `${this.montantInscription.toLocaleString('fr-FR')} FCFA`;
+  }
 
   get initiales(): string {
     const c = this.candidature;
