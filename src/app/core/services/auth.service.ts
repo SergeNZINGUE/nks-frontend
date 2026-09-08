@@ -5,6 +5,11 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '@env/environment';
 import { LoginRequest, LoginResponse } from '@core/models';
 
+export interface ChangerMotDePasseRequest {
+  motDePasseActuel: string;
+  nouveauMotDePasse: string;
+}
+
 const TOKEN_KEY   = 'nks_access_token';
 const REFRESH_KEY = 'nks_refresh_token';
 const ROLES_KEY   = 'nks_roles';
@@ -28,6 +33,10 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.api}/auth/refresh`, { refreshToken }).pipe(
       tap(res => this.storeTokens(res))
     );
+  }
+
+  changerMotDePasse(req: ChangerMotDePasseRequest): Observable<void> {
+    return this.http.put<void>(`${this.api}/auth/changer-mot-de-passe`, req);
   }
 
   logout(): void {

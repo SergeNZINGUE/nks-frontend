@@ -75,12 +75,8 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'utilisateurs',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Utilisateurs & rôles',
-          icon: 'user',
-          description: "Gestion des comptes (admin, jury, agent d'accueil) et de leurs rôles n'est pas encore conçue.",
-        },
+        loadComponent: () =>
+          import('./utilisateurs/utilisateurs.component').then(c => c.UtilisateursComponent),
       },
       {
         path: 'audit',

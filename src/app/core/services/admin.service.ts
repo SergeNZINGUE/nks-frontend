@@ -10,6 +10,26 @@ import {
   Page,
 } from '@core/models';
 
+export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL';
+
+export interface CreerUtilisateurAdminRequest {
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  role: RoleAdmin;
+}
+
+export interface UtilisateurAdminResponse {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  roles: string[];
+  statut: string;
+}
+
 /** SmsController.SmsBulkResponse — réponse de POST /sms/candidatures-validees. */
 export interface SmsBulkResponse {
   nbEnvoyes: number;
@@ -196,6 +216,21 @@ export class AdminService {
    */
   envoyerWhatsappUnitaire(to: string, message: string): Observable<{ success: boolean; sid: string }> {
     return this.http.post<{ success: boolean; sid: string }>(`${this.api}/whatsapp/envoyer`, { to, message });
+  }
+
+  /** POST /admin/utilisateurs — SUPER_ADMIN uniquement */
+  creerUtilisateur(req: CreerUtilisateurAdminRequest): Observable<UtilisateurAdminResponse> {
+    return this.http.post<UtilisateurAdminResponse>(`${this.api}/admin/utilisateurs`, req);
+  }
+
+  /** GET /admin/utilisateurs — SUPER_ADMIN uniquement */
+  listerUtilisateurs(): Observable<UtilisateurAdminResponse[]> {
+    return this.http.get<UtilisateurAdminResponse[]>(`${this.api}/admin/utilisateurs`);
+  }
+
+  /** POST /admin/utilisateurs/{id}/reinitialiser-mot-de-passe */
+  reinitialiserMotDePasse(id: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/admin/utilisateurs/${id}/reinitialiser-mot-de-passe`, {});
   }
 
   /**

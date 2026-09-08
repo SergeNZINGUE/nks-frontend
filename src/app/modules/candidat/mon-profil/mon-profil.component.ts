@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { catchError, finalize, of, switchMap } from 'rxjs';
@@ -8,6 +8,7 @@ import { catchError, finalize, of, switchMap } from 'rxjs';
 import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
+import { AuthService } from '@core/services/auth.service';
 import { CandidatPublicResponse, MediaPublicResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
@@ -23,6 +24,7 @@ export class MonProfilComponent implements OnInit, OnDestroy {
   private candidatSvc = inject(CandidatService);
   private mediaSvc = inject(MediaService);
   private editionSvc = inject(EditionService);
+  private authSvc = inject(AuthService);
 
   isLoading = true;
   isSaving = false;
@@ -32,7 +34,12 @@ export class MonProfilComponent implements OnInit, OnDestroy {
   successMsg: string | null = null;
   erreur: string | null = null;
 
+  isChangingPassword = false;
+  successMdp: string | null = null;
+  erreurMdp: string | null = null;
+
   form!: FormGroup;
+  formMdp!: FormGroup;
   private sub = new Subscription();
 
   ngOnInit(): void {
@@ -40,6 +47,12 @@ export class MonProfilComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       biographie: ['', [Validators.maxLength(2000)]],
     });
+
+    this.formMdp = this.fb.group({
+      motDePasseActuel: ['', Validators.required],
+      nouveauMotDePasse: ['', [Validators.required, Validators.minLength(8)]],
+      confirmation: ['', Validators.required],
+    }, { validators: this.mdpIdentiques });
 
     this.sub.add(
       this.editionSvc.lister().pipe(
@@ -100,6 +113,33 @@ export class MonProfilComponent implements OnInit, OnDestroy {
         if (media.urlStockage?.startsWith('https://')) this.photoPreview = media.urlStockage;
         this.successMsg = 'Photo mise à jour.';
         setTimeout(() => (this.successMsg = null), 3000);
+      })
+    );
+  }
+
+  private mdpIdentiques(control: AbstractControl): ValidationErrors | null {
+    const n = control.get('nouveauMotDePasse')?.value;
+    const c = control.get('confirmation')?.value;
+    return n && c && n !== c ? { mismatch: true } : null;
+  }
+
+  changerMotDePasse(): void {
+    this.formMdp.markAllAsTouched();
+    if (this.formMdp.invalid || this.isChangingPassword) return;
+    this.erreurMdp = null;
+    this.successMdp = null;
+    this.isChangingPassword = true;
+    const { motDePasseActuel, nouveauMotDePasse } = this.formMdp.value;
+    let echec = false;
+    this.sub.add(
+      this.authSvc.changerMotDePasse({ motDePasseActuel, nouveauMotDePasse }).pipe(
+        catchError(err => { echec = true; this.erreurMdp = messageErreur(err, 'Échec du changement de mot de passe.'); return of(undefined); }),
+        finalize(() => { this.isChangingPassword = false; }),
+      ).subscribe(() => {
+        if (echec) return;
+        this.formMdp.reset();
+        this.successMdp = 'Mot de passe modifié.';
+        setTimeout(() => (this.successMdp = null), 4000);
       })
     );
   }

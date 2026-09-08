@@ -66,7 +66,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     titre: 'Plateforme',
     items: [
       { label: 'Paiements',           route: '/admin/paiements',     icon: 'credit-card', statut: 'ready' },
-      { label: 'Utilisateurs & rôles', route: '/admin/utilisateurs', icon: 'user',        statut: 'soon' },
+      { label: 'Utilisateurs & rôles', route: '/admin/utilisateurs', icon: 'user',        statut: 'ready' },
       { label: 'Audit & sécurité',    route: '/admin/audit',         icon: 'shield',      statut: 'ready' },
       { label: 'Paramètres',          route: '/admin/parametres',    icon: 'settings',    statut: 'soon' },
     ],
