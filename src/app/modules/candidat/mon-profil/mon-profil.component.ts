@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, finalize, of, switchMap } from 'rxjs';
 
 import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
 import { EditionService } from '@core/services/edition.service';
-import { CandidatPublicResponse } from '@core/models';
+import { CandidatPublicResponse, MediaPublicResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
@@ -23,12 +23,14 @@ export class MonProfilComponent implements OnInit, OnDestroy {
   private candidatSvc = inject(CandidatService);
   private mediaSvc = inject(MediaService);
   private editionSvc = inject(EditionService);
+  private cdr = inject(ChangeDetectorRef);
 
   isLoading = true;
   isSaving = false;
   isUploadingPhoto = false;
   profil: CandidatPublicResponse | null = null;
   photoPreview: string | null = null;
+  photoErreur = false;
   successMsg: string | null = null;
   erreur: string | null = null;
 
@@ -48,13 +50,19 @@ export class MonProfilComponent implements OnInit, OnDestroy {
           if (!active) throw new Error('Aucune édition en cours');
           return this.candidatSvc.monProfil(active.id);
         }),
+        switchMap(p => {
+          this.profil = p;
+          if (p.biographie) this.form.patchValue({ biographie: p.biographie });
+          return this.mediaSvc.mediasCandidat(p.id).pipe(
+            catchError(() => of([] as MediaPublicResponse[])),
+          );
+        }),
         catchError(() => of(null)),
-      ).subscribe(p => {
-        this.profil = p;
+      ).subscribe(medias => {
         this.isLoading = false;
-        if (!p) { this.erreur = 'Impossible de charger ton profil.'; return; }
-        if (p.biographie) this.form.patchValue({ biographie: p.biographie });
-        if (p.photoUrl) this.photoPreview = p.photoUrl;
+        if (medias === null) { this.erreur = 'Impossible de charger ton profil.'; return; }
+        const photoUrl = this.mediaSvc.photoProfilUrl(medias);
+        if (photoUrl) { this.photoPreview = photoUrl; this.photoErreur = false; }
       })
     );
   }
@@ -80,22 +88,36 @@ export class MonProfilComponent implements OnInit, OnDestroy {
     if (!['image/jpeg', 'image/png'].includes(file.type)) { this.erreur = 'JPG ou PNG uniquement.'; return; }
 
     const reader = new FileReader();
-    reader.onload = e => (this.photoPreview = e.target?.result as string);
+    reader.onload = e => { this.photoPreview = e.target?.result as string; this.photoErreur = false; };
     reader.readAsDataURL(file);
 
     this.isUploadingPhoto = true;
-    this.mediaSvc.uploadPhoto(file).subscribe({
-      next: res => {
-        this.isUploadingPhoto = false;
+    this.sub.add(
+      this.mediaSvc.uploadPhoto(file).pipe(
+        switchMap(res => this.mediaSvc.enregistrerPhoto(res)),
+        catchError(err => { this.erreur = messageErreur(err, 'Échec upload photo.'); return of(null); }),
+        finalize(() => { this.isUploadingPhoto = false; }),
+      ).subscribe(media => {
+        if (!media) return;
+        if (media.urlStockage?.startsWith('https://')) { this.photoPreview = media.urlStockage; this.photoErreur = false; }
         this.successMsg = 'Photo mise à jour.';
         setTimeout(() => (this.successMsg = null), 3000);
-        // TODO: appeler POST /medias/photo avec res.publicId quand endpoint disponible
-      },
-      error: () => {
-        this.isUploadingPhoto = false;
-        this.erreur = 'Échec upload photo.';
-      },
-    });
+      })
+    );
+  }
+
+  /**
+   * Filet de secours pour les hôtes bloqués (réseau/CSP) qui ne déclenchent jamais
+   * (error) — l'image se termine en "complete" mais avec naturalWidth=0.
+   */
+  verifierImage(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img.naturalWidth === 0) { this.photoErreur = true; this.cdr.detectChanges(); }
+  }
+
+  onPhotoErreur(): void {
+    this.photoErreur = true;
+    this.cdr.detectChanges();
   }
 
   sauvegarder(): void {

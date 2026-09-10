@@ -9,6 +9,7 @@ import { MediaService } from '@core/services/media.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { EditionService } from '@core/services/edition.service';
 import { Video, StatutVideo, Phase } from '@core/models';
+import { BadgeComponent, BadgeVariant } from '../../admin/shared/ui/badge/badge.component';
 
 // Même contrainte qu'à l'inscription (CdC §3.1.1) — appliquée ici uniquement côté client :
 // POST /videos (VideoService.uploaderPourPhase()) ne valide pas la durée côté backend,
@@ -19,7 +20,7 @@ const VIDEO_DUREE_MAX_S = 60;
 
 @Component({
   selector: 'app-mes-videos',
-  imports: [DatePipe, RouterModule, FormsModule],
+  imports: [DatePipe, RouterModule, FormsModule, BadgeComponent],
   templateUrl: './mes-videos.component.html',
   styleUrls: ['./mes-videos.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -89,6 +90,11 @@ export class MesVideosComponent implements OnInit, OnDestroy {
 
   statutClass(s: StatutVideo): string {
     return { EN_COURS_UPLOAD: 'warning', DISPONIBLE: 'success', MASQUEE: 'default' }[s] ?? 'default';
+  }
+
+  badgeVariant(s: StatutVideo): BadgeVariant {
+    const map: Record<string, BadgeVariant> = { warning: 'warning', success: 'success', default: 'neutral' };
+    return map[this.statutClass(s)] ?? 'neutral';
   }
 
   dureeFormatee(sec: number): string {

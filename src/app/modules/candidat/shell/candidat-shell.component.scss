@@ -4,7 +4,8 @@
 
 .shell {
   min-height: 100dvh;
-  background: $nks-bg-primary;
+  background: $surface-0;
+  background-image: radial-gradient(1100px 480px at 82% -8%, rgba($nks-gold, 0.05), transparent 60%);
   color: $nks-text;
   font-family: $font-body;
 
@@ -24,8 +25,9 @@
     position: sticky;
     top: 0;
     height: 100dvh;
-    background: $nks-bg-surface;
-    border-right: 1px solid rgba($nks-text, 0.08);
+    background: $surface-1;
+    @include surface-sheen;
+    border-right: 1px solid $border-hairline;
   }
 }
 
@@ -34,10 +36,11 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-5 $sp-5 $sp-4;
-  border-bottom: 1px solid rgba($nks-text, 0.08);
+  border-bottom: 1px solid $border-hairline;
+  min-height: 65px;
 }
 
-.sidebar__brand-icon { height: 32px; width: auto; flex-shrink: 0; }
+.sidebar__logo { height: 32px; width: auto; flex-shrink: 0; }
 
 .sidebar__brand-text {
   font-family: $font-title;
@@ -46,8 +49,6 @@
 
   span { color: $nks-gold; }
 }
-
-.sidebar__brand-sub { font-size: 11px; color: $nks-text-secondary; opacity: 0.7; margin-top: 1px; }
 
 .sidebar__nav {
   flex: 1;
@@ -66,34 +67,95 @@
   color: $nks-text-secondary;
   text-decoration: none;
   font-size: 14px;
-  min-height: 44px;
+  min-height: 40px;
+  position: relative;
   transition: background $dur-fast $ease-out, color $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
 
-  &:hover { background: rgba($nks-text, 0.05); color: $nks-text; }
+  &:hover { background: rgba(255, 255, 255, 0.05); color: $nks-text; }
+  &:focus-visible { @include focus-ring; }
 
   &--active {
-    background: linear-gradient(135deg, rgba($nks-gold, 0.18), rgba($nks-gold, 0.06));
-    box-shadow: inset 0 0 0 1px rgba($nks-gold, 0.25);
-    color: $nks-gold;
+    background: linear-gradient(135deg, rgba($nks-gold, 0.16), rgba($nks-gold, 0.04));
+    box-shadow: inset 0 0 0 1px rgba($nks-gold, 0.22);
+    color: $nks-gold-light;
     font-weight: 600;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 6px auto 6px 0;
+      width: 3px;
+      border-radius: $radius-full;
+      background: $nks-gradient-gold;
+    }
+
+    .sidebar__item-icon { background: status-bg($nks-gold); color: $nks-gold-light; }
   }
 }
 
-.sidebar__item-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar__item-icon {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background $dur-fast $ease-out, color $dur-fast $ease-out;
+
+  svg { width: 16px; height: 16px; }
+}
+
 .sidebar__item-label { flex: 1; }
 
 .sidebar__footer {
-  padding: $sp-4 $sp-3;
-  border-top: 1px solid rgba($nks-text, 0.08);
+  padding: $sp-3;
+  border-top: 1px solid $border-hairline;
   display: flex;
   flex-direction: column;
-  gap: $sp-1;
+  gap: 2px;
 }
 
-.sidebar__footer-link {
+.sidebar__account {
   display: flex;
   align-items: center;
-  gap: $sp-2;
+  gap: $sp-3;
+  padding: $sp-2 $sp-3 $sp-3;
+  margin-bottom: $sp-1;
+  border-bottom: 1px solid $border-hairline;
+}
+
+.sidebar__account-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: $radius-full;
+  background: $nks-gradient-gold;
+  color: $nks-bg-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 0 0 3px rgba($nks-gold, 0.12);
+}
+
+.sidebar__account-info { display: flex; flex-direction: column; min-width: 0; }
+.sidebar__account-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: $nks-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar__account-sub { font-size: 11px; color: $nks-text-secondary; }
+
+.sidebar__site-link,
+.sidebar__logout {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
   padding: $sp-2 $sp-3;
   border-radius: $radius-sm;
   font-size: 13px;
@@ -104,12 +166,16 @@
   cursor: pointer;
   text-align: left;
   font-family: $font-body;
-  min-height: 44px;
+  min-height: 38px;
   transition: background $dur-fast $ease-out, color $dur-fast $ease-out;
 
-  &:hover { background: rgba($nks-text, 0.05); color: $nks-text; }
-  &--danger:hover { color: $nks-error; background: rgba($nks-error, 0.08); }
+  &:hover { background: rgba(255, 255, 255, 0.05); color: $nks-text; }
+  &:focus-visible { @include focus-ring; }
+
+  .icon { width: 16px; height: 16px; }
 }
+
+.sidebar__logout:hover { color: $nks-error; }
 
 // ─── Contenu principal ───────────────────────────────────────────────────────
 .shell__main { min-width: 0; }
@@ -120,69 +186,74 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 56px;
   padding: 0 $sp-4;
-  background: $nks-glass-bg;
-  backdrop-filter: blur($nks-glass-blur);
-  -webkit-backdrop-filter: blur($nks-glass-blur);
-  border-bottom: 1px solid $nks-border;
+  background: rgba($surface-1, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid $border-hairline;
 
-  @media (min-width: 900px) {
-    background: none;
-    backdrop-filter: none;
-    border-bottom: none;
-    padding: $sp-5 $sp-8 0;
-    height: auto;
-  }
+  @media (min-width: 900px) { display: none; }
 }
+
+.shell__brand-mobile {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  text-decoration: none;
+  color: $nks-text;
+  font-family: $font-title;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.shell__brand-icon { height: 24px; width: auto; }
 
 .shell__topbar-spacer { flex: 1; }
 
 .shell__account {
   display: flex;
   align-items: center;
-  gap: $sp-2;
-  padding: 6px 14px 6px 6px;
-  background: $nks-bg-surface;
-  border: 1px solid $nks-border;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   border-radius: $radius-full;
+  transition: box-shadow $dur-fast $ease-out;
+
+  &:hover, &:focus-visible { box-shadow: 0 0 0 3px rgba($nks-gold, 0.25); }
+  &:focus-visible { outline: none; }
 }
 
 .shell__account-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-full;
   background: $nks-gradient-gold;
   color: $nks-bg-primary;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: $font-title;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
+  box-shadow: 0 0 0 3px rgba($nks-gold, 0.12);
 }
 
-.shell__account-label { font-size: 13px; color: $nks-text-secondary; white-space: nowrap; }
-
-// $bottom-nav-height (64px) : la même variable que app-bottom-nav (site public),
-// pour que le contenu ne soit jamais masqué par la barre fixe en bas de l'écran.
 .shell__content {
   padding-bottom: $bottom-nav-height;
 
   @media (min-width: 900px) { padding-bottom: 0; }
 }
 
-// ─── Barre basse (mobile uniquement) — même recette que app-bottom-nav ─────
+// ─── Barre basse (mobile uniquement) ─────────────────────────────────────────
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: $bottom-nav-height;
-  background: $nks-bg-primary;
-  border-top: 1px solid $nks-border;
+  background: $surface-1;
+  border-top: 1px solid $border-hairline;
   display: flex;
   align-items: stretch;
   z-index: 200;
@@ -217,3 +288,84 @@
 
   @media (min-width: 900px) { display: none; }
 }
+
+// ─── Modal changement de mot de passe ────────────────────────────────────────
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-2;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-md;
+  font-size: 13px;
+  margin-bottom: $sp-3;
+
+  &--error {
+    background: status-bg($nks-error);
+    color: $nks-error;
+    border: 1px solid status-border($nks-error);
+  }
+
+  .icon { margin-top: 2px; }
+}
+
+.mdp-form {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+}
+
+.mdp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $nks-text;
+
+    small { font-weight: 400; color: $nks-text-secondary; margin-left: 4px; }
+  }
+
+  input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid $border-hairline-hover;
+    border-radius: $radius-sm;
+    padding: $sp-3;
+    color: $nks-text;
+    font-size: 14.5px;
+    font-family: $font-body;
+    transition: border-color $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+    &:focus {
+      outline: none;
+      border-color: $nks-gold;
+      box-shadow: 0 0 0 3px rgba($nks-gold, 0.18);
+    }
+  }
+}
+
+.mdp-erreur { font-size: 12px; color: $nks-error; }
+
+.mdp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sp-3;
+  padding-top: $sp-1;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba($nks-gold, 0.3);
+  border-top-color: $nks-gold;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+
+  &--inline { vertical-align: middle; margin-right: 6px; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

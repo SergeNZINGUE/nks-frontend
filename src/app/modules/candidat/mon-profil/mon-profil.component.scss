@@ -71,14 +71,17 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   label { font-size: 13px; font-weight: 600; color: $text;
     small { font-weight: 400; color: $muted; margin-left: 4px; }
   }
-  textarea {
+  input, textarea {
     background: $surface; border: 1px solid $border; border-radius: t.$radius-md;
     padding: 12px 14px; color: $text; font-size: 15px; font-family: inherit;
-    resize: vertical; min-height: 160px; outline: none;
+    outline: none;
     transition: border-color t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
     &:focus { border-color: $gold; box-shadow: 0 0 0 3px rgba($gold, 0.16); }
   }
+  textarea { resize: vertical; min-height: 160px; }
 }
+
+.section-title { font-family: t.$font-title; font-size: 16px; color: $gold; margin: 0 0 12px; }
 
 .mots-counter { font-size: 12px; color: $muted; text-align: right; &.limit { color: t.$nks-warning; } }
 .form-error   { font-size: 12px; color: t.$nks-error; }

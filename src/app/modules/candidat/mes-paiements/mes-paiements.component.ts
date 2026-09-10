@@ -2,36 +2,17 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@
 
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription, catchError, of } from 'rxjs';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { CandidatureService } from '@core/services/candidature.service';
+import { ParametresService } from '@core/services/parametres.service';
 import { CandidatureDetailResponse } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { environment } from '@env/environment';
-
-/**
- * Paiement des frais d'inscription — CdC §3.1.2 :
- * « En cas d'acceptation : le candidat procède au paiement des frais d'inscription
- *   via Mobile Money. Paiement confirmé : profil public activé. »
- *
- * Le paiement n'a donc PAS lieu au moment de l'inscription : il est déclenché ici,
- * une fois la candidature au statut EN_ATTENTE_PAIEMENT (validée par l'admin).
- *
- * GAP BACKEND #1 : aucun endpoint ne liste les paiements d'un candidat.
- *   GET /paiements est réservé ADMIN/SUPER_ADMIN, GET /paiements/{id} exige de
- *   connaître l'identifiant. L'historique (CdC §5.2) n'est donc pas affichable.
- * GAP BACKEND #2 (partiellement contourné le 19/08/2026, décision explicite user) :
- *   PRIX_INSCRIPTION_FCFA n'est exposé par aucun endpoint (aucun contrôleur ne sert
- *   parametres_plateforme). Le montant était donc auparavant un champ libre saisi par
- *   le candidat — risque direct de fraude (montant arbitraire envoyé au paiement).
- *   Corrigé : montant figé, champ lecture seule. Centralisé dans `environment` depuis
- *   le 02/09/2026 (le tableau de bord l'affiche aussi dans son CTA de paiement).
- *   À REMPLACER dès qu'un endpoint backend expose ce paramètre.
- */
-const MONTANT_INSCRIPTION_FCFA = environment.inscriptionPriceFcfa;
+import { BadgeComponent, BadgeVariant } from '../../admin/shared/ui/badge/badge.component';
 @Component({
   selector: 'app-mes-paiements',
-  imports: [RouterModule, ReactiveFormsModule],
+  imports: [RouterModule, ReactiveFormsModule, BadgeComponent],
   templateUrl: './mes-paiements.component.html',
   styleUrls: ['./mes-paiements.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -39,6 +20,7 @@ const MONTANT_INSCRIPTION_FCFA = environment.inscriptionPriceFcfa;
 export class MesPaiementsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private candidatureSvc = inject(CandidatureService);
+  private parametresSvc = inject(ParametresService);
 
   isLoading = true;
   isPaying = false;
@@ -46,11 +28,14 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
   erreur: string | null = null;
   paiementInitie = false;
   urlPaiement: string | null = null;
+  montantInscription = environment.inscriptionPriceFcfa;
 
   form!: FormGroup;
   private sub = new Subscription();
 
-  readonly montantFormate = `${MONTANT_INSCRIPTION_FCFA.toLocaleString('fr-FR')} FCFA`;
+  get montantFormate(): string {
+    return `${this.montantInscription.toLocaleString('fr-FR')} FCFA`;
+  }
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -58,15 +43,16 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
     });
 
     this.sub.add(
-      this.candidatureSvc.maCandidature()
-        .pipe(catchError(() => of(null)))
-        .subscribe(c => {
-          this.isLoading = false;
-          this.candidature = c;
-          if (!c) { this.erreur = 'Impossible de charger ta candidature.'; return; }
-          // Pré-remplit avec le numéro déclaré à l'inscription
-          this.form.patchValue({ telephone: c.telephone });
-        })
+      forkJoin({
+        candidature: this.candidatureSvc.maCandidature().pipe(catchError(() => of(null))),
+        parametres: this.parametresSvc.publics().pipe(catchError(() => of(null))),
+      }).subscribe(({ candidature, parametres }) => {
+        this.isLoading = false;
+        this.candidature = candidature;
+        if (parametres) this.montantInscription = parametres.prixInscriptionFcfa;
+        if (!candidature) { this.erreur = 'Impossible de charger ta candidature.'; return; }
+        this.form.patchValue({ telephone: candidature.telephone });
+      })
     );
   }
 
@@ -86,7 +72,7 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
     const { telephone } = this.form.value;
 
     this.sub.add(
-      this.candidatureSvc.initierPaiementInscription(MONTANT_INSCRIPTION_FCFA, telephone.trim())
+      this.candidatureSvc.initierPaiementInscription(this.montantInscription, telephone.trim())
         .pipe(catchError(err => {
           this.erreur = messageErreur(err, 'Échec de l\'initiation du paiement.');
           return of(null);
@@ -120,5 +106,10 @@ export class MesPaiementsComponent implements OnInit, OnDestroy {
       ACTIVE: 'success',
       REJETEE: 'danger',
     }[s] ?? 'default';
+  }
+
+  badgeVariant(s: string): BadgeVariant {
+    const map: Record<string, BadgeVariant> = { warning: 'warning', success: 'success', danger: 'error', default: 'neutral' };
+    return map[this.statutClass(s)] ?? 'neutral';
   }
 }

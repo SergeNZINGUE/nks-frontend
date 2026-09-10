@@ -64,6 +64,11 @@ export class CandidatService {
     return this.http.put<CandidatPublicResponse>(`${this.base}/mon-profil`, { biographie });
   }
 
+  /** PUT /candidats/{id} — ADMIN/SUPER_ADMIN — mise à jour biographie + chansonPreselection. */
+  mettreAJourAdmin(id: string, biographie: string | null, chansonPreselection: string | null): Observable<CandidatPublicResponse> {
+    return this.http.put<CandidatPublicResponse>(`${this.base}/${id}`, { biographie, chansonPreselection });
+  }
+
   /** Initiales pour placeholder photo (GAP-01) */
   initiales(candidat: CandidatPublicResponse): string {
     return `${candidat.prenom[0] ?? ''}${candidat.nom[0] ?? ''}`.toUpperCase();

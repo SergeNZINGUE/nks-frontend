@@ -202,19 +202,8 @@ $gold:    t.$nks-gold;
   display: flex;
   gap: 16px;
   margin-bottom: 16px;
-}
 
-.score-stat {
-  flex: 1;
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: t.$radius-md;
-  padding: 16px;
-  text-align: center;
-  box-shadow: t.$shadow-card;
-
-  &__value { display: block; font-family: t.$font-title; font-size: 28px; color: $gold; }
-  &__label { display: block; font-size: 11px; color: $muted; margin-top: 4px; }
+  app-kpi-card { flex: 1; }
 }
 
 .scores-table {
@@ -270,29 +259,98 @@ $gold:    t.$nks-gold;
   padding: 12px 16px;
   border-bottom: 1px solid $border;
   font-size: 14px;
+  gap: 12px;
 
   &:last-child { border-bottom: none; }
-  span     { color: $muted; }
+  > span   { color: $muted; }
   strong   { color: $text; }
+
+  &__val {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    color: $text;
+  }
 }
 
-// ── Badge ──────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: t.$radius-full;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.poule-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  &--success { background: rgba(t.$nks-success, 0.15); color: t.$nks-success; }
-  &--warning { background: rgba(t.$nks-warning, 0.15); color: t.$nks-warning; }
-  &--danger  { background: rgba(t.$nks-error, 0.15); color: t.$nks-error; }
-  // Repêchage : bonne nouvelle pour le candidat, jamais un statut d'alerte —
-  // ni le vert QUALIFIE (prêterait à confusion) ni le rouge/orange des deux autres.
-  &--info    { background: rgba(t.$nks-info, 0.15); color: t.$nks-info; }
-  &--default { background: rgba(255, 255, 255, 0.08); color: $muted; }
+.poule-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-md;
+  box-shadow: t.$shadow-card;
+  padding: 14px 16px;
+
+  &__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__phase { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: $muted; }
+  &__nom { font-size: 15px; font-weight: 700; color: $text; }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    min-height: 40px;
+    background: rgba($gold, 0.08);
+    border: 1px solid rgba($gold, 0.35);
+    border-radius: t.$radius-sm;
+    color: $gold;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+
+    .icon { width: 16px; height: 16px; }
+
+    &:hover { background: rgba($gold, 0.14); box-shadow: t.$shadow-glow-gold; }
+  }
+}
+
+.membres-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: $text;
+  }
+}
+
+.membres-list__code {
+  font-family: t.$font-title;
+  font-size: 12px;
+  color: $gold;
+  background: rgba($gold, 0.1);
+  border: 1px solid rgba($gold, 0.3);
+  border-radius: t.$radius-full;
+  padding: 2px 10px;
+  flex-shrink: 0;
+}
+
+.membres-vide {
+  color: $muted;
+  font-size: 14px;
+  margin: 0;
 }
 
 // ── Logout ─────────────────────────────────────────────────────────────────

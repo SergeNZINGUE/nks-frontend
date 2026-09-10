@@ -47,15 +47,6 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   strong { color: $text; font-size: 14px; }
 }
 
-.badge {
-  display: inline-block; font-size: 11px; font-weight: 700;
-  padding: 2px 8px; border-radius: t.$radius-full; text-transform: uppercase; letter-spacing: 0.04em;
-  &--success { background: rgba(t.$nks-success, 0.15); color: t.$nks-success; }
-  &--warning { background: rgba(t.$nks-warning, 0.15); color: t.$nks-warning; }
-  &--danger  { background: rgba(t.$nks-error, 0.15);  color: t.$nks-error; }
-  &--default { background: rgba(255,255,255,0.08); color: $muted; }
-}
-
 .alert {
   margin: 0 16px 16px; padding: 12px 14px; border-radius: t.$radius-md; font-size: 13px;
   display: flex; gap: 8px; align-items: flex-start;

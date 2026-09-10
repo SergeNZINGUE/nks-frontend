@@ -31,10 +31,10 @@
       <div class="avatar-section">
         <div class="avatar-wrap">
           <div class="avatar">
-            @if (photoPreview) {
-              <img [src]="photoPreview" alt="Photo" />
+            @if (photoPreview && !photoErreur) {
+              <img [src]="photoPreview" alt="Photo" (error)="onPhotoErreur()" (load)="verifierImage($event)" />
             }
-            @if (!photoPreview) {
+            @if (!photoPreview || photoErreur) {
               <span>{{ initiales }}</span>
             }
           </div>

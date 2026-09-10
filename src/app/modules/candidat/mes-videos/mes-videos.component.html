@@ -104,7 +104,7 @@
           <div class="video-info">
             <p class="video-title">{{ v.titreChanson }}</p>
             <p class="video-date">{{ v.dateUpload | date:'dd/MM/yyyy' }}</p>
-            <span class="badge badge--{{ statutClass(v.statut) }}">{{ statutLabel(v.statut) }}</span>
+            <app-badge [variant]="badgeVariant(v.statut)">{{ statutLabel(v.statut) }}</app-badge>
           </div>
           <!-- Lien -->
           @if (v.statut === 'DISPONIBLE' && v.urlStreaming) {

@@ -33,17 +33,17 @@ Dashboard — Espace Candidat NKS
     <!-- Bannière profil -->
     <div class="profil-banner" [class.banner--alerte]="candidature.statut === 'EN_ATTENTE_PAIEMENT'">
       <div class="avatar">
-        @if (profil?.photoUrl) {
-          <img [src]="profil!.photoUrl!" alt="Photo profil" />
+        @if (photoPreview && !photoErreur) {
+          <img [src]="photoPreview" alt="Photo profil" (error)="onPhotoErreur()" (load)="verifierImage($event)" />
         }
-        @if (!profil?.photoUrl) {
+        @if (!photoPreview || photoErreur) {
           <span>{{ initiales }}</span>
         }
       </div>
       <div class="profil-info">
         <h2>{{ candidature.prenom }} {{ candidature.nom }}</h2>
         <span class="code-badge">{{ candidature.codeCandidat }}</span>
-        <span class="badge badge--{{ statutClass }}">{{ statutLabel }}</span>
+        <app-badge [variant]="statutBadgeVariant">{{ statutLabel }}</app-badge>
       </div>
     </div>
     <!-- Alerte paiement en attente -->
@@ -66,20 +66,62 @@ Dashboard — Espace Candidat NKS
         <span>Candidature rejetée — <em>{{ candidature.motifRejet ?? 'aucun motif précisé' }}</em></span>
       </div>
     }
+    <!-- Ma poule / mon duo -->
+    @if (chargementAffectations) {
+      <div class="skeleton-grid" style="padding: 0 16px;">
+        <div class="skeleton skeleton--card"></div>
+      </div>
+    }
+    @if (!chargementAffectations && mesAffectations.length > 0) {
+      <section class="info-section">
+        <h2 class="section-title">Ma poule</h2>
+        <div class="poule-cards">
+          @for (a of mesAffectations; track a.phaseLabel) {
+            <div class="poule-card">
+              <div class="poule-card__info">
+                <span class="poule-card__phase">{{ a.phaseLabel }}</span>
+                <strong class="poule-card__nom">{{ a.texte }}</strong>
+              </div>
+              @if (a.membres) {
+                <button type="button" class="poule-card__btn" (click)="voirMembres(a)">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  {{ a.membres.length ? 'Voir les membres' : 'Aucun autre membre' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (pouleMembresOuverte) {
+      <app-modal [titre]="pouleMembresOuverte.texte" (fermer)="fermerMembres()">
+        @if (pouleMembresOuverte.membres?.length) {
+          <ul class="membres-list">
+            @for (m of pouleMembresOuverte.membres; track m.id) {
+              <li>
+                <span class="membres-list__code">{{ m.codeCandidat }}</span>
+                <span>{{ m.prenom }} {{ m.nom }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="membres-vide">Tu es seul(e) dans cette poule pour l'instant.</p>
+        }
+      </app-modal>
+    }
     <!-- Scores par phase -->
     @if (scores.length > 0) {
       <section class="scores-section">
         <h2 class="section-title">Mes scores</h2>
         <div class="score-summary">
-          <div class="score-stat">
-            <span class="score-stat__value">{{ totalPoints }}</span>
-            <span class="score-stat__label">Points total</span>
-          </div>
+          <app-kpi-card label="Points total" [value]="totalPoints" variant="gold">
+            <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          </app-kpi-card>
           @if (meilleurRang) {
-            <div class="score-stat">
-              <span class="score-stat__value">#{{ meilleurRang }}</span>
-              <span class="score-stat__label">Meilleur rang</span>
-            </div>
+            <app-kpi-card label="Meilleur rang" [value]="'#' + meilleurRang" variant="success">
+              <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </app-kpi-card>
           }
         </div>
         <div class="scores-table">
@@ -98,12 +140,7 @@ Dashboard — Espace Candidat NKS
               <span>{{ s.pointsPublicSurPlace }}</span>
               <span>{{ s.pointsJury }}</span>
               <span class="score-total">{{ s.totalPoints }}</span>
-              <span class="badge" [class.badge--success]="s.statutQualification === 'QUALIFIE'"
-                [class.badge--danger]="s.statutQualification === 'ELIMINE'"
-                [class.badge--warning]="s.statutQualification === 'EN_ATTENTE'"
-                [class.badge--info]="s.statutQualification === 'REPECHAGE'">
-                {{ s.statutQualification }}
-              </span>
+              <app-badge [variant]="qualificationBadgeVariant(s.statutQualification)">{{ s.statutQualification }}</app-badge>
             </div>
           }
         </div>

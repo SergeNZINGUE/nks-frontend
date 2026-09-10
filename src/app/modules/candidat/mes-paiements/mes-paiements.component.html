@@ -33,9 +33,7 @@
         </div>
         <div class="info-row">
           <span>Statut</span>
-          <strong class="badge badge--{{ statutClass(candidature.statut) }}">
-            {{ statutLabel(candidature.statut) }}
-          </strong>
+          <app-badge [variant]="badgeVariant(candidature.statut)">{{ statutLabel(candidature.statut) }}</app-badge>
         </div>
       </div>
     </section>
