@@ -88,6 +88,50 @@
           <div class="info-row"><span>Statut</span><strong>{{ profil.statutProfil }}</strong></div>
         </div>
       }
+
+      <!-- Changement de mot de passe -->
+      <div class="info-card">
+        <h3 class="section-title">Changer de mot de passe</h3>
+        @if (successMdp) {
+          <div class="toast toast--success" style="margin-bottom: 12px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+            {{ successMdp }}
+          </div>
+        }
+        @if (erreurMdp) {
+          <div class="toast toast--error" style="margin-bottom: 12px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {{ erreurMdp }}
+          </div>
+        }
+        <form [formGroup]="formMdp" (ngSubmit)="changerMotDePasse()" class="bio-form">
+          <div class="form-group">
+            <label for="mdp-actuel">Mot de passe actuel</label>
+            <input id="mdp-actuel" type="password" formControlName="motDePasseActuel" autocomplete="current-password" />
+            @if (formMdp.get('motDePasseActuel')?.invalid && formMdp.get('motDePasseActuel')?.touched) {
+              <span class="form-error">Champ requis.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="mdp-nouveau">Nouveau mot de passe <small>(min. 8 caractères)</small></label>
+            <input id="mdp-nouveau" type="password" formControlName="nouveauMotDePasse" autocomplete="new-password" />
+            @if (formMdp.get('nouveauMotDePasse')?.hasError('minlength') && formMdp.get('nouveauMotDePasse')?.touched) {
+              <span class="form-error">8 caractères minimum.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="mdp-confirm">Confirmer le nouveau mot de passe</label>
+            <input id="mdp-confirm" type="password" formControlName="confirmation" autocomplete="new-password" />
+            @if (formMdp.hasError('mismatch') && formMdp.get('confirmation')?.touched) {
+              <span class="form-error">Les mots de passe ne correspondent pas.</span>
+            }
+          </div>
+          <button type="submit" class="btn btn--primary" [disabled]="isChangingPassword || formMdp.invalid">
+            @if (isChangingPassword) { <span class="spinner spinner--inline"></span> }
+            <span>{{ isChangingPassword ? 'Modification…' : 'Changer le mot de passe' }}</span>
+          </button>
+        </form>
+      </div>
     </div>
   }
 </div>
