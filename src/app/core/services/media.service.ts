@@ -41,9 +41,11 @@ export class MediaService {
     return this.http.get<MediaPublicResponse[]>(`${this.api}/medias/candidat/${candidatId}`);
   }
 
-  /** Résout l'URL de la photo de profil parmi les médias d'un candidat, ou null si absente. */
+  /** Résout l'URL de la photo de profil parmi les médias d'un candidat, ou null si absente.
+   *  Les blob: URLs sont éphémères (session courante uniquement) — on les ignore. */
   photoProfilUrl(medias: MediaPublicResponse[]): string | null {
-    return medias.find(m => m.type === 'PHOTO_PROFIL')?.urlStockage ?? null;
+    const url = medias.find(m => m.type === 'PHOTO_PROFIL')?.urlStockage ?? null;
+    return url && !url.startsWith('blob:') ? url : null;
   }
 
   /**

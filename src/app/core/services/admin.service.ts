@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import {
   DashboardResponse,
+  DashboardOrganisateurResponse,
   CandidatureDetailResponse,
   Phase,
   Edition,
@@ -79,6 +80,11 @@ export class AdminService {
   /** GET /admin/dashboard */
   dashboard(): Observable<DashboardResponse> {
     return this.http.get<DashboardResponse>(`${this.api}/admin/dashboard`);
+  }
+
+  /** GET /admin/dashboard/organisateur — sans données financières */
+  dashboardOrganisateur(): Observable<DashboardOrganisateurResponse> {
+    return this.http.get<DashboardOrganisateurResponse>(`${this.api}/admin/dashboard/organisateur`);
   }
 
   /** GET /editions — pour retrouver l'édition EN_COURS */

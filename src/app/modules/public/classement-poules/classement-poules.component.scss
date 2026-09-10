@@ -1,0 +1,370 @@
+@use 'tokens' as *;
+
+$nks-silver: #C0C0C0;
+$nks-bronze: #CD7F32;
+
+// ═══ BANDEAU LIVE ═══════════════════════════════════════════════════════════
+.poules__bandeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $sp-2 $sp-4;
+  padding: $sp-2 $sp-4 $sp-3;
+  font-size: 12px;
+  color: $nks-text-secondary;
+}
+
+.poules__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: $nks-success;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+
+.poules__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: $nks-success;
+  animation: poules-pulse 1.8s ease-out infinite;
+}
+
+@keyframes poules-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba($nks-success, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba($nks-success, 0); }
+  100% { box-shadow: 0 0 0 0 rgba($nks-success, 0); }
+}
+
+.poules__total { margin-left: auto; }
+
+// ═══ SÉLECTEUR DE PHASE ═════════════════════════════════════════════════════
+.poules__phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $sp-2;
+  padding: 0 $sp-4 $sp-3;
+}
+
+.poules__phase-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: $sp-1 $sp-3;
+  border-radius: $radius-full;
+  border: 1px solid $nks-border;
+  background: $nks-bg-surface;
+  color: $nks-text-secondary;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color $dur-fast $ease-out, color $dur-fast $ease-out, background $dur-fast $ease-out;
+
+  &:hover { border-color: rgba($nks-gold, 0.5); color: $nks-text; }
+
+  &--active {
+    border-color: $nks-gold;
+    background: rgba($nks-gold, 0.1);
+    color: $nks-gold;
+    font-weight: 700;
+  }
+}
+
+.poules__phase-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $nks-success;
+}
+
+// ═══ FILTRE PAR POULE ═══════════════════════════════════════════════════════
+.poules__filtre {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $sp-2;
+  overflow-x: auto;
+  padding: 0 $sp-4 $sp-3;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-1;
+  padding: $sp-1 $sp-3;
+  border-radius: $radius-full;
+  border: 1.5px solid $nks-border;
+  background: transparent;
+  color: $nks-text-secondary;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color $dur-fast $ease-out, color $dur-fast $ease-out, background $dur-fast $ease-out;
+
+  &:hover { border-color: rgba($nks-gold, 0.5); color: $nks-text; }
+
+  &--active {
+    border-color: $nks-gold;
+    color: $nks-gold;
+    background: rgba($nks-gold, 0.1);
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: $radius-full;
+    background: rgba($nks-text, 0.1);
+    font-size: 11px;
+    font-weight: 700;
+    color: $nks-text-secondary;
+  }
+}
+
+// ═══ LOADING ════════════════════════════════════════════════════════════════
+.poules__loading { padding: $sp-4; display: flex; flex-direction: column; gap: $sp-6; }
+
+.poules__skeleton-section { display: flex; flex-direction: column; gap: $sp-3; }
+
+.poules__sk-titre { height: 28px; width: 160px; border-radius: $radius-md; }
+
+.poules__sk-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-4;
+
+  @media (min-width: 480px) { grid-template-columns: 1fr 1fr; }
+  @media (min-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+}
+
+.poules__sk-card { aspect-ratio: 3 / 4; border-radius: $radius-md; }
+
+// ═══ ÉTAT VIDE ══════════════════════════════════════════════════════════════
+.poules__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-3;
+  padding: $sp-10 $sp-4;
+  color: $nks-text-secondary;
+  text-align: center;
+
+  svg { width: 40px; height: 40px; }
+  p   { margin: 0; font-size: 14px; }
+}
+
+// ═══ SECTION PAR POULE ══════════════════════════════════════════════════════
+.poule-section {
+  margin-bottom: $sp-8;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    gap: $sp-3;
+    padding: $sp-3 $sp-4 $sp-3;
+    border-bottom: 2px solid rgba($nks-gold, 0.25);
+    margin-bottom: $sp-4;
+  }
+
+  &__nom {
+    font-family: $font-title;
+    font-size: 18px;
+    color: $nks-text;
+    margin: 0;
+  }
+
+  &__count { font-size: 12px; color: $nks-text-secondary; }
+
+  &__vide {
+    padding: $sp-4;
+    color: $nks-text-secondary;
+    font-size: 13px;
+    margin: 0;
+  }
+}
+
+// ═══ GRILLE DE CARTES ═══════════════════════════════════════════════════════
+.poule-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-4;
+  padding: 0 $sp-4;
+
+  @media (min-width: 480px) { grid-template-columns: 1fr 1fr; }
+  @media (min-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+  @media (min-width: 1280px) { grid-template-columns: repeat(4, 1fr); }
+}
+
+// ═══ CARTE CANDIDAT ═════════════════════════════════════════════════════════
+.poule-card {
+  display: flex;
+  flex-direction: column;
+  background: $nks-bg-card;
+  border-radius: $radius-md;
+  border: 1px solid $nks-border;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+  transition: border-color $dur-fast $ease-out, transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+  &:hover {
+    border-color: $nks-gold;
+    transform: translateY(-3px);
+    box-shadow: $shadow-card, $shadow-glow-gold;
+  }
+
+  // Leader de la poule : halo doré permanent
+  &--leader {
+    border-color: $nks-gold;
+    box-shadow: $shadow-card, $shadow-glow-gold;
+  }
+
+  &__poster {
+    position: relative;
+    display: block;
+    text-decoration: none;
+  }
+
+  &__photo {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: $nks-bg-surface;
+    overflow: hidden;
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  }
+
+  &__fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
+    background: linear-gradient(160deg, $nks-bg-surface, $nks-bg-card 60%, rgba($nks-gold, 0.18));
+
+    &-initiales {
+      font-family: $font-title;
+      font-size: 32px;
+      font-weight: 700;
+      color: $nks-gold;
+      line-height: 1;
+    }
+  }
+
+  // Badge rang — coin supérieur gauche
+  &__rang {
+    position: absolute;
+    top: $sp-2;
+    left: $sp-2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: $radius-full;
+    background: rgba(#000, 0.65);
+    border: 1px solid rgba($nks-text, 0.2);
+    color: $nks-text;
+    font-size: 12px;
+    font-weight: 700;
+
+    svg { width: 16px; height: 16px; }
+
+    &--or     { border-color: $nks-gold;    color: $nks-gold;    svg { color: $nks-gold; } }
+    &--argent { border-color: $nks-silver;  color: $nks-silver;  svg { color: $nks-silver; } }
+    &--bronze { border-color: $nks-bronze;  color: $nks-bronze;  svg { color: $nks-bronze; } }
+  }
+
+  // Ruban bas : code + score
+  &__ruban {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-2;
+    padding: $sp-2 $sp-3;
+    background: linear-gradient(0deg, rgba(#000, 0.80), rgba(#000, 0));
+  }
+
+  &__code {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: $nks-gold-light;
+    font-family: monospace;
+  }
+
+  &__score {
+    font-family: $font-title;
+    font-size: 13px;
+    font-weight: 700;
+    color: $nks-gold-light;
+  }
+
+  // Infos sous la photo
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    padding: $sp-3;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $nks-text;
+    line-height: 1.3;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__detail {
+    display: flex;
+    gap: $sp-3;
+    font-size: 11px;
+    color: $nks-text-secondary;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .icon { width: 12px; height: 12px; flex-shrink: 0; }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    margin-top: $sp-2;
+  }
+
+  &__voter { width: 100%; }
+}
+
+// ── Desktop — centrage max-width comme la galerie ────────────────────────────
+@media (min-width: 900px) {
+  .poule-section__header,
+  .poule-grid {
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: $sp-10;
+  }
+
+  .poule-section__header { padding-inline: $sp-10; }
+}

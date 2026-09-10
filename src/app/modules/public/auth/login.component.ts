@@ -135,10 +135,11 @@ export class LoginComponent {
   }
 
   private redirectByRole(): string {
-    if (this.auth.isAdmin())    return '/admin';
-    if (this.auth.isCandidat()) return '/mon-espace';
-    if (this.auth.isJury())     return '/jury';
-    if (this.auth.isAgent())    return '/scan';
+    if (this.auth.isAdmin())        return '/admin';
+    if (this.auth.isOrganisateur()) return '/admin';
+    if (this.auth.isCandidat())     return '/mon-espace';
+    if (this.auth.isJury())         return '/jury';
+    if (this.auth.isAgent())        return '/scan';
     return '/';
   }
 }

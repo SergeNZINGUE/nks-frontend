@@ -148,7 +148,7 @@
                   <h3 class="spotlight__leader-nom">
                     @if (profilClasse(leader); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ leader.codeCandidat }} }
                   </h3>
-                  <p class="spotlight__leader-votes"><strong>{{ leader.totalPointsCumules | number:'1.0-0' }}</strong> votes</p>
+                  <p class="spotlight__leader-votes"><strong>{{ leader.totalPointsCumules | number:'1.0-0' }}</strong> points</p>
                 </a>
                 @if (voteActif) {
                   <a [routerLink]="['/voter', leader.candidatId]" class="btn btn--primary btn--sm spotlight__leader-voter">
@@ -159,7 +159,7 @@
             }
             @if (classement.length > 1) {
               <div class="spotlight__rangee">
-                @for (item of classement.slice(1); track item; let i = $index) {
+                @for (item of classement.slice(1); track item.candidatId; let i = $index) {
                   <a [routerLink]="['/candidat', item.candidatId]" class="spotlight__ligne">
                     <span class="spotlight__ligne-rang">{{ i + 2 }}</span>
                     <div class="avatar spotlight__ligne-avatar">{{ initialesClassement(item) }}</div>
@@ -182,7 +182,7 @@
               <h2 class="bloc__titre">Soirées à venir</h2>
               <a routerLink="/billetterie" class="bloc__lien">Tout voir →</a>
             </div>
-            @for (s of soirees; track s) {
+            @for (s of soirees; track s.id) {
               <article class="soiree">
                 <div class="soiree__date" aria-hidden="true">
                   <span class="soiree__jour">{{ s.dateHeure | date:'dd' }}</span>
@@ -206,7 +206,7 @@
               <a routerLink="/classement" class="bloc__lien">Tout voir →</a>
             </div>
             <div class="classement-bars">
-              @for (item of classement; track item; let i = $index) {
+              @for (item of classement; track item.candidatId; let i = $index) {
                 <a [routerLink]="['/candidat', item.candidatId]" class="classement-bar" [class.classement-bar--top]="i === 0">
                   <span class="classement-bar__rang" aria-hidden="true"
                     [class.classement-bar__rang--or]="i === 0"

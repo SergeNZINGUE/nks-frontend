@@ -311,6 +311,16 @@ export interface DashboardResponse {
   tauxRemplissageMoyenSoirees: number;
 }
 
+export interface DashboardOrganisateurResponse {
+  candidatsTotal: number;
+  candidatsValides: number;
+  candidatsEnAttente: number;
+  candidatsEnAttentePaiement: number;
+  candidatsRejetes: number;
+  votesTotauxParPhase: Record<string, number>;
+  tauxRemplissageMoyenSoirees: number;
+}
+
 // NOTE: Les interfaces jury (CritereNotation, JuryDashboardData, CandidatANoter,
 // NoteJuryRequest/Response) ont été supprimées car elles ne correspondaient pas
 // aux DTOs réels du backend. Les types corrects sont dans jury.service.ts :

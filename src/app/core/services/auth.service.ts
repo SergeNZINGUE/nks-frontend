@@ -62,10 +62,11 @@ export class AuthService {
     return allowedRoles.some(r => this.roles.includes(r));
   }
 
-  isAdmin(): boolean    { return this.hasRole('ADMIN', 'SUPER_ADMIN'); }
-  isCandidat(): boolean { return this.hasRole('CANDIDAT'); }
-  isJury(): boolean     { return this.hasRole('JURY'); }
-  isAgent(): boolean    { return this.hasRole('AGENT_ACCUEIL'); }
+  isAdmin(): boolean        { return this.hasRole('ADMIN', 'SUPER_ADMIN'); }
+  isOrganisateur(): boolean { return this.hasRole('ORGANISATEUR'); }
+  isCandidat(): boolean     { return this.hasRole('CANDIDAT'); }
+  isJury(): boolean         { return this.hasRole('JURY'); }
+  isAgent(): boolean        { return this.hasRole('AGENT_ACCUEIL'); }
 
   private storeTokens(res: LoginResponse): void {
     localStorage.setItem(TOKEN_KEY, res.accessToken);
