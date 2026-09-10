@@ -234,6 +234,7 @@
 
 // ── Dossier (modale) ──────────────────────────────────────────────────────
 .modal--dossier { max-width: 560px; text-align: left; }
+.modal--activation { max-width: 600px; }
 
 .dossier {
   &__champ {
@@ -391,6 +392,41 @@
   }
 
   &__err { color: $nks-error; font-size: 12px; margin: 6px 0; }
+
+  &__hint {
+    font-size: 13px;
+    color: $nks-text-secondary;
+    margin: 0 0 $sp-4;
+    line-height: 1.5;
+  }
+
+  &__label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: $nks-text;
+    margin: $sp-3 0 $sp-1;
+  }
+
+  &__optional {
+    font-weight: 400;
+    color: $nks-text-secondary;
+  }
+
+  &__input {
+    width: 100%;
+    background: rgba($nks-text, 0.05);
+    border: 1px solid rgba($nks-text, 0.15);
+    border-radius: $radius-sm;
+    color: $nks-text;
+    padding: $sp-2 $sp-3;
+    font-size: 14px;
+    font-family: $font-body;
+    box-sizing: border-box;
+
+    &:focus { outline: none; border-color: $nks-gold; }
+    &::placeholder { color: $nks-text-secondary; }
+  }
 
   &__actions {
     display: flex;

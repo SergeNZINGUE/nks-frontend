@@ -37,7 +37,8 @@ export class SoireeService {
   /**
    * PUT /soirees/{id} — ADMIN/SUPER_ADMIN — SoireeController.mettreAJour().
    * Remplacement des champs modifiables uniquement (nom, dateHeure, lieu, adresse,
-   * capaciteMax, statut, voteSurPlaceActif) — la phase/édition ne sont pas modifiables ici.
+   * capaciteMax, statut, voteSurPlaceActif, resultatsPublies) — la phase/édition
+   * ne sont pas modifiables ici.
    */
   mettreAJour(id: string, soiree: Omit<SoireeEvent, 'id'>): Observable<SoireeEvent> {
     return this.http.put<SoireeEvent>(`${this.base}/${id}`, soiree);

@@ -4,14 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { PouleResponse, AffectationPouleResponse, DuoResponse, ResultatPhase } from '@core/models';
 
-/**
- * Client HTTP pour bf.laterrasse.nks.controller.PouleDuoController (§13.10, §13.9 — US-25/26/27).
- *
- * Gap backend important : aucun GET de listing des poules par phase (ni /poules?phaseId=,
- * ni /phases/{id}/poules). Une poule n'est récupérable qu'à sa création (retour du POST) ou
- * via son id déjà connu. Documenté aussi sur PouleResponse dans core/models/index.ts.
- * Les duos, eux, sont listables via GET /duos/phase/{phaseId} — pas de cette limitation.
- */
+/** Client HTTP pour bf.laterrasse.nks.controller.PouleDuoController (§13.10, §13.9 — US-25/26/27). */
 @Injectable({ providedIn: 'root' })
 export class PouleDuoService {
   private http = inject(HttpClient);
@@ -23,6 +16,11 @@ export class PouleDuoService {
    */
   creerPoule(phaseId: string, nom: string): Observable<PouleResponse> {
     return this.http.post<PouleResponse>(`${this.api}/poules`, { phaseId, nom });
+  }
+
+  /** GET /poules/phase/{phaseId} — liste toutes les poules d'une phase avec JOIN FETCH (pas de LazyInit). */
+  poulesPhase(phaseId: string): Observable<PouleResponse[]> {
+    return this.http.get<PouleResponse[]>(`${this.api}/poules/phase/${phaseId}`);
   }
 
   /**
@@ -55,6 +53,23 @@ export class PouleDuoService {
   /** GET /duos/phase/{phaseId} — endpoint public (cf. SecurityConfig `/duos/phase/**`), pas besoin d'un rôle admin. */
   duosPhase(phaseId: string): Observable<DuoResponse[]> {
     return this.http.get<DuoResponse[]>(`${this.api}/duos/phase/${phaseId}`);
+  }
+
+  /** PUT /poules/{id} — renommer une poule. */
+  mettreAJourPoule(id: string, nom: string): Observable<PouleResponse> {
+    return this.http.put<PouleResponse>(`${this.api}/poules/${id}`, { nom });
+  }
+
+  /** PUT /affectations/{id} — mettre à jour ordrePassage et/ou chansonImposee. */
+  mettreAJourAffectation(id: string, ordrePassage: number | null, chansonImposee: string | null): Observable<AffectationPouleResponse> {
+    const body: Record<string, unknown> = { chansonImposee };
+    if (ordrePassage !== null) body['ordrePassage'] = ordrePassage;
+    return this.http.put<AffectationPouleResponse>(`${this.api}/affectations/${id}`, body);
+  }
+
+  /** DELETE /affectations/{id} — retirer un candidat d'une poule. */
+  retirerAffectation(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/affectations/${id}`);
   }
 
   /**

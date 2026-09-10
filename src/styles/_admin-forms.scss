@@ -1,0 +1,79 @@
+// ─── Formulaires & modales — Panel 2026 ──────────────────────────────────────
+// Partiel partagé par les écrans admin/jury/candidat qui utilisent <app-modal> :
+// évite de dupliquer .form/.form-group/.form-actions dans chaque *.component.scss.
+// `@use 'tokens' as *;` doit être présent AVANT ce `@use` dans le fichier appelant
+// (ce partiel dépend des tokens Panel 2026 : $border-hairline, status-bg(), etc.)
+@use 'tokens' as *;
+
+.form { display: flex; flex-direction: column; gap: $sp-4; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $sp-4;
+
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label { font-size: 13px; font-weight: 600; color: $nks-text-secondary; }
+
+  input, select, textarea {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid $border-hairline-hover;
+    border-radius: $radius-sm;
+    padding: $sp-3 $sp-3;
+    color: $nks-text;
+    font-size: 14.5px;
+    font-family: $font-body;
+    transition: border-color $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+    &:focus {
+      outline: none;
+      border-color: $nks-gold;
+      box-shadow: 0 0 0 3px rgba($nks-gold, 0.18);
+    }
+  }
+
+  textarea { resize: vertical; min-height: 90px; }
+}
+
+.form-hint {
+  font-size: 12.5px;
+  color: $nks-text-secondary;
+  line-height: 1.5;
+  margin: 0;
+  padding: $sp-3;
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.form-error--global {
+  font-size: 13px;
+  color: $nks-error;
+  background: status-bg($nks-error);
+  border: 1px solid status-border($nks-error);
+  border-radius: $radius-sm;
+  padding: $sp-2 $sp-3;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sp-3;
+  padding-top: $sp-2;
+}
+
+.confirm-text {
+  font-size: 14px;
+  color: $nks-text-secondary;
+  line-height: 1.6;
+  margin: 0 0 $sp-4;
+
+  strong { color: $nks-text; }
+}

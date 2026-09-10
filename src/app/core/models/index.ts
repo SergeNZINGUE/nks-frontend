@@ -81,6 +81,15 @@ export interface CandidatureSubmitRequest {
   tailleVideoOctets: number;
   urlCaptureSocial: string;
   editionId: string;
+  /**
+   * Consentement RGPD (10/09/2026) — CandidatureSubmitRequest.java n'a pas encore ces deux
+   * champs : envoyés dès aujourd'hui (Jackson ignore les champs inconnus par défaut, donc
+   * sans risque), mais le backend doit les lire ET arrêter de coder en dur
+   * `.consentementRgpd(true)` (CandidatureService.java:325) pour qu'ils aient un effet réel.
+   * Bloqués côté frontend (Validators.requiredTrue) en attendant.
+   */
+  accepteReglement: boolean;
+  accepteConfidentialite: boolean;
 }
 
 /** Réponse réelle de POST /candidatures — CandidatureSubmitResponse.java (3 champs) */
@@ -164,13 +173,7 @@ export interface Phase {
   juryObligatoire?: boolean;
 }
 
-/**
- * Poule — bf.laterrasse.nks.dto.poule.PouleResponse.
- * ⚠️ Pas de GET /poules?phaseId ni GET /phases/{id}/poules côté backend (PouleDuoController) :
- * une poule n'est retrouvable qu'à sa création (réponse du POST) ou via son id déjà connu
- * (GET /poules/{id}/candidats). Impossible de lister les poules existantes d'une phase après
- * rechargement de page — limitation backend, pas un choix frontend (cf. NKS_FRONTEND_AGENT_CONTEXT.md).
- */
+/** Poule — bf.laterrasse.nks.dto.poule.PouleResponse. Listable via GET /poules/phase/{phaseId}. */
 export interface PouleResponse {
   id: string;
   phaseId: string;
@@ -188,7 +191,7 @@ export interface AffectationPouleResponse {
   chansonImposee: string | null;
 }
 
-/** bf.laterrasse.nks.dto.poule.DuoResponse — listable via GET /duos/phase/{phaseId} (contrairement aux poules) */
+/** bf.laterrasse.nks.dto.poule.DuoResponse — listable via GET /duos/phase/{phaseId}. */
 export interface DuoResponse {
   id: string;
   phaseId: string;
@@ -208,6 +211,14 @@ export interface SoireeEvent {
   capaciteMax: number;
   statut: StatutSoiree;
   voteSurPlaceActif: boolean;
+  /**
+   * Contrôle GET /candidats/{id}/scores côté backend (jointure sur la soirée
+   * de la phase — ResultatPhaseRepository.findByCandidatIdEtResultatsPublies) :
+   * un candidat ne voit ses résultats de phase que si la soirée correspondante
+   * a ce champ à true. Absent du formulaire d'édition avant le 10/09/2026 —
+   * aucun moyen pour l'admin de l'activer autrement qu'en base.
+   */
+  resultatsPublies: boolean;
 }
 
 export interface Classement {
@@ -314,6 +325,16 @@ export interface DashboardResponse {
   revenusInscriptions: number;
   revenusVotes: number;
   revenusBillets: number;
+  tauxRemplissageMoyenSoirees: number;
+}
+
+export interface DashboardOrganisateurResponse {
+  candidatsTotal: number;
+  candidatsValides: number;
+  candidatsEnAttente: number;
+  candidatsEnAttentePaiement: number;
+  candidatsRejetes: number;
+  votesTotauxParPhase: Record<string, number>;
   tauxRemplissageMoyenSoirees: number;
 }
 

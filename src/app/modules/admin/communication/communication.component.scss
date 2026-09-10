@@ -161,6 +161,27 @@
     outline: 3px solid $nks-gold-light;
     outline-offset: 2px;
   }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+
+    // Pas de vrai `disabled` sur le <label> lui-même (impossible en HTML) —
+    // le champ caché, lui, est bien `formControlName` avec un FormControl
+    // désactivé : le curseur/l'opacité suffisent à signaler l'indisponibilité.
+    &:focus-within { outline: none; }
+  }
+}
+
+.canal-btn__tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: $radius-full;
+  background: status-bg($nks-warning);
+  color: $nks-warning;
+  white-space: nowrap;
 }
 
 .btn {

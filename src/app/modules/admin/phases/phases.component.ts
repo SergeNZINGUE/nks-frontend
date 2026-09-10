@@ -255,7 +255,10 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                   Éditer
                 </button>
                 @if (p.statut === 'EN_ATTENTE') {
-                  <button type="button" class="btn btn--sm btn--ok" [disabled]="activationEnCours === p.id" (click)="phaseAActiver = p">
+                  <button type="button" class="btn btn--sm btn--ok"
+                    [disabled]="activationEnCours === p.id || !!phaseActiveExistante"
+                    [title]="titreBoutonActiver"
+                    (click)="phaseAActiver = p">
                     @if (activationEnCours !== p.id) {
                       <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m7 4 15 8-15 8V4z"/></svg>
                     }
@@ -264,7 +267,8 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                 }
                 @if (p.nom !== 'PRESELECTION') {
                   <button type="button" class="btn btn--sm" [class.btn--ok]="!p.voteActif" [class.btn--err]="p.voteActif"
-                    [disabled]="toggling === p.id || p.statut === 'TERMINEE'"
+                    [disabled]="toggling === p.id || p.statut === 'TERMINEE' || (!p.voteActif && p.statut !== 'EN_COURS')"
+                    [title]="!p.voteActif && p.statut === 'EN_ATTENTE' ? 'Active d’abord la phase avant d’ouvrir ses votes' : ''"
                     (click)="toggleVote(p)">
                     {{ toggling === p.id ? '…' : (p.voteActif ? 'Fermer les votes' : 'Ouvrir les votes') }}
                   </button>
@@ -322,6 +326,16 @@ export class PhasesComponent implements OnInit, OnDestroy {
   activationEnCours: string | null = null;
   phaseAActiver: Phase | null = null;
   phaseACloturer: Phase | null = null;
+
+  /** Une seule phase EN_COURS autorisée à la fois (contrainte frontend, non posée par le backend). */
+  get phaseActiveExistante(): Phase | null {
+    return this.phases.find(p => p.statut === 'EN_COURS') ?? null;
+  }
+
+  get titreBoutonActiver(): string {
+    const active = this.phaseActiveExistante;
+    return active ? `Clôture la phase « ${this.labelPhase(active.nom)} » avant d’en activer une autre` : '';
+  }
   erreurAction: string | null = null;
 
   formCreation: ReturnType<typeof this.creerFormCreation> | null = null;
@@ -498,7 +512,14 @@ export class PhasesComponent implements OnInit, OnDestroy {
    *   true  → PUT /phases/{id}/vote/desactiver
    *   false → PUT /phases/{id}/vote/activer
    */
+  /**
+   * Le backend ne vérifie pas non plus le statut avant d'ouvrir les votes (activerVote()
+   * se contente de poser voteActif=true, quel que soit le statut de la phase) — même
+   * contrainte posée ici que pour activer() : on ne peut ouvrir les votes que d'une phase
+   * EN_COURS. Fermer reste toujours permis (filet de sécurité si un état incohérent existe).
+   */
   toggleVote(p: Phase): void {
+    if (!p.voteActif && p.statut !== 'EN_COURS') return;
     this.toggling = p.id;
     const req$ = p.voteActif
       ? this.adminSvc.desactiverVote(p.id)
@@ -529,8 +550,18 @@ export class PhasesComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** PUT /phases/{id}/activer — cf. AdminService.activerPhase() : transitionne EN_ATTENTE → EN_COURS. */
+  /**
+   * PUT /phases/{id}/activer — cf. AdminService.activerPhase() : transitionne EN_ATTENTE → EN_COURS.
+   * Le backend n'empêche pas deux phases EN_COURS simultanées (activer() écrase juste le statut
+   * de la phase ciblée sans vérifier les autres) — contrainte imposée ici côté frontend : une
+   * seule phase active à la fois, la précédente doit être clôturée avant d'en activer une autre.
+   */
   activer(p: Phase): void {
+    const dejaActive = this.phaseActiveExistante;
+    if (dejaActive && dejaActive.id !== p.id) {
+      this.erreurAction = `La phase « ${this.labelPhase(dejaActive.nom)} » est déjà en cours — clôture-la avant d'en activer une autre.`;
+      return;
+    }
     this.erreurAction = null;
     this.activationEnCours = p.id;
     this.sub.add(

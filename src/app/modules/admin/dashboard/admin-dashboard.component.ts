@@ -6,7 +6,8 @@ import { Subscription } from 'rxjs';
 import { catchError, of } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
-import { DashboardResponse } from '@core/models';
+import { AuthService } from '@core/services/auth.service';
+import { DashboardResponse, DashboardOrganisateurResponse } from '@core/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -30,7 +31,7 @@ import { DashboardResponse } from '@core/models';
   @if (!isLoading && !data && aucuneEdition) {
     <div class="banner banner--info" role="status">
       Aucune édition en cours pour l'instant.
-      <a routerLink="/admin/edition">Créer une édition</a> pour faire apparaître le tableau de bord.
+      <a routerLink="/back-office/edition">Créer une édition</a> pour faire apparaître le tableau de bord.
     </div>
   }
 
@@ -63,20 +64,24 @@ import { DashboardResponse } from '@core/models';
       </div>
     </section>
 
-    <h2 class="section-title">Revenus</h2>
+    @if (!estOrganisateur) {
+      <h2 class="section-title">Revenus</h2>
+      <section class="kpi-grid">
+        <div class="kpi kpi--info">
+          <div class="kpi__label">Inscriptions</div>
+          <div class="kpi__val">{{ asAdmin(data).revenusInscriptions | number }} <span>FCFA</span></div>
+        </div>
+        <div class="kpi kpi--info">
+          <div class="kpi__label">Votes</div>
+          <div class="kki__val">{{ asAdmin(data).revenusVotes | number }} <span>FCFA</span></div>
+        </div>
+        <div class="kpi kpi--info">
+          <div class="kpi__label">Billets</div>
+          <div class="kpi__val">{{ asAdmin(data).revenusBillets | number }} <span>FCFA</span></div>
+        </div>
+      </section>
+    }
     <section class="kpi-grid">
-      <div class="kpi kpi--info">
-        <div class="kpi__label">Inscriptions</div>
-        <div class="kpi__val">{{ data.revenusInscriptions | number }} <span>FCFA</span></div>
-      </div>
-      <div class="kpi kpi--info">
-        <div class="kpi__label">Votes</div>
-        <div class="kpi__val">{{ data.revenusVotes | number }} <span>FCFA</span></div>
-      </div>
-      <div class="kpi kpi--info">
-        <div class="kpi__label">Billets</div>
-        <div class="kpi__val">{{ data.revenusBillets | number }} <span>FCFA</span></div>
-      </div>
       <div class="kpi kpi--gold">
         <div class="kpi__label">Remplissage moyen soirées</div>
         <div class="kpi__val">{{ data.tauxRemplissageMoyenSoirees | number:'1.0-0' }}%</div>
@@ -90,19 +95,21 @@ import { DashboardResponse } from '@core/models';
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   private adminSvc = inject(AdminService);
+  private auth     = inject(AuthService);
 
   isLoading = true;
-  data: DashboardResponse | null = null;
-  /** GET /admin/dashboard renvoie 404 RESOURCENOTFOUND « Aucune édition en cours »
-   *  tant qu'aucune édition n'a le statut EN_COURS — état normal juste après un
-   *  reset, pas une panne. On distingue ce cas d'une vraie erreur réseau/serveur
-   *  pour ne pas afficher « backend hors ligne ? » à tort. */
+  data: DashboardResponse | DashboardOrganisateurResponse | null = null;
   aucuneEdition = false;
+  estOrganisateur = this.auth.isOrganisateur();
   private sub = new Subscription();
 
   ngOnInit(): void {
+    const req$ = this.estOrganisateur
+      ? this.adminSvc.dashboardOrganisateur()
+      : this.adminSvc.dashboard();
+
     this.sub.add(
-      this.adminSvc.dashboard().pipe(
+      req$.pipe(
         catchError((err: HttpErrorResponse) => {
           this.aucuneEdition = err.status === 404;
           return of(null);
@@ -112,6 +119,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.data = d;
       })
     );
+  }
+
+  asAdmin(d: DashboardResponse | DashboardOrganisateurResponse | null): DashboardResponse {
+    return d as DashboardResponse;
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }

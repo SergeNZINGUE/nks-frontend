@@ -1,0 +1,82 @@
+@use 'tokens' as *;
+@use 'admin-forms' as *;
+
+:host { display: block; }
+
+.page {
+  padding: $sp-6 $sp-5 $sp-10;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $sp-4;
+  margin-bottom: $sp-6;
+  flex-wrap: wrap;
+
+  &__title {
+    font-family: $font-title;
+    font-size: $text-panel-title;
+    color: $nks-text;
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13.5px;
+    color: $nks-text-secondary;
+    margin: 0;
+  }
+}
+
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+// ─── Table ────────────────────────────────────────────────────────────────
+.table-wrap {
+  border: 1px solid $border-hairline;
+  border-radius: $radius-lg;
+  background: $surface-1;
+  @include surface-sheen;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: $sp-2;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead th {
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $nks-text-secondary;
+    padding: $sp-3 $sp-4;
+  }
+
+  tbody tr {
+    transition: background $dur-fast $ease-out;
+    &:hover { background: rgba(255, 255, 255, 0.03); }
+  }
+
+  td {
+    padding: $sp-3 $sp-4;
+    border-top: 1px solid $border-hairline;
+    vertical-align: middle;
+  }
+
+  &__nom { font-weight: 600; color: $nks-text; }
+  &__roles { display: flex; flex-wrap: wrap; gap: 6px; }
+  &__actions { text-align: right; white-space: nowrap; }
+}
+
+@media (max-width: 640px) {
+  .table-wrap { overflow-x: auto; }
+}

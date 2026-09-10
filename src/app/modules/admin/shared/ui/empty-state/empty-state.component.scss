@@ -1,0 +1,61 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: $sp-12 $sp-5;
+  border: 1px dashed $border-hairline;
+  border-radius: $radius-lg;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.empty__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-full;
+  background: status-bg($nks-gold);
+  color: $nks-gold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $sp-4;
+
+  ::ng-deep svg { width: 26px; height: 26px; }
+}
+
+.empty__title {
+  font-family: $font-title;
+  font-size: 16px;
+  color: $nks-text;
+  margin: 0 0 $sp-1;
+}
+
+.empty__desc {
+  font-size: 13.5px;
+  color: $nks-text-secondary;
+  max-width: 42ch;
+  margin: 0 0 $sp-4;
+  line-height: 1.55;
+}
+
+.empty__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-5;
+  border-radius: $radius-sm;
+  background: $nks-gradient-gold;
+  color: $nks-bg-primary;
+  font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out;
+
+  &:hover { transform: translateY(-1px); box-shadow: $shadow-gold; }
+  &:active { transform: translateY(0) scale(0.98); }
+  &:focus-visible { @include focus-ring; }
+}

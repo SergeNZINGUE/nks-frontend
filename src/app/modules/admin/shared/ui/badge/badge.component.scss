@@ -1,0 +1,30 @@
+@use 'tokens' as *;
+
+:host { display: inline-flex; }
+
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+@each $name, $color in ("gold": $nks-gold, "success": $nks-success, "warning": $nks-warning, "error": $nks-error, "info": $nks-info) {
+  .ui-badge--#{$name} {
+    background: status-bg($color);
+    border-color: status-border($color);
+    color: $color;
+  }
+}
+
+.ui-badge--neutral {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: $border-hairline;
+  color: $nks-text-secondary;
+}

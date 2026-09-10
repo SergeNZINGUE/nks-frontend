@@ -7,7 +7,7 @@ import { Subscription, switchMap, catchError, of, finalize, forkJoin } from 'rxj
 import { AdminService } from '@core/services/admin.service';
 import { SoireeService } from '@core/services/soiree.service';
 import { BilletterieService } from '@core/services/billetterie.service';
-import { Edition, Phase, SoireeEvent, CategorieTicket } from '@core/models';
+import { Edition, Phase, SoireeEvent, CategorieTicket, StatutSoiree } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
@@ -23,12 +23,6 @@ import { messageErreur } from '@core/utils/http-error.util';
     </div>
   </div>
 
-  <div class="gap-banner" role="note">
-    Écran câblé sur les endpoints réels de <code>SoireeController</code> /
-    <code>BilletterieController</code>. La lecture (liste, disponibilité) n'expose pas de
-    relation LAZY complexe et devrait fonctionner ; non encore testée en live avec données réelles.
-  </div>
-
   @if (isLoading) {
     <div class="skeletons" role="status"><div class="sk" aria-hidden="true"></div></div>
   }
@@ -42,41 +36,16 @@ import { messageErreur } from '@core/utils/http-error.util';
 
   @if (!isLoading && !erreurChargement) {
 
-    <div class="card">
-      <h2 class="card__title">Créer une soirée</h2>
-      <form [formGroup]="formSoiree" (ngSubmit)="creerSoiree()" class="form">
-        <div class="field">
-          <label for="phase">Phase</label>
-          <select id="phase" formControlName="phaseId">
-            <option value="" disabled>— choisir —</option>
-            @for (p of phases; track p.id) { <option [value]="p.id">{{ p.nom }}</option> }
-          </select>
-        </div>
-        <div class="form__row">
-          <div class="field"><label for="nom">Nom</label><input id="nom" type="text" formControlName="nom" maxlength="150" /></div>
-          <div class="field field--sm"><label for="dateHeure">Date &amp; heure</label><input id="dateHeure" type="datetime-local" formControlName="dateHeure" /></div>
-        </div>
-        <div class="form__row">
-          <div class="field"><label for="lieu">Lieu</label><input id="lieu" type="text" formControlName="lieu" maxlength="150" /></div>
-          <div class="field field--sm"><label for="capaciteMax">Capacité max</label><input id="capaciteMax" type="number" min="1" formControlName="capaciteMax" /></div>
-        </div>
-        <div class="field"><label for="adresse">Adresse (optionnel)</label><input id="adresse" type="text" formControlName="adresse" maxlength="255" /></div>
-        @if (erreurCreation) {
-          <div class="field-error" role="alert">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            {{ erreurCreation }}
-          </div>
-        }
-        <div class="form__actions">
-          <button type="submit" class="btn btn--primary" [disabled]="formSoiree.invalid || creationEnCours">
-            {{ creationEnCours ? 'Création…' : 'Créer la soirée' }}
-          </button>
-        </div>
-        @if (messageSoiree) {
-          <div class="field-hint" role="status" aria-live="polite" style="margin-top: 8px;">{{ messageSoiree }}</div>
-        }
-      </form>
+    <div class="actions-row">
+      <button type="button" class="btn btn--primary" (click)="ouvrirModalCreation()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Créer une soirée
+      </button>
     </div>
+
+    @if (messageSoiree) {
+      <div class="field-hint" role="status" aria-live="polite" style="margin-bottom: 12px;">{{ messageSoiree }}</div>
+    }
 
     <div class="list">
       @if (erreurSoirees) {
@@ -94,7 +63,10 @@ import { messageErreur } from '@core/utils/http-error.util';
               <div class="phase-card__nom">{{ s.nom }}</div>
               <div class="phase-card__dates">{{ s.dateHeure | date:'dd/MM/yyyy HH:mm' }} · {{ s.lieu }} · {{ s.capaciteMax }} places · {{ s.statut }}</div>
             </div>
-            <a class="btn btn--sm btn--ghost" [routerLink]="['/admin/billets']" [queryParams]="{ soireeId: s.id }">Réservations →</a>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirEditionSoiree(s)">✏ Modifier</button>
+              <a class="btn btn--sm btn--ghost" [routerLink]="['/back-office/billets']" [queryParams]="{ soireeId: s.id }">Réservations →</a>
+            </div>
           </div>
           <div class="phase-card__body">
             @if (categoriesParSoiree[s.id]; as cats) {
@@ -146,6 +118,94 @@ import { messageErreur } from '@core/utils/http-error.util';
       }
     </div>
   }
+
+  <!-- Modal création soirée -->
+  @if (modalCreationOuverte) {
+    <div class="modal-bg" (click)="fermerModalCreation()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-creation-soiree"
+        (click)="$event.stopPropagation()" style="max-width:600px">
+        <h2 id="titre-creation-soiree">Créer une soirée</h2>
+        <form [formGroup]="formSoiree" (ngSubmit)="creerSoiree()" class="form">
+          <div class="field">
+            <label for="phase">Phase</label>
+            <select id="phase" formControlName="phaseId">
+              <option value="" disabled>— choisir —</option>
+              @for (p of phases; track p.id) { <option [value]="p.id">{{ p.nom }}</option> }
+            </select>
+          </div>
+          <div class="form__row">
+            <div class="field"><label for="nom">Nom</label><input id="nom" type="text" formControlName="nom" maxlength="150" /></div>
+            <div class="field field--sm"><label for="dateHeure">Date &amp; heure</label><input id="dateHeure" type="datetime-local" formControlName="dateHeure" /></div>
+          </div>
+          <div class="form__row">
+            <div class="field"><label for="lieu">Lieu</label><input id="lieu" type="text" formControlName="lieu" maxlength="150" /></div>
+            <div class="field field--sm"><label for="capaciteMax">Capacité max</label><input id="capaciteMax" type="number" min="1" formControlName="capaciteMax" /></div>
+          </div>
+          <div class="field"><label for="adresse">Adresse (optionnel)</label><input id="adresse" type="text" formControlName="adresse" maxlength="255" /></div>
+          @if (erreurCreation) {
+            <div class="field-error" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ erreurCreation }}
+            </div>
+          }
+          <div class="modal__actions">
+            <button type="button" class="btn btn--ghost" (click)="fermerModalCreation()">Annuler</button>
+            <button type="submit" class="btn btn--primary" [disabled]="formSoiree.invalid || creationEnCours">
+              {{ creationEnCours ? 'Création…' : 'Créer la soirée' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal édition soirée -->
+  @if (soireeEnEdition) {
+    <div class="modal-bg" (click)="fermerEditionSoiree()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-edit-soiree"
+        (click)="$event.stopPropagation()" style="max-width:600px">
+        <h2 id="titre-edit-soiree">Modifier « {{ soireeEnEdition.nom }} »</h2>
+        <form [formGroup]="formEditionSoiree" (ngSubmit)="enregistrerSoiree()" class="form">
+          <div class="form__row">
+            <div class="field"><label for="editNom">Nom</label><input id="editNom" type="text" formControlName="nom" maxlength="150" /></div>
+            <div class="field field--sm"><label for="editDateHeure">Date &amp; heure</label><input id="editDateHeure" type="datetime-local" formControlName="dateHeure" /></div>
+          </div>
+          <div class="form__row">
+            <div class="field"><label for="editLieu">Lieu</label><input id="editLieu" type="text" formControlName="lieu" maxlength="150" /></div>
+            <div class="field field--sm"><label for="editCapacite">Capacité max</label><input id="editCapacite" type="number" min="1" formControlName="capaciteMax" /></div>
+          </div>
+          <div class="field"><label for="editAdresse">Adresse (optionnel)</label><input id="editAdresse" type="text" formControlName="adresse" maxlength="255" /></div>
+          <div class="field">
+            <label for="editStatut">Statut</label>
+            <select id="editStatut" formControlName="statut">
+              <option value="PLANIFIEE">Planifiée</option>
+              <option value="EN_COURS">En cours</option>
+              <option value="TERMINEE">Terminée</option>
+              <option value="ANNULEE">Annulée</option>
+            </select>
+          </div>
+          <label class="checkbox">
+            <input type="checkbox" formControlName="voteSurPlaceActif" />
+            Vote sur place actif
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" formControlName="resultatsPublies" />
+            Résultats publiés
+          </label>
+          <p class="field-hint">Une fois coché, chaque candidat voit ses points (votes/jury/public) et son rang pour la phase de cette soirée, depuis son espace.</p>
+          @if (erreurEditionSoiree) {
+            <div class="field-error" role="alert">{{ erreurEditionSoiree }}</div>
+          }
+          <div class="modal__actions">
+            <button type="button" class="btn btn--ghost" (click)="fermerEditionSoiree()">Annuler</button>
+            <button type="submit" class="btn btn--primary" [disabled]="formEditionSoiree.invalid || editionSoireeEnCours">
+              {{ editionSoireeEnCours ? 'Enregistrement…' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>
 `,
   styleUrls: ['../phases/phases.component.scss', '../poules/poules.component.scss', '../resultats/resultats.component.scss'],
@@ -165,6 +225,7 @@ export class SoireesComponent implements OnInit, OnDestroy {
   categoriesParSoiree: Record<string, CategorieTicket[]> = {};
   erreurSoirees = false;
 
+  modalCreationOuverte = false;
   formSoiree = this.fb.nonNullable.group({
     phaseId: ['', Validators.required],
     nom: ['', [Validators.required, Validators.maxLength(150)]],
@@ -176,6 +237,20 @@ export class SoireesComponent implements OnInit, OnDestroy {
   erreurCreation: string | null = null;
   creationEnCours = false;
   messageSoiree: string | null = null;
+
+  soireeEnEdition: SoireeEvent | null = null;
+  formEditionSoiree = this.fb.nonNullable.group({
+    nom: ['', [Validators.required, Validators.maxLength(150)]],
+    dateHeure: ['', Validators.required],
+    lieu: ['', [Validators.required, Validators.maxLength(150)]],
+    adresse: [''],
+    capaciteMax: [200, [Validators.required, Validators.min(1)]],
+    statut: ['PLANIFIEE', Validators.required],
+    voteSurPlaceActif: [false],
+    resultatsPublies: [false],
+  });
+  erreurEditionSoiree: string | null = null;
+  editionSoireeEnCours = false;
 
   formulaireCategorieOuvertPour: string | null = null;
   formCategorie = this.fb.nonNullable.group({
@@ -226,6 +301,16 @@ export class SoireesComponent implements OnInit, OnDestroy {
     );
   }
 
+  ouvrirModalCreation(): void {
+    this.formSoiree.reset({ phaseId: '', nom: '', dateHeure: '', lieu: '', adresse: '', capaciteMax: 200 });
+    this.erreurCreation = null;
+    this.modalCreationOuverte = true;
+  }
+
+  fermerModalCreation(): void {
+    this.modalCreationOuverte = false;
+  }
+
   creerSoiree(): void {
     if (this.formSoiree.invalid) { this.formSoiree.markAllAsTouched(); return; }
     this.erreurCreation = null;
@@ -239,6 +324,7 @@ export class SoireesComponent implements OnInit, OnDestroy {
       capaciteMax: v.capaciteMax,
       statut: 'PLANIFIEE' as const,
       voteSurPlaceActif: false,
+      resultatsPublies: false,
     };
     this.sub.add(
       this.soireeSvc.creer(v.phaseId, corps).pipe(
@@ -248,8 +334,43 @@ export class SoireesComponent implements OnInit, OnDestroy {
         if (!soiree) return;
         this.soirees = [...this.soirees, soiree];
         this.categoriesParSoiree = { ...this.categoriesParSoiree, [soiree.id]: [] };
-        this.formSoiree.reset({ phaseId: '', nom: '', dateHeure: '', lieu: '', adresse: '', capaciteMax: 200 });
         this.messageSoiree = `Soirée "${soiree.nom}" créée.`;
+        this.fermerModalCreation();
+      })
+    );
+  }
+
+  ouvrirEditionSoiree(s: SoireeEvent): void {
+    this.soireeEnEdition = s;
+    this.erreurEditionSoiree = null;
+    this.formEditionSoiree.setValue({
+      nom: s.nom,
+      dateHeure: new Date(s.dateHeure).toISOString().slice(0, 16),
+      lieu: s.lieu,
+      adresse: s.adresse ?? '',
+      capaciteMax: s.capaciteMax,
+      statut: s.statut,
+      voteSurPlaceActif: s.voteSurPlaceActif,
+      resultatsPublies: s.resultatsPublies,
+    });
+  }
+
+  fermerEditionSoiree(): void { this.soireeEnEdition = null; }
+
+  enregistrerSoiree(): void {
+    if (this.formEditionSoiree.invalid || !this.soireeEnEdition) { this.formEditionSoiree.markAllAsTouched(); return; }
+    this.erreurEditionSoiree = null;
+    this.editionSoireeEnCours = true;
+    const v = this.formEditionSoiree.getRawValue();
+    const corps = { ...this.soireeEnEdition, ...v, dateHeure: new Date(v.dateHeure).toISOString(), statut: v.statut as StatutSoiree };
+    this.sub.add(
+      this.soireeSvc.mettreAJour(this.soireeEnEdition.id, corps).pipe(
+        catchError(err => { this.erreurEditionSoiree = messageErreur(err, 'Échec de la mise à jour.'); return of(null); }),
+        finalize(() => { this.editionSoireeEnCours = false; })
+      ).subscribe(soiree => {
+        if (!soiree) return;
+        this.soirees = this.soirees.map(s => s.id === soiree.id ? soiree : s);
+        this.fermerEditionSoiree();
       })
     );
   }
