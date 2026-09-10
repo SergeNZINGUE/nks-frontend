@@ -5,10 +5,11 @@ import { Subscription, forkJoin, catchError, of } from 'rxjs';
 
 import { JuryService, CandidatBrut, NoteJuryBrut } from '@core/services/jury.service';
 import { SoireeEvent } from '@core/models';
+import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.component';
 
 @Component({
   selector: 'app-jury-dashboard',
-  imports: [DatePipe, RouterModule],
+  imports: [DatePipe, RouterModule, KpiCardComponent],
   template: `
 <div class="jury-page">
 
@@ -74,11 +75,15 @@ import { SoireeEvent } from '@core/models';
         <div class="phase-banner__nom">{{ soireeSelectionnee.nom }}</div>
         <div class="phase-banner__sub">{{ soireeSelectionnee.dateHeure | date:'EEEE d MMMM yyyy, HH:mm' }} — {{ soireeSelectionnee.lieu }}</div>
         <div class="phase-banner__stats">
-          <span class="stat"><strong>{{ candidats.length }}</strong> candidats</span>
-          <span class="stat-sep">·</span>
-          <span class="stat"><strong>{{ candidatsANoter.length }}</strong> à noter</span>
-          <span class="stat-sep">·</span>
-          <span class="stat"><strong>{{ candidatsNotes.length }}</strong> notés</span>
+          <app-kpi-card label="Candidats" [value]="candidats.length" variant="gold">
+            <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </app-kpi-card>
+          <app-kpi-card label="À noter" [value]="candidatsANoter.length" variant="warning">
+            <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </app-kpi-card>
+          <app-kpi-card label="Notés" [value]="candidatsNotes.length" variant="success">
+            <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          </app-kpi-card>
         </div>
       </div>
     }

@@ -110,16 +110,11 @@
   }
 
   &__stats {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: $sp-2;
-    flex-wrap: wrap;
-    font-size: 13px;
-    color: rgba($nks-text, 0.7);
   }
 }
-
-.stat strong { color: $nks-text; }
-.stat-sep { color: rgba($nks-text, 0.3); }
 
 .section {
   padding: $sp-4 $sp-4 0;
@@ -224,7 +219,7 @@
   }
 
   &__nom     { font-size: 15px; font-weight: 600; color: $nks-text; }
-  &__code    { font-size: 12px; color: $nks-text-secondary; font-family: monospace; }
+  &__code    { font-size: 16px; font-weight: 700; color: $nks-gold; font-family: $font-title; letter-spacing: 0.03em; }
   &__chanson { display: flex; align-items: center; gap: 5px; font-size: 13px; color: rgba($nks-text, 0.6); overflow-wrap: anywhere; }
   &__score   { font-size: 13px; color: $nks-success; }
   &__arrow   { width: 18px; height: 18px; color: rgba($nks-gold, 0.6); flex-shrink: 0; }

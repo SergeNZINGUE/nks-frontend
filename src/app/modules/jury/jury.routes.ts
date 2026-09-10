@@ -15,6 +15,10 @@ export const juryRoutes: Routes = [
         path: 'noter/:candidatId',
         loadComponent: () => import('./notation/notation.component').then(c => c.NotationComponent),
       },
+      {
+        path: 'historique',
+        loadComponent: () => import('./historique/historique.component').then(c => c.HistoriqueComponent),
+      },
     ],
   },
 ];
