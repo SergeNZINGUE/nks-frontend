@@ -1,22 +1,34 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { Subscription, filter, startWith } from 'rxjs';
 
 import { AuthService } from '@core/services/auth.service';
-import { ADMIN_NAV } from './admin-nav.config';
+import { ADMIN_NAV, AdminNavItem } from './admin-nav.config';
+
+/** Libellé FR affiché pour le rôle courant — priorité au rôle le plus élevé si plusieurs. */
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: 'Super-admin',
+  ADMIN: 'Administrateur',
+  ORGANISATEUR: 'Organisateur',
+  JURY: 'Membre du jury',
+  AGENT_ACCUEIL: "Agent d'accueil",
+  CANDIDAT: 'Candidat',
+};
+const ROLE_PRIORITY = ['SUPER_ADMIN', 'ADMIN', 'ORGANISATEUR', 'JURY', 'AGENT_ACCUEIL', 'CANDIDAT'];
+
+const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
 
 /**
  * Coquille persistante du back-office : sidebar de navigation + topbar.
- * Remplace le pattern précédent (chaque écran redéfinissait son propre `<app-topbar
- * backLink="/admin">`, sans navigation transversale — équivalent à un site sans menu).
- * Tous les écrans /admin/* sont désormais rendus dans <router-outlet> à l'intérieur
- * de cette coquille (cf. admin.routes.ts).
+ * Tous les écrans /back-office/* sont rendus dans <router-outlet> à l'intérieur de
+ * cette coquille (cf. admin.routes.ts).
  */
 @Component({
   selector: 'app-admin-shell',
   imports: [RouterModule, NgTemplateOutlet],
   template: `
-<div class="shell" [class.shell--sidebar-ouverte]="sidebarOuverte">
+<div class="shell" [class.shell--sidebar-ouverte]="sidebarOuverte" [class.shell--sidebar-repliee]="sidebarRepliee">
 
   <!-- Overlay mobile -->
   @if (sidebarOuverte) {
@@ -27,6 +39,9 @@ import { ADMIN_NAV } from './admin-nav.config';
     <div class="sidebar__brand">
       <img src="assets/logos/nks.png" alt="" class="sidebar__logo" />
       <span class="sidebar__brand-text">NKS <span>Admin</span></span>
+      <button type="button" class="sidebar__collapse" [attr.aria-label]="sidebarRepliee ? 'Déplier le menu' : 'Réduire le menu'" (click)="toggleCollapse()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
     </div>
 
     <nav class="sidebar__nav" aria-label="Navigation administration">
@@ -34,12 +49,14 @@ import { ADMIN_NAV } from './admin-nav.config';
         <div class="sidebar__groupe">
           <div class="sidebar__groupe-titre">{{ groupe.titre }}</div>
           @for (item of groupe.items; track item.route) {
+            @if (!item.roles || authSvc.hasRole(...item.roles)) {
             <a
               class="sidebar__item"
               [class.sidebar__item--soon]="item.statut === 'soon'"
               [routerLink]="item.route"
               routerLinkActive="sidebar__item--active"
-              [routerLinkActiveOptions]="{ exact: item.route === '/admin' }"
+              [routerLinkActiveOptions]="{ exact: item.route === '/back-office' }"
+              [title]="sidebarRepliee ? item.label : ''"
               (click)="fermerSidebar()">
               <span class="sidebar__item-icon" aria-hidden="true">
                 <ng-container [ngTemplateOutlet]="adminIcon" [ngTemplateOutletContext]="{ key: item.icon }" />
@@ -49,19 +66,27 @@ import { ADMIN_NAV } from './admin-nav.config';
                 <span class="sidebar__item-tag">bientôt</span>
               }
             </a>
+            }
           }
         </div>
       }
     </nav>
 
     <div class="sidebar__footer">
-      <a routerLink="/" class="sidebar__site-link">
+      <div class="sidebar__account" [title]="sidebarRepliee ? roleLabel : ''">
+        <span class="sidebar__account-avatar" aria-hidden="true">{{ roleInitiale }}</span>
+        <div class="sidebar__account-info">
+          <span class="sidebar__account-role">{{ roleLabel }}</span>
+          <span class="sidebar__account-sub">Espace back-office</span>
+        </div>
+      </div>
+      <a routerLink="/" class="sidebar__site-link" [title]="sidebarRepliee ? 'Voir le site public' : ''">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-        Voir le site public
+        <span class="sidebar__item-label">Voir le site public</span>
       </a>
-      <button type="button" class="sidebar__logout" (click)="logout()">
+      <button type="button" class="sidebar__logout" [title]="sidebarRepliee ? 'Déconnexion' : ''" (click)="logout()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-        Déconnexion
+        <span class="sidebar__item-label">Déconnexion</span>
       </button>
     </div>
   </aside>
@@ -71,11 +96,18 @@ import { ADMIN_NAV } from './admin-nav.config';
       <button type="button" class="shell__burger" aria-label="Ouvrir le menu" (click)="toggleSidebar()">
         <span></span><span></span><span></span>
       </button>
+
+      @if (fil.length) {
+        <nav class="shell__breadcrumb" aria-label="Fil d'Ariane">
+          @for (etape of fil; track $index; let dernier = $last) {
+            <span class="shell__breadcrumb-item" [class.shell__breadcrumb-item--courant]="dernier">{{ etape }}</span>
+            @if (!dernier) { <span class="shell__breadcrumb-sep" aria-hidden="true">/</span> }
+          }
+        </nav>
+      }
+
       <div class="shell__topbar-spacer"></div>
-      <div class="shell__account" title="Administrateur NKS">
-        <span class="shell__account-avatar" aria-hidden="true">A</span>
-        <span class="shell__account-label">Administrateur</span>
-      </div>
+
       <button type="button" class="shell__logout-btn" title="Déconnexion" aria-label="Déconnexion" (click)="logout()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
       </button>
@@ -143,15 +175,52 @@ import { ADMIN_NAV } from './admin-nav.config';
   styleUrls: ['./admin-shell.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class AdminShellComponent {
-  private authSvc = inject(AuthService);
+export class AdminShellComponent implements OnInit, OnDestroy {
+  protected authSvc = inject(AuthService);
   private router = inject(Router);
+  private sub = new Subscription();
 
   nav = ADMIN_NAV;
   sidebarOuverte = false;
+  sidebarRepliee = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1';
+  fil: string[] = [];
+
+  get roleLabel(): string {
+    const roles = this.authSvc.roles;
+    const principal = ROLE_PRIORITY.find(r => roles.includes(r));
+    return principal ? ROLE_LABELS[principal] : 'Compte';
+  }
+
+  get roleInitiale(): string {
+    return this.roleLabel.charAt(0).toUpperCase();
+  }
+
+  ngOnInit(): void {
+    const items: (AdminNavItem & { groupe: string })[] =
+      this.nav.flatMap(g => g.items.map(i => ({ ...i, groupe: g.titre })));
+
+    this.sub.add(
+      this.router.events.pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        startWith(null)
+      ).subscribe(() => {
+        const url = this.router.url.split('?')[0];
+        const match = items.find(i => i.route === url)
+          ?? items.find(i => i.route !== '/back-office' && url.startsWith(i.route));
+        this.fil = match ? [match.groupe, match.label] : [];
+      })
+    );
+  }
+
+  ngOnDestroy(): void { this.sub.unsubscribe(); }
 
   toggleSidebar(): void { this.sidebarOuverte = !this.sidebarOuverte; }
   fermerSidebar(): void { this.sidebarOuverte = false; }
+
+  toggleCollapse(): void {
+    this.sidebarRepliee = !this.sidebarRepliee;
+    localStorage.setItem(SIDEBAR_COLLAPSE_KEY, this.sidebarRepliee ? '1' : '0');
+  }
 
   logout(): void {
     this.authSvc.logout();

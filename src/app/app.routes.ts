@@ -30,11 +30,12 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/jury/jury.routes').then(m => m.juryRoutes),
   },
-  // Back-office Admin
+  // Back-office (ADMIN/SUPER_ADMIN/ORGANISATEUR) — segment d'URL neutre : ORGANISATEUR
+  // n'est pas un "admin", le préfixe ne doit pas le laisser croire.
   {
-    path: 'admin',
+    path: 'back-office',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'SUPER_ADMIN'] },
+    data: { roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANISATEUR'] },
     loadChildren: () =>
       import('./modules/admin/admin.routes').then(m => m.adminRoutes),
   },

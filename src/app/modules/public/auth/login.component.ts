@@ -3,14 +3,17 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 import { AuthService } from '@core/services/auth.service';
+import { IdleTimeoutService } from '@core/services/idle-timeout.service';
 import { messageErreur } from '@core/utils/http-error.util';
 import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
+import { StarFieldComponent } from '@shared/components/star-field/star-field.component';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterModule, StarMarkComponent],
+  imports: [ReactiveFormsModule, RouterModule, StarMarkComponent, StarFieldComponent],
   template: `
     <div class="page login-page">
+      <app-star-field [shootingStar]="false" />
       <div class="login-glow" aria-hidden="true"></div>
 
       <a routerLink="/" class="login-back" aria-label="Retour à l'accueil">
@@ -103,6 +106,7 @@ import { StarMarkComponent } from '@shared/components/star-mark/star-mark.compon
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
+  private idleSvc = inject(IdleTimeoutService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -116,6 +120,13 @@ export class LoginComponent {
       email:     ['', [Validators.required, Validators.email]],
       motDePasse: ['', Validators.required],
     });
+    // Déconnexion forcée par IdleTimeoutService (30 min d'inactivité) : message dédié,
+    // distinct d'un simple échec d'identifiants.
+    if (this.route.snapshot.queryParamMap.get('motif') === 'inactivite') {
+      // Délai variable selon le rôle (cf. IdleTimeoutService) : pas de durée
+      // chiffrée ici, les tokens sont déjà effacés au moment où cette page se charge.
+      this.error = 'Session expirée par inactivité. Merci de vous reconnecter.';
+    }
   }
 
   submit(): void {
@@ -124,6 +135,7 @@ export class LoginComponent {
     this.error = null;
     this.auth.login(this.form.value).subscribe({
       next: () => {
+        this.idleSvc.reinitialiser();
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? this.redirectByRole();
         this.router.navigateByUrl(returnUrl);
       },
@@ -135,10 +147,11 @@ export class LoginComponent {
   }
 
   private redirectByRole(): string {
-    if (this.auth.isAdmin())    return '/admin';
-    if (this.auth.isCandidat()) return '/mon-espace';
-    if (this.auth.isJury())     return '/jury';
-    if (this.auth.isAgent())    return '/scan';
+    if (this.auth.isAdmin())        return '/back-office';
+    if (this.auth.isOrganisateur()) return '/back-office';
+    if (this.auth.isCandidat())     return '/mon-espace';
+    if (this.auth.isJury())         return '/jury';
+    if (this.auth.isAgent())        return '/scan';
     return '/';
   }
 }

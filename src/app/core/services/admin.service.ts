@@ -4,11 +4,32 @@ import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import {
   DashboardResponse,
+  DashboardOrganisateurResponse,
   CandidatureDetailResponse,
   Phase,
   Edition,
   Page,
 } from '@core/models';
+
+export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL';
+
+export interface CreerUtilisateurAdminRequest {
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  role: RoleAdmin;
+}
+
+export interface UtilisateurAdminResponse {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  roles: string[];
+  statut: string;
+}
 
 /** SmsController.SmsBulkResponse — réponse de POST /sms/candidatures-validees. */
 export interface SmsBulkResponse {
@@ -18,14 +39,13 @@ export interface SmsBulkResponse {
 }
 
 /**
- * Doit rester identique à `CandidatureService.SMS_CANDIDATURE_VALIDEE` (backend).
- * Aucun endpoint n'expose ce texte — dupliqué ici uniquement pour le renvoi individuel
- * (`POST /sms/envoyer`, message libre). Le renvoi en masse (`POST /sms/candidatures-validees`)
- * n'a pas ce problème : le backend réutilise directement sa propre constante.
- * Si Serge change le message côté backend, le répercuter ici.
+ * Construit le SMS de confirmation de candidature avec le montant des frais lu depuis
+ * `environment.inscriptionPriceFcfa` — aligné sur la var d'env backend INSCRIPTION_FRAIS_FCFA.
+ * Utilisé uniquement pour le renvoi unitaire (POST /sms/envoyer) ; le renvoi en masse
+ * (POST /sms/candidatures-validees) utilise la constante du backend directement.
  */
 export const SMS_CANDIDATURE_VALIDEE =
-  "Felicitations candidature acceptee! Reglez vos frais d'inscription 15000 FCFA https://laterrasse.bf/login ou via OM:+22606071717.BIENVENUE DANS LA COMPETITION!";
+  `Felicitations candidature acceptee! Reglez vos frais d'inscription ${environment.inscriptionPriceFcfa} FCFA https://laterrasse.bf/login ou via OM:+22606071717.BIENVENUE DANS LA COMPETITION!`;
 
 /**
  * Normalise un numéro burkinabè vers E.164 (+226XXXXXXXX) — même logique que
@@ -60,6 +80,11 @@ export class AdminService {
   /** GET /admin/dashboard */
   dashboard(): Observable<DashboardResponse> {
     return this.http.get<DashboardResponse>(`${this.api}/admin/dashboard`);
+  }
+
+  /** GET /admin/dashboard/organisateur — sans données financières */
+  dashboardOrganisateur(): Observable<DashboardOrganisateurResponse> {
+    return this.http.get<DashboardOrganisateurResponse>(`${this.api}/admin/dashboard/organisateur`);
   }
 
   /** GET /editions — pour retrouver l'édition EN_COURS */
@@ -136,6 +161,18 @@ export class AdminService {
   }
 
   /**
+   * PUT /candidatures/{id}/activer-manuellement — activation après règlement en espèces ou autre.
+   * Les deux champs sont optionnels : referenceReglement (reçu, référence) et montant
+   * (défaut backend : 15 000 FCFA si absent).
+   */
+  activerManuellement(id: string, referenceReglement?: string | null, montant?: number | null): Observable<CandidatureDetailResponse> {
+    return this.http.put<CandidatureDetailResponse>(
+      `${this.api}/candidatures/${id}/activer-manuellement`,
+      { referenceReglement: referenceReglement ?? null, montant: montant ?? null }
+    );
+  }
+
+  /**
    * GET /editions/{id}/phases  (EditionController)
    * Pas de GET /phases indépendant pour l'admin
    */
@@ -185,6 +222,21 @@ export class AdminService {
    */
   envoyerWhatsappUnitaire(to: string, message: string): Observable<{ success: boolean; sid: string }> {
     return this.http.post<{ success: boolean; sid: string }>(`${this.api}/whatsapp/envoyer`, { to, message });
+  }
+
+  /** POST /admin/utilisateurs — SUPER_ADMIN uniquement */
+  creerUtilisateur(req: CreerUtilisateurAdminRequest): Observable<UtilisateurAdminResponse> {
+    return this.http.post<UtilisateurAdminResponse>(`${this.api}/admin/utilisateurs`, req);
+  }
+
+  /** GET /admin/utilisateurs — SUPER_ADMIN uniquement */
+  listerUtilisateurs(): Observable<UtilisateurAdminResponse[]> {
+    return this.http.get<UtilisateurAdminResponse[]>(`${this.api}/admin/utilisateurs`);
+  }
+
+  /** POST /admin/utilisateurs/{id}/reinitialiser-mot-de-passe */
+  reinitialiserMotDePasse(id: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/admin/utilisateurs/${id}/reinitialiser-mot-de-passe`, {});
   }
 
   /**

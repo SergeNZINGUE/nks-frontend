@@ -1,5 +1,6 @@
 import { ApplicationRef, ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { IdleTimeoutService } from '@core/services/idle-timeout.service';
 
 /**
  * Filet de sécurité post-migration Angular 22 — volet "événements DOM locaux".
@@ -28,20 +29,30 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   private appRef = inject(ApplicationRef);
+  private idleSvc = inject(IdleTimeoutService);
+
+  constructor() {
+    // Couvre le cas d'une session déjà active au chargement (rechargement de
+    // page) — sans interaction, les @HostListener ci-dessous ne s'exécutent
+    // jamais et le minuteur ne démarrerait sinon qu'au premier clic.
+    this.idleSvc.reinitialiser();
+  }
 
   private forcerTick(): void {
     queueMicrotask(() => this.appRef.tick());
   }
 
+  // Ces mêmes événements marquent aussi une activité utilisateur réelle
+  // (cf. IdleTimeoutService) : pas de nouveaux listeners, on réutilise ceux-ci.
   @HostListener('document:click')
-  onClick(): void { this.forcerTick(); }
+  onClick(): void { this.forcerTick(); this.idleSvc.reinitialiser(); }
 
   @HostListener('document:input')
-  onInput(): void { this.forcerTick(); }
+  onInput(): void { this.forcerTick(); this.idleSvc.reinitialiser(); }
 
   @HostListener('document:change')
-  onChange(): void { this.forcerTick(); }
+  onChange(): void { this.forcerTick(); this.idleSvc.reinitialiser(); }
 
   @HostListener('document:keyup')
-  onKeyup(): void { this.forcerTick(); }
+  onKeyup(): void { this.forcerTick(); this.idleSvc.reinitialiser(); }
 }

@@ -5,6 +5,11 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '@env/environment';
 import { LoginRequest, LoginResponse } from '@core/models';
 
+export interface ChangerMotDePasseRequest {
+  motDePasseActuel: string;
+  nouveauMotDePasse: string;
+}
+
 const TOKEN_KEY   = 'nks_access_token';
 const REFRESH_KEY = 'nks_refresh_token';
 const ROLES_KEY   = 'nks_roles';
@@ -30,11 +35,19 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  changerMotDePasse(req: ChangerMotDePasseRequest): Observable<void> {
+    return this.http.put<void>(`${this.api}/auth/changer-mot-de-passe`, req);
+  }
+
+  /**
+   * `motif: 'inactivite'` distingue la déconnexion forcée par IdleTimeoutService
+   * d'une déconnexion manuelle, pour que LoginComponent affiche un message adapté.
+   */
+  logout(motif?: 'inactivite'): void {
     const refreshToken = localStorage.getItem(REFRESH_KEY);
     this.http.post(`${this.api}/auth/logout`, { refreshToken }).subscribe();
     this.clearTokens();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], motif ? { queryParams: { motif } } : {});
   }
 
   get accessToken(): string | null {
@@ -53,10 +66,11 @@ export class AuthService {
     return allowedRoles.some(r => this.roles.includes(r));
   }
 
-  isAdmin(): boolean    { return this.hasRole('ADMIN', 'SUPER_ADMIN'); }
-  isCandidat(): boolean { return this.hasRole('CANDIDAT'); }
-  isJury(): boolean     { return this.hasRole('JURY'); }
-  isAgent(): boolean    { return this.hasRole('AGENT_ACCUEIL'); }
+  isAdmin(): boolean        { return this.hasRole('ADMIN', 'SUPER_ADMIN'); }
+  isOrganisateur(): boolean { return this.hasRole('ORGANISATEUR'); }
+  isCandidat(): boolean     { return this.hasRole('CANDIDAT'); }
+  isJury(): boolean         { return this.hasRole('JURY'); }
+  isAgent(): boolean        { return this.hasRole('AGENT_ACCUEIL'); }
 
   private storeTokens(res: LoginResponse): void {
     localStorage.setItem(TOKEN_KEY, res.accessToken);

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '@core/guards/role.guard';
 
 const comingSoon = () =>
   import('./shared/coming-soon.component').then(c => c.ComingSoonComponent);
@@ -49,12 +50,7 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'votes',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Votes',
-          icon: 'vote',
-          description: "Suivi et modération des votes en ligne / payants n'est pas encore conçu côté admin.",
-        },
+        loadComponent: () => import('./votes/votes.component').then(c => c.VotesComponent),
       },
       {
         path: 'soirees',
@@ -75,12 +71,15 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'utilisateurs',
-        loadComponent: comingSoon,
-        data: {
-          titre: 'Utilisateurs & rôles',
-          icon: 'user',
-          description: "Gestion des comptes (admin, jury, agent d'accueil) et de leurs rôles n'est pas encore conçue.",
-        },
+        loadComponent: () =>
+          import('./utilisateurs/utilisateurs.component').then(c => c.UtilisateursComponent),
+        // roleGuard seul (pas authGuard) : l'authentification est déjà vérifiée par
+        // le parent /admin — ici on ajoute juste la restriction SUPER_ADMIN, plus
+        // stricte que le ADMIN/SUPER_ADMIN du parent. Défense en profondeur : le
+        // nav masque déjà ce lien aux simples ADMIN (cf. admin-nav.config.ts), et le
+        // backend refuse de toute façon en 403 (AdminController, hasRole('SUPER_ADMIN')).
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
       },
       {
         path: 'audit',
