@@ -62,4 +62,21 @@
       text-align: center;
     }
   }
+
+  &__liens {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $sp-2;
+    margin-bottom: $sp-2;
+    font-size: 12px;
+
+    a {
+      color: $nks-text-secondary;
+      text-decoration: none;
+      &:hover { color: $nks-gold; text-decoration: underline; }
+    }
+
+    span { color: rgba($nks-text, 0.25); }
+  }
 }

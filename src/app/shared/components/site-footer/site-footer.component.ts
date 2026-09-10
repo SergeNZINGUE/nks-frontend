@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 /**
  * Pied de page public — léger par conception : pas de logique, pas d'appel
@@ -10,7 +11,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
  */
 @Component({
   selector: 'app-site-footer',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './site-footer.component.html',
   styleUrls: ['./site-footer.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,

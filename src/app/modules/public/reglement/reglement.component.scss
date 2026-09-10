@@ -1,0 +1,77 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.legal-page {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+}
+
+.legal {
+  padding: $sp-6 $sp-4 $sp-12;
+
+  &__inner {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  &__brouillon {
+    background: rgba($nks-warning, 0.1);
+    border: 1px solid rgba($nks-warning, 0.35);
+    color: $nks-warning;
+    border-radius: $radius-md;
+    padding: $sp-3 $sp-4;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: $sp-6;
+  }
+
+  &__maj {
+    color: $nks-text-secondary;
+    font-size: 13px;
+    margin: 0 0 $sp-6;
+  }
+
+  &__retour {
+    margin-top: $sp-8;
+    padding-top: $sp-4;
+    border-top: 1px solid rgba($nks-text, 0.08);
+    font-size: 14px;
+
+    a { color: $nks-gold; text-decoration: none; &:hover { text-decoration: underline; } }
+  }
+
+  h1 {
+    font-family: $font-title;
+    font-size: 26px;
+    color: $nks-gold;
+    margin: 0 0 $sp-2;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-family: $font-title;
+    font-size: 17px;
+    color: $nks-gold-light;
+    margin: $sp-8 0 $sp-3;
+  }
+
+  p, li {
+    font-size: 14px;
+    line-height: 1.7;
+    color: $nks-text;
+  }
+
+  p { margin: 0 0 $sp-3; }
+
+  ul, ol {
+    margin: 0 0 $sp-4;
+    padding-left: 1.3em;
+
+    li { margin-bottom: $sp-2; }
+  }
+
+  strong { color: $nks-gold-light; font-weight: 700; }
+}

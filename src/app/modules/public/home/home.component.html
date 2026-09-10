@@ -26,28 +26,7 @@
     <!-- ═══ HERO — deux colonnes en desktop, empilé en mobile ═══ -->
     <section class="hero">
       <!-- Champ d'étoiles décoratif — purement visuel, sous le contenu, jamais cliquable -->
-      <div class="hero__stars" aria-hidden="true">
-        @for (s of stars; track $index) {
-          <span
-            class="hero__star"
-            [class.hero__star--gold]="s.gold"
-            [style.top.%]="s.top"
-            [style.left.%]="s.left"
-            [style.width.px]="s.size"
-            [style.height.px]="s.size"
-            [style.animation-duration.s]="s.duration"
-            [style.animation-delay.s]="s.delay"
-            [style.--star-opacity]="s.opacity"
-          ></span>
-        }
-        <!-- Étoile filante — traverse le hero toutes les ~13s, traînée dégradée qui
-             s'estompe, tête = logo NKS existant (étoile-micro), animée en
-             transform/opacity uniquement (aucun reflow). -->
-        <div class="hero__shooting-star">
-          <span class="hero__shooting-star-trail"></span>
-          <img src="assets/logos/nks.png" alt="" class="hero__shooting-star-head" />
-        </div>
-      </div>
+      <app-star-field [count]="60" [shootingStar]="true" />
       <div class="hero__inner">
         <!-- Colonne gauche : accroche -->
         <div class="hero__accroche">
@@ -148,7 +127,7 @@
                   <h3 class="spotlight__leader-nom">
                     @if (profilClasse(leader); as p) { {{ p.prenom }} {{ p.nom }} } @else { {{ leader.codeCandidat }} }
                   </h3>
-                  <p class="spotlight__leader-votes"><strong>{{ leader.totalPointsCumules | number:'1.0-0' }}</strong> votes</p>
+                  <p class="spotlight__leader-votes"><strong>{{ leader.totalPointsCumules | number:'1.0-0' }}</strong> points</p>
                 </a>
                 @if (voteActif) {
                   <a [routerLink]="['/voter', leader.candidatId]" class="btn btn--primary btn--sm spotlight__leader-voter">
@@ -159,7 +138,7 @@
             }
             @if (classement.length > 1) {
               <div class="spotlight__rangee">
-                @for (item of classement.slice(1); track item; let i = $index) {
+                @for (item of classement.slice(1); track item.candidatId; let i = $index) {
                   <a [routerLink]="['/candidat', item.candidatId]" class="spotlight__ligne">
                     <span class="spotlight__ligne-rang">{{ i + 2 }}</span>
                     <div class="avatar spotlight__ligne-avatar">{{ initialesClassement(item) }}</div>
@@ -182,7 +161,7 @@
               <h2 class="bloc__titre">Soirées à venir</h2>
               <a routerLink="/billetterie" class="bloc__lien">Tout voir →</a>
             </div>
-            @for (s of soirees; track s) {
+            @for (s of soirees; track s.id) {
               <article class="soiree">
                 <div class="soiree__date" aria-hidden="true">
                   <span class="soiree__jour">{{ s.dateHeure | date:'dd' }}</span>
@@ -206,7 +185,7 @@
               <a routerLink="/classement" class="bloc__lien">Tout voir →</a>
             </div>
             <div class="classement-bars">
-              @for (item of classement; track item; let i = $index) {
+              @for (item of classement; track item.candidatId; let i = $index) {
                 <a [routerLink]="['/candidat', item.candidatId]" class="classement-bar" [class.classement-bar--top]="i === 0">
                   <span class="classement-bar__rang" aria-hidden="true"
                     [class.classement-bar__rang--or]="i === 0"

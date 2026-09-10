@@ -14,14 +14,9 @@ import { CompetitionGalleryComponent } from '../../../shared/components/competit
 import { BottomNavComponent } from '../../../shared/components/bottom-nav/bottom-nav.component';
 import { SiteFooterComponent } from '../../../shared/components/site-footer/site-footer.component';
 import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
+import { StarFieldComponent } from '@shared/components/star-field/star-field.component';
 
 interface Countdown { jours: number; heures: number; minutes: number; secondes: number; }
-
-/** Une étoile décorative du champ scintillant du hero — purement visuel, aucune donnée métier. */
-interface Star {
-  top: number; left: number; size: number; opacity: number;
-  duration: number; delay: number; gold: boolean;
-}
 
 @Component({
     selector: 'app-home',
@@ -37,7 +32,8 @@ interface Star {
     UpperCasePipe,
     DecimalPipe,
     DatePipe,
-    StarMarkComponent
+    StarMarkComponent,
+    StarFieldComponent
 ],
     changeDetection: ChangeDetectionStrategy.Eager,
 })
@@ -64,14 +60,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   compteARebourdActif = false;
 
   private subs = new Subscription();
-
-  /**
-   * Champ d'étoiles scintillantes en arrière-plan du hero — décor pur, généré une
-   * seule fois (pas de SSR/hydration sur ce projet, donc Math.random() ici est
-   * sans risque de désynchronisation). Pas de Canvas ni de librairie : chaque
-   * étoile est un <span> positionné en %, animé en CSS pur (voir home.component.scss).
-   */
-  readonly stars: Star[] = this.buildStarField(60);
 
   ngOnInit(): void {
     // courante() (et non enCours()) : en EN_PREPARATION aucune édition n'est
@@ -237,27 +225,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.voteActif = phase !== null;
       this.armerCompteARebours(edition, this.soirees);
       this.appRef.tick();
-    });
-  }
-
-  /**
-   * Génère `count` étoiles réparties aléatoirement sur toute la zone du hero.
-   * Délai d'animation négatif (`-Math.random() * duration`) : chaque étoile
-   * démarre en plein milieu de son cycle plutôt que toutes en phase à 0,
-   * pour un scintillement naturel dès le premier rendu.
-   */
-  private buildStarField(count: number): Star[] {
-    return Array.from({ length: count }, () => {
-      const duration = 3 + Math.random() * 4; // 3s à 7s : scintillement lent, jamais clignotant
-      return {
-        top: Math.random() * 100,
-        left: Math.random() * 100,
-        size: 1 + Math.random() * 2,          // 1 à 3px
-        opacity: 0.15 + Math.random() * 0.35, // base discrète, quelques-unes plus vives via l'animation
-        duration,
-        delay: -Math.random() * duration,
-        gold: Math.random() < 0.22,           // ~1 étoile sur 5 en or, le reste en blanc
-      };
     });
   }
 }

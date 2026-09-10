@@ -62,3 +62,46 @@ $dur-base: 250ms;
 
 // Bottom nav
 $bottom-nav-height: 64px;
+
+// ─── Panel 2026 (admin / candidat / jury / super-admin) ──────────────────────
+// Couche additive : ne remplace aucun token public existant, uniquement destinée
+// aux surfaces "produit" (back-offices) qui ont besoin d'un système d'élévation
+// et de statuts plus riche que le site public.
+
+// Élévation — 3 plans de profondeur, dérivés de la même teinte que $nks-bg-primary
+// (pas de gris neutre importé) pour rester dans la charte.
+$surface-0: $nks-bg-primary;   // fond de page
+$surface-1: $nks-bg-surface;   // carte
+$surface-2: $nks-bg-card;      // overlay / dropdown / modal
+
+// Bordure fine "lumineuse" — un poil de blanc plutôt qu'un gris plat.
+$border-hairline: rgba(255, 255, 255, 0.08);
+$border-hairline-hover: rgba(255, 255, 255, 0.16);
+
+// Liseré haut de carte : simule une lumière ambiante venant du dessus,
+// remplace le shadow-md générique (cf. taste-skill "Surfaces et Profondeur").
+@mixin surface-sheen {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 55%);
+}
+
+// Statuts — même teinte que $nks-success/warning/error/info, déclinée en
+// "soft tint" (fond très faible opacité + texte plein) pour badges et bannières,
+// au lieu d'aplats saturés.
+@function status-bg($color) { @return rgba($color, 0.12); }
+@function status-border($color) { @return rgba($color, 0.28); }
+
+// Typographie fluide — uniquement pour les titres de section des panels ;
+// le corps de texte reste en px fixe (cohérent avec le reste du site).
+$text-panel-title: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+$text-panel-kpi:   clamp(1.75rem, 1.4rem + 1.4vw, 2.25rem);
+
+// Focus visible — anneau constant sur toute la surface panel.
+@mixin focus-ring {
+  outline: 2px solid $nks-gold;
+  outline-offset: 2px;
+  border-radius: $radius-sm;
+}
+
+// Durée d'entrée pour cartes/lignes qui apparaissent (skeleton → contenu,
+// nouvelle ligne de tableau). Reste sous 300ms — cf. scrollcraft.
+$dur-enter: 220ms;

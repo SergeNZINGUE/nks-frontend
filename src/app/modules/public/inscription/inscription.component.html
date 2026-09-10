@@ -416,6 +416,29 @@ administrateur → notification → puis paiement depuis l'espace candidat.
                 </strong>
               </div>
             </div>
+            <!-- Consentement RGPD — deux cases distinctes, chacune obligatoire -->
+            <div class="form-group consentements">
+              <label class="checkbox-line">
+                <input type="checkbox" formControlName="accepteReglement" />
+                <span>
+                  J'ai lu et j'accepte le
+                  <a routerLink="/reglement" target="_blank" rel="noopener">règlement de la compétition</a> *
+                </span>
+              </label>
+              @if (step4.get('accepteReglement')?.touched && step4.get('accepteReglement')?.invalid) {
+                <span class="form-error">Tu dois accepter le règlement pour t'inscrire.</span>
+              }
+              <label class="checkbox-line">
+                <input type="checkbox" formControlName="accepteConfidentialite" />
+                <span>
+                  J'accepte le traitement de mes données personnelles conformément à la
+                  <a routerLink="/confidentialite" target="_blank" rel="noopener">politique de confidentialité</a> *
+                </span>
+              </label>
+              @if (step4.get('accepteConfidentialite')?.touched && step4.get('accepteConfidentialite')?.invalid) {
+                <span class="form-error">Ton accord est nécessaire pour traiter ta candidature.</span>
+              }
+            </div>
             <p class="paiement-hint">
               Tes frais d'inscription seront réglés depuis ton espace personnel <strong>après validation
             de ta candidature</strong> par le comité d'organisation.

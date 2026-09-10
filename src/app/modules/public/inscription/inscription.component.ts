@@ -166,6 +166,12 @@ export class InscriptionComponent implements OnInit, OnDestroy {
       // Renseigné par l'upload de la capture, jamais saisi à la main.
       // @NotBlank côté backend (CandidatureSubmitRequest.urlCaptureSocial).
       captureUploaded: [false, Validators.requiredTrue],
+      // Consentement RGPD (10/09/2026) — deux cases distinctes et obligatoires
+      // (règlement = acceptation contractuelle, confidentialité = consentement RGPD,
+      // volontairement non fusionnées : une case à cocher ne doit couvrir qu'un seul
+      // engagement à la fois).
+      accepteReglement: [false, Validators.requiredTrue],
+      accepteConfidentialite: [false, Validators.requiredTrue],
     });
   }
 
@@ -497,6 +503,8 @@ export class InscriptionComponent implements OnInit, OnDestroy {
       tailleVideoOctets: this.videoResult.tailleOctets,
       urlCaptureSocial: this.captureResult.url,
       editionId: this.editionId,
+      accepteReglement: s4.accepteReglement,
+      accepteConfidentialite: s4.accepteConfidentialite,
     };
 
     this.isSubmitting = true;

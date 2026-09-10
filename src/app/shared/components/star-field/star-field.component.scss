@@ -1,0 +1,67 @@
+@use 'tokens' as *;
+
+:host {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star-field { position: absolute; inset: 0; }
+
+.star-field__star {
+  position: absolute;
+  border-radius: 50%;
+  background: $nks-text; // blanc
+  opacity: var(--star-opacity, 0.3);
+  animation: star-field-twinkle 4s ease-in-out infinite;
+  will-change: opacity, transform;
+
+  &--gold { background: $nks-gold-light; }
+}
+
+// Scintillement lent et discret : la luminosité varie, jamais de clignotement
+// brutal (cycles de 3 à 7s, générés par étoile — voir buildStarField()).
+@keyframes star-field-twinkle {
+  0%, 100% { opacity: var(--star-opacity, 0.3); transform: scale(0.85); }
+  50%      { opacity: calc(var(--star-opacity, 0.3) + 0.45); transform: scale(1.15); }
+}
+
+// ─── Étoile filante ──────────────────────────────────────────────────────────
+// Un seul passage discret toutes les ~18s. Uniquement transform/opacity animés.
+.star-field__shooting-star {
+  position: absolute;
+  top: 12%;
+  left: -8%;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  opacity: 0;
+  animation: star-field-shooting-star 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.star-field__shooting-star-trail {
+  width: 130px;
+  height: 2px;
+  border-radius: $radius-full;
+  background: linear-gradient(90deg, transparent, rgba($nks-gold-light, 0.75) 60%, rgba($nks-gold-light, 0.95));
+  filter: blur(0.4px);
+}
+
+.star-field__shooting-star-head {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba($nks-gold-light, 0.9));
+}
+
+@keyframes star-field-shooting-star {
+  0%   { transform: translate3d(0, 0, 0) rotate(18deg) scale(0.85); opacity: 0; }
+  4%   { opacity: 1; }
+  42%  { transform: translate3d(120vw, 65vh, 0) rotate(18deg) scale(1); opacity: 1; }
+  48%  { opacity: 0; }
+  100% { opacity: 0; }
+}
