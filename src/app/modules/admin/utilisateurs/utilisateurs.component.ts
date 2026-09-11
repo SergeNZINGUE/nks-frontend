@@ -43,6 +43,7 @@ import { messageErreur } from '@core/utils/http-error.util';
           <option value="ADMIN">Administrateur</option>
           <option value="SUPER_ADMIN">Super administrateur</option>
           <option value="AGENT_ACCUEIL">Agent d'accueil</option>
+          <option value="ORGANISATEUR">Organisateur</option>
         </select>
       </div>
       @if (erreurCreation) {

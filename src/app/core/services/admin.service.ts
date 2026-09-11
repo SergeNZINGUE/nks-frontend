@@ -11,7 +11,7 @@ import {
   Page,
 } from '@core/models';
 
-export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL';
+export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL' | 'ORGANISATEUR';
 
 export interface CreerUtilisateurAdminRequest {
   prenom: string;
@@ -67,6 +67,7 @@ export interface CommunicationRequest {
   filtreStatut: string | null; // StatutProfilCandidat | null = tous
   canalSms: boolean;
   canalEmail: boolean;
+  canalWhatsapp: boolean;
   message: string;         // max 160 chars pour SMS
   sujetEmail: string | null;
 }

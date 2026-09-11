@@ -103,11 +103,10 @@ const FILTRES_STATUT = [
         <div class="form-group">
           <label>Canaux d'envoi *</label>
           <div class="canal-group" role="group" aria-label="Canaux d'envoi">
-            <label class="canal-btn canal-btn--disabled" title="Bientôt disponible — nécessite une mise à jour backend (canalWhatsapp)">
+            <label class="canal-btn" [class.canal-btn--on]="form.get('canalWhatsapp')?.value">
               <input type="checkbox" formControlName="canalWhatsapp" hidden />
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 3.4z"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0zm0 0c0 2 1.5 4.5 5 5.5m0 0h1a.5.5 0 0 0 0-1h-.5a.5.5 0 0 0-.5.5"/></svg>
               WhatsApp
-              <span class="canal-btn__tag">Bientôt</span>
             </label>
             <label class="canal-btn" [class.canal-btn--on]="form.get('canalEmail')?.value">
               <input type="checkbox" formControlName="canalEmail" hidden />
@@ -168,7 +167,7 @@ export class CommunicationComponent implements OnInit, OnDestroy {
       sujetEmail:    ['', Validators.maxLength(150)],
       // WhatsApp prioritaire mais désactivé (pas encore supporté par l'envoi groupé
       // backend) — Email coché par défaut, SMS décoché (opt-in explicite, coût par message).
-      canalWhatsapp: [{ value: false, disabled: true }],
+      canalWhatsapp: [false],
       canalEmail:    [true],
       canalSms:      [false],
     });
@@ -185,7 +184,9 @@ export class CommunicationComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.sub.unsubscribe(); }
 
   get canauxVides(): boolean {
-    return !this.form.get('canalSms')?.value && !this.form.get('canalEmail')?.value;
+    return !this.form.get('canalSms')?.value
+        && !this.form.get('canalEmail')?.value
+        && !this.form.get('canalWhatsapp')?.value;
   }
 
   get smsTropLong(): boolean {
@@ -201,12 +202,13 @@ export class CommunicationComponent implements OnInit, OnDestroy {
 
     const val = this.form.value;
     const req: CommunicationRequest = {
-      editionId:    this.edition.id,
-      filtreStatut: val.filtreStatut || null,   // '' → null = tous
-      canalSms:     val.canalSms,
-      canalEmail:   val.canalEmail,
-      message:      val.message,
-      sujetEmail:   val.sujetEmail || null,
+      editionId:     this.edition.id,
+      filtreStatut:  val.filtreStatut || null,   // '' → null = tous
+      canalSms:      val.canalSms,
+      canalEmail:    val.canalEmail,
+      canalWhatsapp: val.canalWhatsapp,
+      message:       val.message,
+      sujetEmail:    val.sujetEmail || null,
     };
 
     this.isSending = true;
