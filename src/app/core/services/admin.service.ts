@@ -65,13 +65,14 @@ export function normaliserTelephone(telephone: string): string {
 export interface CommunicationRequest {
   editionId: string;
   filtreStatut: string | null;
+  ciblePartenaires: boolean;
   canalSms: boolean;
   canalEmail: boolean;
   canalWhatsapp: boolean;
   message: string;
   sujetEmail: string | null;
-  templateWhatsapp: string | null;       // clé Meta (ex: "karaoke_info") — null si canalWhatsapp=false
-  variablesWhatsapp: string[] | null;    // variables du template dans l'ordre — null pour karaoke_accepted
+  templateWhatsapp: string | null;
+  variablesWhatsapp: string[] | null;
 }
 
 @Injectable({ providedIn: 'root' })

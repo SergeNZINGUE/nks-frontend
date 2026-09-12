@@ -9,13 +9,14 @@ import { Edition } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 const FILTRES_STATUT = [
-  { val: null,         lbl: 'Tous les candidats' },
-  { val: 'EN_ATTENTE', lbl: 'En attente' },
-  { val: 'ACTIF',      lbl: 'Actifs' },
-  { val: 'SUSPENDU',   lbl: 'Suspendus' },
-  { val: 'ELIMINE',    lbl: 'Éliminés' },
-  { val: 'FINALISTE',  lbl: 'Finalistes' },
-  { val: 'GAGNANT',    lbl: 'Gagnants' },
+  { val: null,           lbl: 'Tous les candidats' },
+  { val: 'EN_ATTENTE',   lbl: 'En attente' },
+  { val: 'ACTIF',        lbl: 'Actifs' },
+  { val: 'SUSPENDU',     lbl: 'Suspendus' },
+  { val: 'ELIMINE',      lbl: 'Éliminés' },
+  { val: 'FINALISTE',    lbl: 'Finalistes' },
+  { val: 'GAGNANT',      lbl: 'Gagnants' },
+  { val: 'PARTENAIRES',  lbl: 'Partenaires (contacts actifs)' },
 ] as const;
 
 interface TemplateVar { label: string; placeholder: string; multiline?: boolean; }
@@ -329,13 +330,15 @@ export class CommunicationComponent implements OnInit, OnDestroy {
     if (canalWhatsapp && this.variablesWA.invalid) return;
 
     const val = this.form.value;
+    const ciblePartenaires = val.filtreStatut === 'PARTENAIRES';
     const waVars = canalWhatsapp && this.templateActuel.vars.length > 0
       ? this.variablesWA.controls.map(c => (c.value ?? '').trim())
       : null;
 
     const req: CommunicationRequest = {
       editionId:          this.edition.id,
-      filtreStatut:       val.filtreStatut || null,
+      filtreStatut:       ciblePartenaires ? null : (val.filtreStatut || null),
+      ciblePartenaires,
       canalSms:           val.canalSms,
       canalEmail:         val.canalEmail,
       canalWhatsapp:      val.canalWhatsapp,
