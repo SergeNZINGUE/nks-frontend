@@ -64,12 +64,14 @@ export function normaliserTelephone(telephone: string): string {
 /** Structure réelle de CommunicationRequest (bf.laterrasse.nks.dto.admin.CommunicationRequest) */
 export interface CommunicationRequest {
   editionId: string;
-  filtreStatut: string | null; // StatutProfilCandidat | null = tous
+  filtreStatut: string | null;
   canalSms: boolean;
   canalEmail: boolean;
   canalWhatsapp: boolean;
-  message: string;         // max 160 chars pour SMS
+  message: string;
   sujetEmail: string | null;
+  templateWhatsapp: string | null;       // clé Meta (ex: "karaoke_info") — null si canalWhatsapp=false
+  variablesWhatsapp: string[] | null;    // variables du template dans l'ordre — null pour karaoke_accepted
 }
 
 @Injectable({ providedIn: 'root' })
