@@ -5,7 +5,7 @@ import { Subscription, switchMap, catchError, of, finalize } from 'rxjs';
 
 import { AdminService } from '@core/services/admin.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { Phase, StatutPhase, NomPhase, Edition, StatutEdition } from '@core/models';
+import { Phase, StatutPhase, NomPhase, Edition, StatutEdition, TitreImpose, StatutChoixTitreCandidat } from '@core/models';
 
 const NOMS_PHASE: { val: NomPhase; label: string }[] = [
   { val: 'PRESELECTION',  label: 'Présélection' },
@@ -196,6 +196,9 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                   Public <strong>{{ p.poidsPublicSurPlace }}%</strong>
                 </span>
               </div>
+              @if (p.dateLimiteChoixTitres) {
+                <div class="field-hint">Date limite choix des titres : {{ p.dateLimiteChoixTitres | date:'dd/MM/yy HH:mm' }} (informative)</div>
+              }
             }
 
             @if (editionEnCoursId === p.id) {
@@ -228,6 +231,13 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                   @if (formEdition!.hasError('ponderationInvalide')) {
                     <div class="field-error">Les 3 pondérations doivent totaliser exactement 100%.</div>
                   }
+                  <div class="form__row">
+                    <div class="field">
+                      <label [for]="'dateLimiteTitresEdit' + p.id">Date limite choix des titres (informative)</label>
+                      <input [id]="'dateLimiteTitresEdit' + p.id" type="datetime-local" formControlName="dateLimiteChoixTitres" />
+                    </div>
+                  </div>
+                  <p class="field-hint">Jamais bloquante — sert uniquement à repérer les retardataires dans le suivi des choix.</p>
                 }
                 <div class="form__actions">
                   <button type="submit" class="btn btn--sm btn--primary" [disabled]="formEdition!.invalid || editionSauvegardeEnCours">
@@ -278,8 +288,107 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
                     {{ clotureEnCours === p.id ? '…' : 'Clôturer' }}
                   </button>
                 }
+                @if (p.nom !== 'PRESELECTION') {
+                  <button type="button" class="btn btn--sm" (click)="toggleTitresPanel(p)">
+                    {{ titresPanelOuvert === p.id ? 'Fermer les titres' : 'Titres imposés' }}
+                  </button>
+                  <button type="button" class="btn btn--sm" (click)="toggleStatutPanel(p)">
+                    {{ statutPanelOuvert === p.id ? 'Fermer le suivi' : 'Suivi des choix' }}
+                  </button>
+                }
               </div>
             </div>
+
+            @if (titresPanelOuvert === p.id) {
+              <div class="titres-panel">
+                <h3 class="card__title card__title--sm">Titres imposés — {{ labelPhase(p.nom) }}</h3>
+
+                @if (formNouveauTitre) {
+                  <form [formGroup]="formNouveauTitre" (ngSubmit)="ajouterTitre(p)" class="form form--inline">
+                    <div class="form__row">
+                      <div class="field">
+                        <label [for]="'nouveauTitre' + p.id">Titre</label>
+                        <input [id]="'nouveauTitre' + p.id" type="text" formControlName="titre" placeholder="Ex. : Ne me quitte pas" />
+                      </div>
+                      <div class="field field--sm">
+                        <label [for]="'nouveauTitreOrdre' + p.id">Ordre</label>
+                        <input [id]="'nouveauTitreOrdre' + p.id" type="number" formControlName="ordre" />
+                      </div>
+                    </div>
+                    <div class="form__actions">
+                      <button type="submit" class="btn btn--sm btn--primary" [disabled]="formNouveauTitre.invalid || ajoutTitreEnCours">
+                        {{ ajoutTitreEnCours ? '…' : '+ Ajouter' }}
+                      </button>
+                    </div>
+                  </form>
+                }
+
+                @if (erreurTitres) {
+                  <div class="field-error" role="alert">{{ erreurTitres }}</div>
+                }
+
+                @if (chargementTitres === p.id) {
+                  <p class="field-hint">Chargement…</p>
+                } @else if ((titresParPhase[p.id] ?? []).length === 0) {
+                  <p class="field-hint">Aucun titre imposé publié pour cette phase.</p>
+                } @else {
+                  <ul class="titres-liste">
+                    @for (t of titresParPhase[p.id]; track t.id) {
+                      <li>
+                        <span class="titres-liste__ordre">{{ t.ordre }}</span>
+                        <span class="titres-liste__titre">{{ t.titre }}</span>
+                        <button type="button" class="btn btn--sm btn--err" [disabled]="suppressionTitreEnCours === t.id" (click)="titreASupprimer = { phaseId: p.id, titre: t }">
+                          {{ suppressionTitreEnCours === t.id ? '…' : 'Supprimer' }}
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+
+            @if (statutPanelOuvert === p.id) {
+              <div class="titres-panel">
+                <h3 class="card__title card__title--sm">Suivi des choix de titre — {{ labelPhase(p.nom) }}</h3>
+
+                @if (chargementStatut === p.id) {
+                  <p class="field-hint">Chargement…</p>
+                } @else if ((statutParPhase[p.id] ?? []).length === 0) {
+                  <p class="field-hint">Aucun candidat affecté à une soirée de cette phase pour l'instant.</p>
+                } @else {
+                  <table class="titres-suivi">
+                    <thead>
+                      <tr>
+                        <th>Candidat</th>
+                        <th>Manche</th>
+                        <th>Titre imposé</th>
+                        <th>Titre personnel</th>
+                        <th>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (s of statutParPhase[p.id]; track s.candidatId + s.soireeId) {
+                        <tr [class.titres-suivi__retard]="s.enRetard">
+                          <td>{{ s.nomComplet }} ({{ s.codeCandidat }})</td>
+                          <td>{{ s.soireeNom }}</td>
+                          <td>{{ s.titreImpose ?? '—' }}</td>
+                          <td>{{ s.titrePersonnel ?? '—' }}</td>
+                          <td>
+                            @if (s.choisi) {
+                              <span class="badge badge--EN_COURS">Choisi</span>
+                            } @else if (s.enRetard) {
+                              <span class="badge badge--err">En retard</span>
+                            } @else {
+                              <span class="badge">En attente</span>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            }
           </div>
         </div>
       }
@@ -307,6 +416,18 @@ function ponderationValide(groupe: AbstractControl): ValidationErrors | null {
       [erreur]="erreurAction"
       (confirmed)="cloturer(p)"
       (cancelled)="phaseACloturer = null; erreurAction = null" />
+  }
+
+  @if (titreASupprimer; as ts) {
+    <app-confirm-dialog
+      titre="Supprimer le titre imposé"
+      [message]="'Supprimer « ' + ts.titre.titre + ' » de la liste ? Les choix déjà faits par des candidats sur ce titre resteront enregistrés.'"
+      libelleConfirmer="Supprimer"
+      [danger]="true"
+      [enCours]="suppressionTitreEnCours === ts.titre.id"
+      [erreur]="erreurTitres"
+      (confirmed)="supprimerTitre(ts.phaseId, ts.titre)"
+      (cancelled)="titreASupprimer = null; erreurTitres = null" />
   }
 </div>
 `,
@@ -345,6 +466,20 @@ export class PhasesComponent implements OnInit, OnDestroy {
   editionEnCoursId: string | null = null;
   formEdition: ReturnType<typeof this.creerFormPonderation> | null = null;
   editionSauvegardeEnCours = false;
+
+  // ── Titres imposés (§ échange du 13/09/2026) ────────────────────────────
+  titresPanelOuvert: string | null = null;
+  titresParPhase: Record<string, TitreImpose[]> = {};
+  chargementTitres: string | null = null;
+  erreurTitres: string | null = null;
+  formNouveauTitre: ReturnType<typeof this.creerFormNouveauTitre> | null = null;
+  ajoutTitreEnCours = false;
+  titreASupprimer: { phaseId: string; titre: TitreImpose } | null = null;
+  suppressionTitreEnCours: string | null = null;
+
+  statutPanelOuvert: string | null = null;
+  statutParPhase: Record<string, StatutChoixTitreCandidat[]> = {};
+  chargementStatut: string | null = null;
 
   private sub = new Subscription();
 
@@ -402,9 +537,19 @@ export class PhasesComponent implements OnInit, OnDestroy {
         poidsVotesEnLigne: [valeurs?.poidsVotesEnLigne ?? 40, [Validators.required, Validators.min(0), Validators.max(100)]],
         poidsPublicSurPlace: [valeurs?.poidsPublicSurPlace ?? 20, [Validators.required, Validators.min(0), Validators.max(100)]],
         poidsJury: [valeurs?.poidsJury ?? 40, [Validators.required, Validators.min(0), Validators.max(100)]],
+        // Purement informatif (jamais bloquant) : date limite pour que chaque candidat choisisse
+        // son titre imposé avant sa manche — cf. Phase.dateLimiteChoixTitres.
+        dateLimiteChoixTitres: [versDatetimeLocal(valeurs?.dateLimiteChoixTitres ?? undefined)],
       },
       { validators: ponderationValide }
     );
+  }
+
+  private creerFormNouveauTitre() {
+    return this.fb.nonNullable.group({
+      titre: ['', [Validators.required, Validators.minLength(1)]],
+      ordre: [0],
+    });
   }
 
   private creerFormCreation() {
@@ -493,6 +638,7 @@ export class PhasesComponent implements OnInit, OnDestroy {
       pointsMaxPublic: p.pointsMaxPublic,
       pointsMaxJury: p.pointsMaxJury,
       juryObligatoire: p.juryObligatoire ?? true,
+      dateLimiteChoixTitres: v.dateLimiteChoixTitres ? versInstant(v.dateLimiteChoixTitres) : null,
     };
     this.sub.add(
       this.adminSvc.mettreAJourPhase(p.id, payload).pipe(
@@ -574,6 +720,96 @@ export class PhasesComponent implements OnInit, OnDestroy {
         const idx = this.phases.findIndex(x => x.id === p.id);
         if (idx !== -1) this.phases[idx] = updated;
         this.phaseAActiver = null;
+      })
+    );
+  }
+
+  // ── Titres imposés ───────────────────────────────────────────────────────
+  toggleTitresPanel(p: Phase): void {
+    if (this.titresPanelOuvert === p.id) {
+      this.titresPanelOuvert = null;
+      this.formNouveauTitre = null;
+      return;
+    }
+    this.titresPanelOuvert = p.id;
+    this.statutPanelOuvert = null;
+    this.formNouveauTitre = this.creerFormNouveauTitre();
+    this.chargerTitres(p.id);
+  }
+
+  private chargerTitres(phaseId: string): void {
+    this.chargementTitres = phaseId;
+    this.erreurTitres = null;
+    this.sub.add(
+      this.adminSvc.titresImposes(phaseId).pipe(
+        catchError(() => of(null)),
+        finalize(() => { this.chargementTitres = null; })
+      ).subscribe(titres => {
+        if (titres === null) { this.erreurTitres = 'Échec du chargement des titres imposés.'; return; }
+        this.titresParPhase = { ...this.titresParPhase, [phaseId]: titres };
+      })
+    );
+  }
+
+  ajouterTitre(p: Phase): void {
+    if (!this.formNouveauTitre || this.formNouveauTitre.invalid) {
+      this.formNouveauTitre?.markAllAsTouched();
+      return;
+    }
+    const v = this.formNouveauTitre.getRawValue();
+    this.ajoutTitreEnCours = true;
+    this.erreurTitres = null;
+    this.sub.add(
+      this.adminSvc.creerTitreImpose(p.id, v.titre.trim(), v.ordre ?? 0).pipe(
+        catchError(() => of(null)),
+        finalize(() => { this.ajoutTitreEnCours = false; })
+      ).subscribe(nouveau => {
+        if (!nouveau) { this.erreurTitres = "Échec de l'ajout du titre."; return; }
+        const existants = this.titresParPhase[p.id] ?? [];
+        this.titresParPhase = { ...this.titresParPhase, [p.id]: [...existants, nouveau].sort((a, b) => a.ordre - b.ordre) };
+        this.formNouveauTitre = this.creerFormNouveauTitre();
+      })
+    );
+  }
+
+  supprimerTitre(phaseId: string, titre: TitreImpose): void {
+    this.suppressionTitreEnCours = titre.id;
+    this.sub.add(
+      this.adminSvc.supprimerTitreImpose(titre.id).pipe(
+        catchError(() => of('erreur' as const)),
+        finalize(() => { this.suppressionTitreEnCours = null; })
+      ).subscribe(res => {
+        if (res === 'erreur') { this.erreurTitres = 'Échec de la suppression du titre.'; return; }
+        this.titresParPhase = {
+          ...this.titresParPhase,
+          [phaseId]: (this.titresParPhase[phaseId] ?? []).filter(t => t.id !== titre.id),
+        };
+        this.titreASupprimer = null;
+      })
+    );
+  }
+
+  // ── Rapport « qui n'a pas choisi » ───────────────────────────────────────
+  toggleStatutPanel(p: Phase): void {
+    if (this.statutPanelOuvert === p.id) {
+      this.statutPanelOuvert = null;
+      return;
+    }
+    this.statutPanelOuvert = p.id;
+    this.titresPanelOuvert = null;
+    this.chargerStatut(p.id);
+  }
+
+  private chargerStatut(phaseId: string): void {
+    this.chargementStatut = phaseId;
+    this.sub.add(
+      this.adminSvc.statutChoixTitres(phaseId).pipe(
+        catchError(() => of(null)),
+        finalize(() => { this.chargementStatut = null; })
+      ).subscribe(statuts => {
+        if (statuts !== null) {
+          this.statutParPhase = { ...this.statutParPhase, [phaseId]: statuts };
+        }
       })
     );
   }

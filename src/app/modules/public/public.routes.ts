@@ -30,6 +30,14 @@ export const publicRoutes: Routes = [
       import('./confidentialite/confidentialite.component').then(c => c.ConfidentialiteComponent),
   },
   {
+    // Vote sur place — public, aucune authentification (accès par connaissance du qrUuid du
+    // billet, mêmes conventions que le reste du parcours billetterie). Le client y arrive via
+    // le lien envoyé automatiquement par WhatsApp après validation de sa consommation par une hôtesse.
+    path: 'vote-sur-place/:soireeId/:qrUuid',
+    loadComponent: () =>
+      import('./vote-sur-place/vote-sur-place.component').then(c => c.VoteSurPlaceComponent),
+  },
+  {
     // return_url / cancel_url LigdiCash — cf. PaiementRetourComponent. Générique
     // aux 3 flux payants (inscription/vote/billet) : identifie le paiement via
     // ?paiementId=, jamais via un contexte candidat/phase supposé.

@@ -84,6 +84,11 @@
               } @else {
                 <div class="qr-img qr-img--loading" aria-hidden="true"></div>
               }
+              <!-- Une fois une consommation validée par une hôtesse, ce même billet donne droit
+                   à un vote sur place — cf. écran hôtesse (rôle HOTESSE). -->
+              <a [routerLink]="['/vote-sur-place', r.soireeId, r.qrUuid]" class="btn btn--ghost btn--full" style="margin-top: 10px;">
+                Voter sur place (après une consommation validée)
+              </a>
             </div>
           }
           <!-- Attente confirmation -->

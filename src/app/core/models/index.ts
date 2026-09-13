@@ -6,6 +6,9 @@ export interface LoginResponse {
   refreshToken: string;
   expiresIn: number;
   roles: string[];
+  /** true si le candidat n'a pas encore accepté le Recueil de consentement — à rediriger
+   *  systématiquement vers /mon-espace/consentement avant toute autre page. */
+  consentementRequis: boolean;
 }
 
 export interface CandidatPublicResponse {
@@ -171,6 +174,52 @@ export interface Phase {
   pointsMaxPublic: number;
   pointsMaxJury: number;
   juryObligatoire?: boolean;
+  /**
+   * Date limite (purement informative, jamais bloquante) pour que chaque candidat choisisse
+   * son titre imposé + déclare son titre personnel avant sa manche — cf. Phase.dateLimiteChoixTitres
+   * (backend) et ChoixTitreService (§ échange du 13/09/2026). `null`/absent = pas de délai affiché.
+   */
+  dateLimiteChoixTitres?: string | null;
+}
+
+/** TitreImposeResponse (bf.laterrasse.nks.dto.titre) — une ligne de la liste imposée par le CO pour une phase. */
+export interface TitreImpose {
+  id: string;
+  titre: string;
+  ordre: number;
+}
+
+/** ChoixTitreResponse — choix déjà fait par le candidat connecté pour sa soirée à venir. */
+export interface ChoixTitre {
+  titreImposeId: string;
+  titreImpose: string;
+  titrePersonnel: string;
+  dateChoix: string;
+}
+
+/** MonChoixTitreResponse — GET /candidats/mon-choix-titre. */
+export interface MonChoixTitre {
+  soireeId: string | null;
+  soireeNom: string | null;
+  soireeDateHeure: string | null;
+  phaseNom: string | null;
+  dateLimiteChoixTitres: string | null;
+  titresDisponibles: TitreImpose[];
+  choixActuel: ChoixTitre | null;
+}
+
+/** StatutChoixTitreCandidatResponse — une ligne du rapport admin GET /admin/phases/{phaseId}/choix-titres. */
+export interface StatutChoixTitreCandidat {
+  candidatId: string;
+  codeCandidat: string;
+  nomComplet: string;
+  soireeId: string;
+  soireeNom: string;
+  choisi: boolean;
+  titreImpose: string | null;
+  titrePersonnel: string | null;
+  dateChoix: string | null;
+  enRetard: boolean;
 }
 
 /** Poule — bf.laterrasse.nks.dto.poule.PouleResponse. Listable via GET /poules/phase/{phaseId}. */
@@ -300,6 +349,7 @@ export interface ReservationResponse {
 
 export interface Reservation {
   id: string;
+  soireeId: string;
   nomReservant: string;
   telephoneReservant: string;
   nbPlaces: number;
@@ -313,6 +363,33 @@ export interface ScanResponse {
   nomSpectateur: string | null;
   nbPlaces: number | null;
   timestampPremierScan: string | null;
+}
+
+/** Candidat éligible au vote sur place — dto/candidat/CandidatPublicResponse.java */
+export interface CandidatVoteSurPlace {
+  id: string;
+  codeCandidat: string;
+  prenom: string;
+  nom: string;
+  biographie: string | null;
+  chansonPreselection: string | null;
+  statutProfil: string;
+}
+
+/**
+ * dto/votesurplace/DroitVoteResponse.java — GET/POST /vote-sur-place et POST /caisse/consommations.
+ * `candidats` n'est renseigné que si statut === 'DISPONIBLE' (choix du vote encore possible).
+ */
+export interface DroitVoteResponse {
+  droitId: string;
+  statut: 'DISPONIBLE' | 'UTILISE';
+  nomSpectateur: string;
+  dateEmission: string;
+  /** true si le lien de vote a bien été transmis par WhatsApp au numéro du billet. */
+  lienWhatsappEnvoye: boolean;
+  candidatVoteId: string | null;
+  dateVote: string | null;
+  candidats: CandidatVoteSurPlace[];
 }
 
 export interface DashboardResponse {

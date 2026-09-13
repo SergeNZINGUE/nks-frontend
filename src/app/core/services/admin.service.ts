@@ -9,9 +9,11 @@ import {
   Phase,
   Edition,
   Page,
+  TitreImpose,
+  StatutChoixTitreCandidat,
 } from '@core/models';
 
-export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL' | 'ORGANISATEUR';
+export type RoleAdmin = 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL' | 'ORGANISATEUR' | 'HOTESSE';
 
 export interface CreerUtilisateurAdminRequest {
   prenom: string;
@@ -253,5 +255,31 @@ export class AdminService {
       params: { phaseId },
       responseType: 'blob',
     });
+  }
+
+  /**
+   * Titres imposés par le CO, publiés par phase (§ échange du 13/09/2026).
+   * GET /admin/phases/{phaseId}/titres-imposes — ouvert à ORGANISATEUR.
+   */
+  titresImposes(phaseId: string): Observable<TitreImpose[]> {
+    return this.http.get<TitreImpose[]>(`${this.api}/admin/phases/${phaseId}/titres-imposes`);
+  }
+
+  /** POST /admin/titres-imposes — { phaseId, titre, ordre? } */
+  creerTitreImpose(phaseId: string, titre: string, ordre?: number): Observable<TitreImpose> {
+    return this.http.post<TitreImpose>(`${this.api}/admin/titres-imposes`, { phaseId, titre, ordre: ordre ?? null });
+  }
+
+  /** DELETE /admin/titres-imposes/{id} */
+  supprimerTitreImpose(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/titres-imposes/${id}`);
+  }
+
+  /**
+   * Rapport « qui n'a pas encore choisi son titre » — GET /admin/phases/{phaseId}/choix-titres.
+   * `enRetard` calculé côté backend par rapport à Phase.dateLimiteChoixTitres (jamais bloquant).
+   */
+  statutChoixTitres(phaseId: string): Observable<StatutChoixTitreCandidat[]> {
+    return this.http.get<StatutChoixTitreCandidat[]>(`${this.api}/admin/phases/${phaseId}/choix-titres`);
   }
 }

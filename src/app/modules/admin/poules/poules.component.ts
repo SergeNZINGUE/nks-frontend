@@ -5,7 +5,8 @@ import { Subscription, switchMap, catchError, of, finalize, forkJoin, map } from
 import { AdminService } from '@core/services/admin.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { PouleDuoService } from '@core/services/poule-duo.service';
-import { Phase, Edition, CandidatPublicResponse, PouleResponse, AffectationPouleResponse, DuoResponse } from '@core/models';
+import { SoireeService } from '@core/services/soiree.service';
+import { Phase, Edition, CandidatPublicResponse, PouleResponse, AffectationPouleResponse, DuoResponse, SoireeEvent } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 
 const LABEL_PHASE: Record<string, string> = {
@@ -101,6 +102,15 @@ interface PouleSession extends PouleResponse {
                       <label for="nomPoule">Nom de la poule</label>
                       <input id="nomPoule" type="text" formControlName="nom" placeholder="Poule A" maxlength="50" autofocus />
                     </div>
+                    <div class="field">
+                      <label for="soireePoule">Soirée <small>(optionnel — nécessaire pour que les jurés voient les candidats de cette poule)</small></label>
+                      <select id="soireePoule" formControlName="soireeId">
+                        <option value="">— aucune —</option>
+                        @for (s of soireesDisponibles; track s.id) {
+                          <option [value]="s.id">{{ s.nom }}</option>
+                        }
+                      </select>
+                    </div>
                     @if (erreurPoule) {
                       <div class="field-error" role="alert">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -127,9 +137,15 @@ interface PouleSession extends PouleResponse {
                   <div class="phase-card__header">
                     <div>
                       <div class="phase-card__nom">{{ poule.nom }}</div>
-                      <div class="phase-card__dates">{{ poule.candidats.length }} candidat(s) affecté(s)</div>
+                      <div class="phase-card__dates">
+                        {{ poule.candidats.length }} candidat(s) affecté(s)
+                        · Soirée : {{ nomSoiree(poule.soireeId) }}
+                        @if (!poule.soireeId) {
+                          <strong style="color: var(--color-err, #c0392b);"> — les jurés ne verront pas ces candidats</strong>
+                        }
+                      </div>
                     </div>
-                    <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirRenommage(poule)">✏ Renommer</button>
+                    <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirRenommage(poule)">✏ Modifier</button>
                   </div>
                   <div class="phase-card__body">
                     @if (poule.candidats.length > 0) {
@@ -197,11 +213,20 @@ interface PouleSession extends PouleResponse {
             <div class="modal-bg" (click)="annulerRenommage()">
               <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-rename"
                 (click)="$event.stopPropagation()" style="max-width:400px">
-                <h2 id="titre-rename">Renommer « {{ pouleARenommer.nom }} »</h2>
+                <h2 id="titre-rename">Modifier « {{ pouleARenommer.nom }} »</h2>
                 <div class="field">
-                  <label for="nvNom">Nouveau nom</label>
+                  <label for="nvNom">Nom</label>
                   <input id="nvNom" type="text" [formControl]="formRenommage" maxlength="50"
                     placeholder="Poule A" (keydown.enter)="confirmerRenommage()" />
+                </div>
+                <div class="field">
+                  <label for="nvSoiree">Soirée <small>(optionnel)</small></label>
+                  <select id="nvSoiree" [value]="soireeSelectionneeRenommage" (change)="soireeSelectionneeRenommage = $any($event.target).value">
+                    <option value="">— aucune —</option>
+                    @for (s of soireesDisponibles; track s.id) {
+                      <option [value]="s.id">{{ s.nom }}</option>
+                    }
+                  </select>
                 </div>
                 @if (erreurRenommage) { <div class="field-error" role="alert">{{ erreurRenommage }}</div> }
                 <div class="modal__actions">
@@ -305,6 +330,15 @@ interface PouleSession extends PouleResponse {
                   <label for="chansonCommune">Chanson commune (optionnel)</label>
                   <input id="chansonCommune" type="text" formControlName="chansonCommune" maxlength="255" />
                 </div>
+                <div class="field">
+                  <label for="soireeDuo">Soirée <small>(optionnel — nécessaire pour que les jurés voient ce duo)</small></label>
+                  <select id="soireeDuo" formControlName="soireeId">
+                    <option value="">— aucune —</option>
+                    @for (s of soireesDisponibles; track s.id) {
+                      <option [value]="s.id">{{ s.nom }}</option>
+                    }
+                  </select>
+                </div>
                 @if (erreurDuo) {
                   <div class="field-error" role="alert">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -334,6 +368,12 @@ interface PouleSession extends PouleResponse {
                           {{ d.chansonCommune }}
                         </div>
                       }
+                      <div class="phase-card__dates">
+                        Soirée : {{ nomSoiree(d.soireeId) }}
+                        @if (!d.soireeId) {
+                          <strong style="color: var(--color-err, #c0392b);"> — les jurés ne verront pas ce duo</strong>
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -353,12 +393,15 @@ export class PoulesComponent implements OnInit, OnDestroy {
   private adminSvc = inject(AdminService);
   private candidatSvc = inject(CandidatService);
   private pouleDuoSvc = inject(PouleDuoService);
+  private soireeSvc = inject(SoireeService);
   private fb = inject(FormBuilder);
 
   isLoading = true;
   erreurChargement: string | null = null;
   edition: Edition | null = null;
   phasesEligibles: Phase[] = [];
+  /** Soirées de l'édition en cours, pour rattacher une poule/un duo à l'une d'elles. */
+  soireesDisponibles: SoireeEvent[] = [];
 
   phaseSelectionneeId = '';
   chargementCandidats = false;
@@ -368,7 +411,10 @@ export class PoulesComponent implements OnInit, OnDestroy {
   duos: DuoResponse[] = [];
 
   modalCreationOuverte = false;
-  formPoule = this.fb.nonNullable.group({ nom: ['', [Validators.required, Validators.maxLength(50)]] });
+  formPoule = this.fb.nonNullable.group({
+    nom: ['', [Validators.required, Validators.maxLength(50)]],
+    soireeId: [''],
+  });
   erreurPoule: string | null = null;
   creationPouleEnCours = false;
 
@@ -386,12 +432,14 @@ export class PoulesComponent implements OnInit, OnDestroy {
     candidat1Id: ['', Validators.required],
     candidat2Id: ['', Validators.required],
     chansonCommune: [''],
+    soireeId: [''],
   });
   erreurDuo: string | null = null;
   creationDuoEnCours = false;
 
   pouleARenommer: PouleSession | null = null;
   formRenommage = new FormControl('', [Validators.required, Validators.maxLength(50)]);
+  soireeSelectionneeRenommage = '';
   erreurRenommage: string | null = null;
   renommageEnCours = false;
 
@@ -417,15 +465,17 @@ export class PoulesComponent implements OnInit, OnDestroy {
           const active = editions.find(e => e.statut === 'EN_COURS') ?? editions[0] ?? null;
           if (!active) return of(null);
           this.edition = active;
-          return this.adminSvc.phases(active.id);
+          return forkJoin([this.adminSvc.phases(active.id), this.soireeSvc.lister(active.id).pipe(catchError(() => of([] as SoireeEvent[])))]);
         }),
         catchError(() => of(null)),
-      ).subscribe(phases => {
+      ).subscribe(res => {
         this.isLoading = false;
-        if (phases === null) {
+        if (res === null) {
           this.erreurChargement = 'Erreur de chargement (backend hors ligne ou aucune édition ?)';
           return;
         }
+        const [phases, soirees] = res;
+        this.soireesDisponibles = soirees;
         this.phasesEligibles = phases.filter(p => p.nom !== 'PRESELECTION');
         if (this.phasesEligibles.length > 0) {
           this.selectionnerPhase(this.phasesEligibles[0].id);
@@ -499,7 +549,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
 
   // ── Poules (mode individuel) ────────────────────────────────────────────
   ouvrirModalCreation(): void {
-    this.formPoule.reset({ nom: '' });
+    this.formPoule.reset({ nom: '', soireeId: '' });
     this.erreurPoule = null;
     this.modalCreationOuverte = true;
   }
@@ -508,19 +558,25 @@ export class PoulesComponent implements OnInit, OnDestroy {
     this.modalCreationOuverte = false;
   }
 
+  /** Nom de la soirée affectée à une poule/un duo, pour affichage — '—' si aucune. */
+  nomSoiree(soireeId: string | null): string {
+    if (!soireeId) return '—';
+    return this.soireesDisponibles.find(s => s.id === soireeId)?.nom ?? '—';
+  }
+
   creerPoule(): void {
     if (this.formPoule.invalid || !this.phaseSelectionnee) { this.formPoule.markAllAsTouched(); return; }
     this.erreurPoule = null;
     this.creationPouleEnCours = true;
-    const nom = this.formPoule.getRawValue().nom;
+    const { nom, soireeId } = this.formPoule.getRawValue();
     this.sub.add(
-      this.pouleDuoSvc.creerPoule(this.phaseSelectionnee.id, nom).pipe(
+      this.pouleDuoSvc.creerPoule(this.phaseSelectionnee.id, nom, soireeId || undefined).pipe(
         catchError(err => { this.erreurPoule = messageErreur(err, 'Échec de la création de la poule.'); return of(null); }),
         finalize(() => { this.creationPouleEnCours = false; })
       ).subscribe(poule => {
         if (!poule) return;
         this.poulesSession = [...this.poulesSession, { ...poule, candidats: [] }];
-        this.formPoule.reset({ nom: '' });
+        this.formPoule.reset({ nom: '', soireeId: '' });
         this.modalCreationOuverte = false;
       })
     );
@@ -672,6 +728,7 @@ export class PoulesComponent implements OnInit, OnDestroy {
   ouvrirRenommage(poule: PouleSession): void {
     this.pouleARenommer = poule;
     this.formRenommage.setValue(poule.nom);
+    this.soireeSelectionneeRenommage = poule.soireeId ?? '';
     this.erreurRenommage = null;
   }
 
@@ -686,14 +743,15 @@ export class PoulesComponent implements OnInit, OnDestroy {
     this.renommageEnCours = true;
     const poule = this.pouleARenommer;
     const nom = this.formRenommage.value!;
+    const soireeId = this.soireeSelectionneeRenommage || null;
     this.sub.add(
-      this.pouleDuoSvc.mettreAJourPoule(poule.id, nom).pipe(
-        catchError(err => { this.erreurRenommage = messageErreur(err, 'Échec du renommage.'); return of(null); }),
+      this.pouleDuoSvc.mettreAJourPoule(poule.id, nom, soireeId).pipe(
+        catchError(err => { this.erreurRenommage = messageErreur(err, 'Échec de la mise à jour.'); return of(null); }),
         finalize(() => { this.renommageEnCours = false; })
       ).subscribe(res => {
         if (!res) return;
         this.poulesSession = this.poulesSession.map(p =>
-          p.id === poule.id ? { ...p, nom: res.nom } : p);
+          p.id === poule.id ? { ...p, nom: res.nom, soireeId: res.soireeId } : p);
         this.annulerRenommage();
       })
     );
@@ -754,13 +812,13 @@ export class PoulesComponent implements OnInit, OnDestroy {
     this.erreurDuo = null;
     this.creationDuoEnCours = true;
     this.sub.add(
-      this.pouleDuoSvc.creerDuo(this.phaseSelectionnee.id, v.candidat1Id, v.candidat2Id, v.chansonCommune || undefined).pipe(
+      this.pouleDuoSvc.creerDuo(this.phaseSelectionnee.id, v.candidat1Id, v.candidat2Id, v.chansonCommune || undefined, v.soireeId || undefined).pipe(
         catchError(err => { this.erreurDuo = messageErreur(err, 'Échec de la création du duo.'); return of(null); }),
         finalize(() => { this.creationDuoEnCours = false; })
       ).subscribe(duo => {
         if (!duo) return;
         this.duos = [...this.duos, duo];
-        this.formDuo.reset({ candidat1Id: '', candidat2Id: '', chansonCommune: '' });
+        this.formDuo.reset({ candidat1Id: '', candidat2Id: '', chansonCommune: '', soireeId: '' });
       })
     );
   }

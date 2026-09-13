@@ -40,6 +40,70 @@ export interface NoteJuryBrut {
   dateSaisie:  string;
 }
 
+/** dto/admin/NoteDetailResponse.java — une note pour un critère précis. */
+export interface NoteDetailResponse {
+  critereId: string;
+  critereNom: string;
+  valeur: number;
+}
+
+/** dto/admin/NoteParJuryResponse.java — notes d'un juré pour un candidat, cette soirée. */
+export interface NoteParJuryResponse {
+  juryId: string;
+  juryNomComplet: string;
+  details: NoteDetailResponse[];
+  totalJury: number;
+}
+
+/** dto/admin/CritereGrilleResponse.java — en-tête de colonne (critère actif de l'édition). */
+export interface CritereGrilleResponse {
+  id: string;
+  nom: string;
+  noteMax: number;
+  ordre: number;
+}
+
+/**
+ * dto/admin/LigneDeliberationResponse.java — une ligne (un candidat) de la grille.
+ * ⚠️ votesPayants/votesLikes/votesCommentaires/pointsVotesEnLigne/votesPublicSurPlace/
+ * pointsPublicSurPlace sont scopés à la PHASE entière (pas à cette seule soirée) — le modèle
+ * de données ne rattache aucun vote à une soirée précise. Seules les notesParJury sont
+ * spécifiques à cette soirée.
+ */
+export interface LigneDeliberationResponse {
+  candidatId: string;
+  codeCandidat: string;
+  prenom: string;
+  nom: string;
+  notesParJury: NoteParJuryResponse[];
+  totalJuryMoyen: number;
+  pointsJury: number;
+  votesPayants: number;
+  votesLikes: number;
+  votesCommentaires: number;
+  pointsVotesEnLigne: number;
+  votesPublicSurPlace: number;
+  pointsPublicSurPlace: number;
+  totalGeneral: number;
+}
+
+/**
+ * dto/admin/GrilleDeliberationResponse.java — GET /soirees/{id}/grille-deliberation.
+ * Vote public sur place : spécifique à cette soirée. Votes en ligne (payants/sociaux) :
+ * cumulatifs sur toute la phase. notationCloturee reflète le verrouillage des notes jury
+ * (JuryService.cloturerSoiree) — pas un statut séparé stocké ailleurs.
+ */
+export interface GrilleDeliberationResponse {
+  soireeId: string;
+  soireeNom: string;
+  soireeDateHeure: string;
+  phaseId: string;
+  phaseNom: string;
+  notationCloturee: boolean;
+  criteres: CritereGrilleResponse[];
+  candidats: LigneDeliberationResponse[];
+}
+
 /**
  * Candidat retourné par GET /jury/candidats?soireeId= — `CandidatPublicResponse` (DTO record,
  * même convention que `@core/models`). `prenom`/`nom` sont à plat, plus d'objet `utilisateur` imbriqué.
@@ -78,6 +142,13 @@ export interface JuryBrut {
   statut: 'ACTIF' | 'INACTIF';
   editionId: string;
   utilisateurId: string;
+  /** Soirées actuellement affectées à ce juré (ajouté avec PUT /admin/jury/{id}/soirees). */
+  soireeIds: string[];
+}
+
+/** Corps de PUT /admin/jury/{id}/soirees (AffecterSoireesJuryRequest.java) — remplace intégralement la sélection. */
+export interface AffecterSoireesJuryRequest {
+  soireeIds: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -158,6 +229,16 @@ export class JuryService {
   }
 
   /**
+   * PUT /admin/jury/{id}/soirees — AdminController.affecterSoireesJury() — ADMIN/SUPER_ADMIN.
+   * Remplace intégralement l'ensemble des soirées affectées à ce juré (pas d'ajout
+   * incrémental). C'est cette affectation qui détermine ce que le juré voit ensuite via
+   * GET /jury/soirees et GET /jury/candidats.
+   */
+  affecterSoirees(juryId: string, req: AffecterSoireesJuryRequest): Observable<JuryBrut> {
+    return this.http.put<JuryBrut>(`${this.base}/admin/jury/${juryId}/soirees`, req);
+  }
+
+  /**
    * PUT /soirees/{id}/cloturer-notation — JuryController.cloturerNotation() — ADMIN/SUPER_ADMIN.
    * Ferme définitivement la fenêtre de notation jury de la soirée (verrouille les notes déjà
    * saisies). Action irréversible côté métier — confirmation obligatoire côté UI avant appel.
@@ -165,5 +246,14 @@ export class JuryService {
    */
   cloturerNotationSoiree(soireeId: string): Observable<void> {
     return this.http.put<void>(`${this.base}/soirees/${soireeId}/cloturer-notation`, {});
+  }
+
+  /**
+   * GET /soirees/{id}/grille-deliberation — JuryController.grilleDeliberation() — ADMIN/SUPER_ADMIN.
+   * Récap complet pour la délibération finale : notes jury détaillées (cette soirée) + votes en
+   * ligne et public sur place (toute la phase). Calculé à la volée, aucune persistance.
+   */
+  grilleDeliberation(soireeId: string): Observable<GrilleDeliberationResponse> {
+    return this.http.get<GrilleDeliberationResponse>(`${this.base}/soirees/${soireeId}/grille-deliberation`);
   }
 }

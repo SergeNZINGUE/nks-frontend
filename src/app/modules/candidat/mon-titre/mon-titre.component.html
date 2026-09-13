@@ -1,0 +1,83 @@
+<div class="mon-titre-page">
+
+  <h1>Mon titre pour la prochaine manche</h1>
+
+  @if (isLoading) {
+    <p class="hint">Chargement…</p>
+  }
+
+  @if (!isLoading && erreur) {
+    <div class="toast toast--error">{{ erreur }}</div>
+  }
+
+  @if (!isLoading && !erreur && donnees) {
+
+    @if (!donnees.soireeId) {
+      <div class="empty-state">
+        Tu n'as pas de manche à venir pour l'instant — reviens ici dès que tu seras affecté(e)
+        à une soirée.
+      </div>
+    } @else {
+
+      <div class="manche-info">
+        <span class="badge">{{ donnees.phaseNom }}</span>
+        <strong>{{ donnees.soireeNom }}</strong>
+        @if (donnees.soireeDateHeure) {
+          <span class="manche-info__date">{{ donnees.soireeDateHeure | date:'dd/MM/yy HH:mm' }}</span>
+        }
+      </div>
+
+      @if (donnees.dateLimiteChoixTitres) {
+        <p class="hint">
+          Date limite indicative pour choisir : {{ donnees.dateLimiteChoixTitres | date:'dd/MM/yy HH:mm' }}
+          (informative, ne bloque pas ta participation).
+        </p>
+      }
+
+      @if (donnees.titresDisponibles.length === 0) {
+        <div class="empty-state">
+          Le comité d'organisation n'a pas encore publié de liste de titres imposés pour cette
+          phase — reviens plus tard.
+        </div>
+      } @else {
+
+        @if (dejaChoisi) {
+          <div class="toast toast--success">
+            Choix déjà enregistré — tu peux le modifier ci-dessous tant que ta manche n'a pas eu lieu.
+          </div>
+        }
+
+        @if (erreurSauvegarde) {
+          <div class="toast toast--error">{{ erreurSauvegarde }}</div>
+        }
+
+        @if (succes) {
+          <div class="toast toast--success">Ton choix a bien été enregistré.</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="enregistrer()" class="form">
+          <div class="field">
+            <label for="titreImposeId">Titre imposé (choisis dans la liste du CO)</label>
+            <select id="titreImposeId" formControlName="titreImposeId">
+              <option value="" disabled>— Choisir un titre —</option>
+              @for (t of donnees.titresDisponibles; track t.id) {
+                <option [value]="t.id">{{ t.titre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="titrePersonnel">Ton titre personnel</label>
+            <input id="titrePersonnel" type="text" formControlName="titrePersonnel" placeholder="Le titre que tu interpréteras librement" />
+          </div>
+
+          <button type="submit" class="btn btn--primary" [disabled]="form.invalid || isSaving">
+            {{ isSaving ? 'Enregistrement…' : (dejaChoisi ? 'Modifier mon choix' : 'Valider mon choix') }}
+          </button>
+        </form>
+      }
+    }
+  }
+
+  <a routerLink="/mon-espace/dashboard" class="retour">← Retour au tableau de bord</a>
+</div>

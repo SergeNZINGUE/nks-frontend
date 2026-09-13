@@ -66,6 +66,21 @@ Dashboard — Espace Candidat NKS
         <span>Candidature rejetée — <em>{{ candidature.motifRejet ?? 'aucun motif précisé' }}</em></span>
       </div>
     }
+    <!-- Rappel non bloquant : titre imposé + titre personnel à choisir avant la prochaine manche -->
+    @if (afficherRappelTitre) {
+      <div class="alert alert--warning alert--cta">
+        <div class="alert__corps">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span>
+            Choisis ton titre imposé et déclare ton titre personnel avant ta prochaine manche
+            ({{ monTitre?.soireeNom }}).
+          </span>
+        </div>
+        <a routerLink="/mon-espace/mon-titre" class="btn btn--primary btn--full">
+          Choisir mon titre
+        </a>
+      </div>
+    }
     <!-- Ma poule / mon duo -->
     @if (chargementAffectations) {
       <div class="skeleton-grid" style="padding: 0 16px;">

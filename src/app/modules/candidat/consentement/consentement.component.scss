@@ -1,0 +1,46 @@
+@use 'tokens' as t;
+$bg: t.$nks-bg-primary; $border: t.$nks-border;
+$text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
+
+.consentement-page { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+.consentement__brouillon {
+  background: rgba(t.$nks-warning, 0.12); border: 1px solid rgba(t.$nks-warning, 0.3);
+  color: t.$nks-warning; border-radius: t.$radius-md; padding: 10px 14px; font-size: 13px;
+  margin-bottom: 20px;
+}
+
+h1 { font-family: t.$font-title; color: $gold; font-size: 22px; margin-bottom: 8px; }
+
+.consentement__intro { color: $muted; font-size: 14px; margin-bottom: 20px;
+  a { color: $gold; }
+}
+
+.toast--error {
+  background: rgba(t.$nks-error, 0.12); border: 1px solid rgba(t.$nks-error, 0.3);
+  color: t.$nks-error; border-radius: t.$radius-md; padding: 10px 14px; font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.consentement__form { display: flex; flex-direction: column; gap: 14px; }
+
+.consentement__item {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid $border; border-radius: t.$radius-md;
+  padding: 14px 16px; cursor: pointer; color: $text; font-size: 14px; line-height: 1.5;
+
+  input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; width: 18px; height: 18px; accent-color: $gold; }
+
+  &--optionnel { opacity: 0.85; }
+}
+
+.consentement__hint { font-size: 12px; color: t.$nks-error; text-align: center; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 20px; border-radius: t.$radius-md; font-size: 15px; font-weight: 700;
+  cursor: pointer; border: 1px solid transparent; transition: opacity 0.2s;
+  &--primary { background: $gold; color: t.$nks-bg-primary; &:hover { opacity: 0.85; } }
+  &--full { width: 100%; }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+}

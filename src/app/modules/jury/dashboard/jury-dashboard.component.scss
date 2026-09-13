@@ -109,6 +109,14 @@
     margin-bottom: $sp-3;
   }
 
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+    margin-bottom: $sp-3;
+    flex-wrap: wrap;
+  }
+
   &__stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

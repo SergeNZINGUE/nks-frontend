@@ -9,6 +9,7 @@ import {
   ReservationResponse,
   Reservation,
   ScanResponse,
+  DroitVoteResponse,
   Page,
 } from '@core/models';
 
@@ -86,6 +87,46 @@ export class BilletterieService {
    */
   compteurEntrees(soireeId: string): Observable<Record<string, number | undefined>> {
     return this.http.get<Record<string, number | undefined>>(`${this.base}/scan/soiree/${soireeId}/compteur`);
+  }
+
+  /**
+   * POST /caisse/consommations — CaisseController.validerConsommation() — rôle HOTESSE requis.
+   * Scanne le billet (si pas déjà fait) et crée le droit de vote sur place pour ce billet en
+   * une seule action, suite à une consommation réelle payée. 409 si un droit existe déjà pour
+   * ce billet (1 billet + 1 consommation validée = au plus 1 vote sur place, à chaque service).
+   */
+  validerConsommation(qrUuid: string, soireeId: string): Observable<DroitVoteResponse> {
+    return this.http.post<DroitVoteResponse>(`${this.base}/caisse/consommations`, { qrUuid, soireeId });
+  }
+
+  /**
+   * GET /vote-sur-place/{soireeId}/{qrUuid} — VoteSurPlaceController.consulter() — public.
+   * Retourne le statut du droit de vote (DISPONIBLE/UTILISE) et, si DISPONIBLE, la liste des
+   * candidats de cette soirée.
+   */
+  consulterDroitVote(soireeId: string, qrUuid: string): Observable<DroitVoteResponse> {
+    return this.http.get<DroitVoteResponse>(`${this.base}/vote-sur-place/${soireeId}/${qrUuid}`);
+  }
+
+  /**
+   * POST /vote-sur-place/{soireeId}/{qrUuid}/voter — VoteSurPlaceController.voter() — public.
+   * Vote définitif et unique pour ce billet sur cette soirée (verrou pessimiste côté backend).
+   * `telephoneVotant`/`position*` sont facultatifs et purement déclaratifs — jamais requis ni
+   * vérifiés côté backend, conservés uniquement pour audit a posteriori (cf. VoterSurPlaceRequest.java).
+   */
+  voterSurPlace(soireeId: string, qrUuid: string, candidatId: string, audit?: {
+    telephoneVotant?: string;
+    positionLatitude?: number;
+    positionLongitude?: number;
+    positionPrecisionM?: number;
+  }): Observable<DroitVoteResponse> {
+    return this.http.post<DroitVoteResponse>(`${this.base}/vote-sur-place/${soireeId}/${qrUuid}/voter`, {
+      candidatId,
+      telephoneVotant: audit?.telephoneVotant || null,
+      positionLatitude: audit?.positionLatitude ?? null,
+      positionLongitude: audit?.positionLongitude ?? null,
+      positionPrecisionM: audit?.positionPrecisionM ?? null,
+    });
   }
 
   /**

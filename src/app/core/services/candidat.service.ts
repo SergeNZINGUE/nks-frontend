@@ -7,6 +7,8 @@ import {
   Page,
   ResultatPhase,
   StatutProfilCandidat,
+  MonChoixTitre,
+  ChoixTitre,
 } from '@core/models';
 
 @Injectable({ providedIn: 'root' })
@@ -67,6 +69,32 @@ export class CandidatService {
   /** PUT /candidats/{id} — ADMIN/SUPER_ADMIN — mise à jour biographie + chansonPreselection. */
   mettreAJourAdmin(id: string, biographie: string | null, chansonPreselection: string | null): Observable<CandidatPublicResponse> {
     return this.http.put<CandidatPublicResponse>(`${this.base}/${id}`, { biographie, chansonPreselection });
+  }
+
+  /**
+   * POST /candidats/mon-consentement — CANDIDAT seulement.
+   * Acceptation explicite du Recueil de consentement — cf. consentGuard côté frontend et
+   * AuthService.calculerConsentementRequis côté backend.
+   */
+  accepterConsentement(): Observable<void> {
+    return this.http.post<void>(`${this.base}/mon-consentement`, {});
+  }
+
+  /**
+   * GET /candidats/mon-choix-titre — CANDIDAT seulement. Soirée résolue automatiquement
+   * côté serveur (la plus proche, non terminée/annulée, parmi celles où le candidat est
+   * affecté). `soireeId: null` si aucune soirée à venir.
+   */
+  monChoixTitre(): Observable<MonChoixTitre> {
+    return this.http.get<MonChoixTitre>(`${this.base}/mon-choix-titre`);
+  }
+
+  /**
+   * POST /candidats/mon-choix-titre — CANDIDAT seulement. La soirée n'est jamais envoyée
+   * par le client : résolue côté serveur (cf. ChoixTitreService.resoudreSoireeActuelle).
+   */
+  choisirTitre(titreImposeId: string, titrePersonnel: string): Observable<ChoixTitre> {
+    return this.http.post<ChoixTitre>(`${this.base}/mon-choix-titre`, { titreImposeId, titrePersonnel });
   }
 
   /** Initiales pour placeholder photo (GAP-01) */

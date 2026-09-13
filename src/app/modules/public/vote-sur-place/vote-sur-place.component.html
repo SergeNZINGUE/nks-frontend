@@ -1,0 +1,77 @@
+<div class="vsp-page">
+
+  <div class="vsp-header">
+    <h1>Vote sur place</h1>
+  </div>
+
+  @if (isLoading) {
+    <div class="vsp-state">Chargement…</div>
+  }
+
+  @if (!isLoading && erreur && !droit) {
+    <div class="vsp-state vsp-state--error">
+      <p>{{ erreur }}</p>
+    </div>
+  }
+
+  @if (!isLoading && droit) {
+
+    @if (voteConfirme) {
+      <div class="vsp-confirmation">
+        <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        <p>Ton vote a bien été enregistré. Merci !</p>
+        <p class="vsp-hint">Un seul vote possible par billet pour cette soirée.</p>
+      </div>
+    }
+
+    @if (!voteConfirme) {
+      <p class="vsp-instructions">Bonjour {{ droit.nomSpectateur }}, choisis le candidat pour lequel tu souhaites voter :</p>
+
+      @if (erreur) {
+        <div class="vsp-toast">{{ erreur }}</div>
+      }
+
+      @if (droit.candidats.length === 0) {
+        <div class="vsp-state">Aucun candidat disponible pour cette soirée.</div>
+      }
+
+      <div class="vsp-form-group">
+        <label for="telephoneVotant">Ton numéro de téléphone (facultatif)</label>
+        <input
+          id="telephoneVotant"
+          type="tel"
+          inputmode="numeric"
+          [(ngModel)]="telephoneVotant"
+          placeholder="Ex : 70000000"
+          />
+        <span class="vsp-form-hint">Juste pour nos archives — ton vote n'en dépend pas.</span>
+      </div>
+
+      <div class="vsp-candidats">
+        @for (c of droit.candidats; track c.id) {
+          <button
+            type="button"
+            class="vsp-candidat"
+            [class.vsp-candidat--selected]="candidatChoisi === c.id"
+            (click)="choisir(c.id)">
+            <span class="vsp-candidat__nom">{{ nomCandidat(c) }}</span>
+            <span class="vsp-candidat__code">{{ c.codeCandidat }}</span>
+          </button>
+        }
+      </div>
+
+      @if (droit.candidats.length > 0) {
+        <button
+          type="button"
+          class="btn btn--primary btn--full"
+          [disabled]="!candidatChoisi || isVoting"
+          (click)="confirmer()">
+          @if (!isVoting) { <span>Confirmer mon vote</span> }
+          @if (isVoting) { <span>⏳ Envoi…</span> }
+        </button>
+      }
+    }
+
+  }
+
+</div>

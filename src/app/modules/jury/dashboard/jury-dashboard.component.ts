@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Subscription, forkJoin, catchError, of } from 'rxjs';
+import { Subscription, forkJoin, catchError, of, finalize } from 'rxjs';
 
-import { JuryService, CandidatBrut, NoteJuryBrut } from '@core/services/jury.service';
+import { JuryService, CandidatBrut, NoteJuryBrut, GrilleDeliberationResponse } from '@core/services/jury.service';
 import { SoireeEvent } from '@core/models';
 import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.component';
+import { GrilleDeliberationComponent } from '@shared/components/grille-deliberation/grille-deliberation.component';
+import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-jury-dashboard',
-  imports: [DatePipe, RouterModule, KpiCardComponent],
+  imports: [DatePipe, RouterModule, KpiCardComponent, GrilleDeliberationComponent],
   template: `
 <div class="jury-page">
 
@@ -74,6 +76,15 @@ import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.compon
         <div class="phase-banner__label">Soirée sélectionnée</div>
         <div class="phase-banner__nom">{{ soireeSelectionnee.nom }}</div>
         <div class="phase-banner__sub">{{ soireeSelectionnee.dateHeure | date:'EEEE d MMMM yyyy, HH:mm' }} — {{ soireeSelectionnee.lieu }}</div>
+        <div class="phase-banner__actions">
+          <button type="button" class="btn btn--ghost" [disabled]="chargementGrille" (click)="ouvrirGrilleDeliberation()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
+            {{ chargementGrille ? 'Chargement…' : 'Grille de délibération' }}
+          </button>
+          @if (erreurGrille) {
+            <span class="field-hint" role="alert">{{ erreurGrille }}</span>
+          }
+        </div>
         <div class="phase-banner__stats">
           <app-kpi-card label="Candidats" [value]="candidats.length" variant="gold">
             <svg icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -150,6 +161,10 @@ import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.compon
     }
   }
 
+  @if (grille) {
+    <app-grille-deliberation [grille]="grille" (fermer)="grille = null" />
+  }
+
 </div>
 `,
   styleUrls: ['./jury-dashboard.component.scss'],
@@ -167,6 +182,10 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
   candidats: CandidatBrut[] = [];
   /** Map<candidatId, NoteJuryBrut[]> — notes déjà saisies par ce juré pour la soirée */
   private notesMap = new Map<string, NoteJuryBrut[]>();
+
+  grille: GrilleDeliberationResponse | null = null;
+  chargementGrille = false;
+  erreurGrille: string | null = null;
 
   private sub = new Subscription();
 
@@ -244,5 +263,19 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/jury/noter', c.id], {
       queryParams: { soireeId: this.soireeSelectionnee.id },
     });
+  }
+
+  ouvrirGrilleDeliberation(): void {
+    if (!this.soireeSelectionnee) return;
+    this.chargementGrille = true;
+    this.erreurGrille = null;
+    this.sub.add(
+      this.jurySvc.grilleDeliberation(this.soireeSelectionnee.id).pipe(
+        finalize(() => this.chargementGrille = false)
+      ).subscribe({
+        next: (grille) => { this.grille = grille; },
+        error: (err) => { this.erreurGrille = messageErreur(err, 'Impossible de charger la grille de délibération.'); },
+      })
+    );
   }
 }

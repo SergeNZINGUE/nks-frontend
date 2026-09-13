@@ -53,6 +53,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./modules/billetterie/scan/scan.component').then(c => c.ScanComponent),
   },
+  // Hôtesse — scan billet + activation consommation fusionnés en une action (rôle HOTESSE)
+  {
+    path: 'hotesse',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['HOTESSE', 'ADMIN', 'SUPER_ADMIN'] },
+    loadComponent: () =>
+      import('./modules/billetterie/caisse/caisse.component').then(c => c.CaisseComponent),
+  },
   // Accès non autorisé
   { path: 'unauthorized', loadComponent: () => import('./modules/public/home/home.component').then(c => c.HomeComponent) },
   // Fallback

@@ -1,0 +1,93 @@
+<div class="scan-page">
+
+  <app-topbar title="Hôtesse — Activer un vote" backLink="/" backLabel="Retour à l'accueil" [showBackOnDesktop]="true" />
+
+  <div class="scan-container">
+
+    <!-- Résultat -->
+    @if (resultat) {
+      <div class="resultat resultat--success">
+        <div class="resultat__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        </div>
+        <div class="resultat__texte">Droit de vote créé</div>
+        <div class="resultat__detail">
+          <span>Nom</span> <strong>{{ resultat.nomSpectateur }}</strong>
+        </div>
+        <div class="resultat__detail">
+          <span>Lien de vote</span>
+          <strong>{{ resultat.lienWhatsappEnvoye ? '✅ Envoyé par WhatsApp' : '⚠️ Non envoyé' }}</strong>
+        </div>
+        <p class="field-hint">
+          @if (resultat.lienWhatsappEnvoye) {
+            Le client a reçu son lien de vote personnel par WhatsApp — inutile de le lui montrer ou de le lui transmettre toi-même.
+          } @else {
+            L'envoi WhatsApp a échoué (numéro invalide, réseau…) — vérifie le numéro du client ou contacte un administrateur.
+          }
+        </p>
+        <button class="btn btn--ghost btn--full" (click)="nouvelleValidation()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Nouvelle validation
+        </button>
+      </div>
+    }
+
+    <!-- Formulaire -->
+    @if (!resultat) {
+      <div>
+        <div class="scan-instructions">
+          <p>Sélectionne la soirée, puis saisis l'UUID du billet du client — à l'entrée ou à table, à chaque service. Le scan d'entrée se fait automatiquement si ce n'est pas déjà fait.</p>
+        </div>
+        @if (erreur) {
+          <div class="toast toast--error"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> {{ erreur }}</div>
+        }
+        @if (chargementSoirees) {
+          <div class="scan-instructions">Chargement des soirées…</div>
+        }
+        @if (!chargementSoirees && soirees.length === 0) {
+          <div class="toast toast--error">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Aucune soirée planifiée ou en cours.
+          </div>
+        }
+        @if (soirees.length > 0) {
+          <form [formGroup]="form" (ngSubmit)="valider()" class="scan-form">
+            <div class="form-group">
+              <label for="soireeId">Soirée *</label>
+              <select id="soireeId" formControlName="soireeId">
+                @for (s of soirees; track s) {
+                  <option [value]="s.id">{{ s.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qrUuid">UUID du billet *</label>
+              <input
+                id="qrUuid"
+                type="text"
+                formControlName="qrUuid"
+                placeholder="Ex. a3f2e1d0-4b5c-6789-abcd-ef0123456789"
+                autocomplete="off"
+                autofocus
+                />
+              @if (form.get('qrUuid')?.hasError('required') && form.get('qrUuid')?.touched) {
+                <span class="form-error">UUID requis.</span>
+              }
+              @if (form.get('qrUuid')?.hasError('pattern') && form.get('qrUuid')?.touched) {
+                <span class="form-error">Format UUID invalide (8-4-4-4-12 caractères hexadécimaux).</span>
+              }
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" [disabled]="form.invalid || isValidating">
+              @if (!isValidating) {
+                <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg> Valider la consommation</span>
+              }
+              @if (isValidating) {
+                <span>⏳ Validation…</span>
+              }
+            </button>
+          </form>
+        }
+      </div>
+    }
+
+  </div>
+
+</div>

@@ -21,6 +21,7 @@ import {
   ResultatPhase,
   StatutCandidature,
   StatutQualification,
+  MonChoixTitre,
 } from '@core/models';
 import { environment } from '@env/environment';
 
@@ -77,6 +78,17 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   chargementAffectations = false;
   pouleMembresOuverte: MonAffectation | null = null;
 
+  /**
+   * Rappel non bloquant (contrairement au consentement) pour choisir son titre imposé +
+   * déclarer son titre personnel avant la prochaine manche — cf. échange du 13/09/2026.
+   * `null` tant que non chargé ou si l'appel échoue (le bandeau reste alors simplement absent).
+   */
+  monTitre: MonChoixTitre | null = null;
+
+  get afficherRappelTitre(): boolean {
+    return !!this.monTitre?.soireeId && !this.monTitre.choixActuel;
+  }
+
   private sub = new Subscription();
 
   /**
@@ -119,6 +131,11 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
               .subscribe(medias => (this.photoPreview = this.mediaSvc.photoProfilUrl(medias)))
           );
           this.chargerAffectations(res.editionId, profilId);
+          this.sub.add(
+            this.candidatSvc.monChoixTitre()
+              .pipe(catchError(() => of(null)))
+              .subscribe(t => { this.monTitre = t; })
+          );
         }
       })
     );

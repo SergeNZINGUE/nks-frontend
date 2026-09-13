@@ -10,9 +10,10 @@ export interface ChangerMotDePasseRequest {
   nouveauMotDePasse: string;
 }
 
-const TOKEN_KEY   = 'nks_access_token';
-const REFRESH_KEY = 'nks_refresh_token';
-const ROLES_KEY   = 'nks_roles';
+const TOKEN_KEY        = 'nks_access_token';
+const REFRESH_KEY      = 'nks_refresh_token';
+const ROLES_KEY        = 'nks_roles';
+const CONSENTEMENT_KEY = 'nks_consentement_requis';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -72,10 +73,21 @@ export class AuthService {
   isJury(): boolean         { return this.hasRole('JURY'); }
   isAgent(): boolean        { return this.hasRole('AGENT_ACCUEIL'); }
 
+  /** true si le candidat connecté doit être redirigé vers /mon-espace/consentement — cf. consentGuard. */
+  consentementRequis(): boolean {
+    return localStorage.getItem(CONSENTEMENT_KEY) === '1';
+  }
+
+  /** À appeler juste après un POST /candidats/mon-consentement réussi. */
+  marquerConsentementAccepte(): void {
+    localStorage.setItem(CONSENTEMENT_KEY, '0');
+  }
+
   private storeTokens(res: LoginResponse): void {
     localStorage.setItem(TOKEN_KEY, res.accessToken);
     localStorage.setItem(REFRESH_KEY, res.refreshToken);
     localStorage.setItem(ROLES_KEY, JSON.stringify(res.roles));
+    localStorage.setItem(CONSENTEMENT_KEY, res.consentementRequis ? '1' : '0');
     this.roles$.next(res.roles);
   }
 
@@ -83,6 +95,7 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(ROLES_KEY);
+    localStorage.removeItem(CONSENTEMENT_KEY);
     this.roles$.next([]);
   }
 

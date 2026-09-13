@@ -13,9 +13,14 @@ export class PouleDuoService {
   /**
    * POST /poules — body libre (Map<String,Object> côté contrôleur, pas de DTO validé).
    * `nom` est NOT NULL en base (Poule.java) : à fournir obligatoirement.
+   * `soireeId` optionnel : sans lui, la poule n'est rattachée à aucune soirée et les jurés
+   * assignés à cette soirée ne verront jamais les candidats de cette poule
+   * (JuryController.candidatsANoter → affectationPouleRepository.findByPouleSoireeId).
    */
-  creerPoule(phaseId: string, nom: string): Observable<PouleResponse> {
-    return this.http.post<PouleResponse>(`${this.api}/poules`, { phaseId, nom });
+  creerPoule(phaseId: string, nom: string, soireeId?: string): Observable<PouleResponse> {
+    const body: Record<string, unknown> = { phaseId, nom };
+    if (soireeId) body['soireeId'] = soireeId;
+    return this.http.post<PouleResponse>(`${this.api}/poules`, body);
   }
 
   /** GET /poules/phase/{phaseId} — liste toutes les poules d'une phase avec JOIN FETCH (pas de LazyInit). */
@@ -55,9 +60,14 @@ export class PouleDuoService {
     return this.http.get<DuoResponse[]>(`${this.api}/duos/phase/${phaseId}`);
   }
 
-  /** PUT /poules/{id} — renommer une poule. */
-  mettreAJourPoule(id: string, nom: string): Observable<PouleResponse> {
-    return this.http.put<PouleResponse>(`${this.api}/poules/${id}`, { nom });
+  /**
+   * PUT /poules/{id} — renommer une poule et/ou changer sa soirée.
+   * `soireeId` : omis → inchangé ; chaîne vide/null → désaffecte la poule de toute soirée.
+   */
+  mettreAJourPoule(id: string, nom: string, soireeId?: string | null): Observable<PouleResponse> {
+    const body: Record<string, unknown> = { nom };
+    if (soireeId !== undefined) body['soireeId'] = soireeId;
+    return this.http.put<PouleResponse>(`${this.api}/poules/${id}`, body);
   }
 
   /** PUT /affectations/{id} — mettre à jour ordrePassage et/ou chansonImposee. */

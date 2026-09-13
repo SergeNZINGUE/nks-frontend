@@ -21,7 +21,7 @@
  */
 export type Role =
   | 'VISITEUR' | 'CANDIDAT' | 'VOTANT_PUBLIC' | 'JURY'
-  | 'PARTENAIRE' | 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL' | 'ORGANISATEUR';
+  | 'PARTENAIRE' | 'ADMIN' | 'SUPER_ADMIN' | 'AGENT_ACCUEIL' | 'ORGANISATEUR' | 'HOTESSE';
 
 /**
  * Capacités du back-office — une capacité = un groupe d'endpoints protégés par le
@@ -32,14 +32,16 @@ export type Capacite =
   | 'ADMIN_ACCES'              // hasAnyRole('ADMIN','SUPER_ADMIN') — accès général au back-office
   | 'ADMIN_UTILISATEURS_GERER' // hasRole('SUPER_ADMIN') — AdminController POST/GET /utilisateurs
   | 'AGENT_ACCUEIL_SCAN'       // hasAnyRole('AGENT_ACCUEIL','ADMIN','SUPER_ADMIN')
+  | 'HOTESSE_VALIDER'          // hasAnyRole('HOTESSE','ADMIN','SUPER_ADMIN') — CaisseController (scan + activation conso fusionnés)
   | 'JURY_NOTER'               // hasRole('JURY')
   | 'CANDIDAT_ESPACE';         // hasRole('CANDIDAT')
 
-/** Miroir exact des `@PreAuthorize` observés (grep sur src/main/java/.../controller/, 09/09/2026). */
+/** Miroir exact des `@PreAuthorize` observés (grep sur src/main/java/.../controller/, 13/09/2026). */
 const MATRICE: Record<Capacite, Role[]> = {
   ADMIN_ACCES:              ['ADMIN', 'SUPER_ADMIN'],
   ADMIN_UTILISATEURS_GERER: ['SUPER_ADMIN'],
   AGENT_ACCUEIL_SCAN:       ['AGENT_ACCUEIL', 'ADMIN', 'SUPER_ADMIN'],
+  HOTESSE_VALIDER:          ['HOTESSE', 'ADMIN', 'SUPER_ADMIN'],
   JURY_NOTER:               ['JURY'],
   CANDIDAT_ESPACE:          ['CANDIDAT'],
 };
