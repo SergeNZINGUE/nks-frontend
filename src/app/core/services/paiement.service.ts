@@ -12,6 +12,9 @@ import { Page } from '@core/models';
 export interface PaiementBrut {
   id: string;
   utilisateurId: string | null;
+  prenomCandidat: string | null;
+  nomCandidat: string | null;
+  emailCandidat: string | null;
   typePaiement: 'INSCRIPTION' | 'VOTE' | 'BILLET';
   montant: number;
   statut: 'PENDING' | 'COMPLETED' | 'FAILED' | 'EXPIRED' | 'REFUNDED';
@@ -20,6 +23,8 @@ export interface PaiementBrut {
   referenceExterne: string | null;
   manuel: boolean;
 }
+
+export type StatutPaiementFiltre = PaiementBrut['statut'] | 'TOUS';
 
 /**
  * Statut public d'un paiement, résolu SANS authentification via l'identifiant
@@ -55,9 +60,11 @@ export class PaiementService {
     return this.http.get<StatutPaiementPublic>(`${this.base}/${id}/statut-public`);
   }
 
-  /** GET /paiements (Pageable) — ADMIN/SUPER_ADMIN — PaiementController.lister(). */
-  lister(page = 0, size = 20): Observable<Page<PaiementBrut>> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  /** GET /paiements — ADMIN/SUPER_ADMIN. Filtres optionnels : typePaiement, statut. */
+  lister(page = 0, size = 20, typePaiement?: string, statut?: string): Observable<Page<PaiementBrut>> {
+    let params = new HttpParams().set('page', page).set('size', size).set('sort', 'dateCreation,desc');
+    if (typePaiement) params = params.set('typePaiement', typePaiement);
+    if (statut) params = params.set('statut', statut);
     return this.http.get<Page<PaiementBrut>>(this.base, { params });
   }
 
