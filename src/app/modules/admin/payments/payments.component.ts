@@ -1,10 +1,15 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy, ChangeDetectorRef,
+  Component, OnDestroy, OnInit, inject,
+} from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Subscription, catchError, of, finalize } from 'rxjs';
 
 import { PaiementService, PaiementBrut, StatutPaiementFiltre } from '@core/services/paiement.service';
 import { Page } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
+
+type TypeOnglet = 'INSCRIPTION' | 'VOTE' | 'BILLET';
 
 const LABEL_STATUT: Record<string, string> = {
   PENDING:   'En attente',
@@ -22,6 +27,12 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
   { val: 'EXPIRED',   lbl: 'Expirés' },
 ];
 
+const ONGLETS: { val: TypeOnglet; lbl: string; soustitre: string }[] = [
+  { val: 'INSCRIPTION', lbl: 'Frais d\'inscription', soustitre: 'Paiements des frais d\'inscription (LigdiCash et espèces).' },
+  { val: 'VOTE',        lbl: 'Votes payants',         soustitre: 'Achats de votes en ligne via LigdiCash.' },
+  { val: 'BILLET',      lbl: 'Billets',               soustitre: 'Achats de billets pour les soirées.' },
+];
+
 @Component({
   selector: 'app-payments',
   imports: [DatePipe, DecimalPipe],
@@ -31,9 +42,19 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
 
   <div class="page-header">
     <div>
-      <h1 class="page-header__title">Frais d'inscription</h1>
-      <p class="page-header__subtitle">Récapitulatif des paiements de frais d'inscription — LigdiCash et espèces.</p>
+      <h1 class="page-header__title">Paiements</h1>
+      <p class="page-header__subtitle">{{ ongletActif().soustitre }}</p>
     </div>
+  </div>
+
+  <!-- Onglets type de paiement -->
+  <div class="tabs" role="tablist" aria-label="Type de paiement">
+    @for (o of onglets; track o.val) {
+      <button type="button" role="tab" class="tab" [class.tab--active]="typeOnglet === o.val"
+        [attr.aria-selected]="typeOnglet === o.val" (click)="setOnglet(o.val)">
+        {{ o.lbl }}
+      </button>
+    }
   </div>
 
   <!-- Filtres statut -->
@@ -66,17 +87,17 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
   @if (!isLoading && !erreur && page) {
 
     @if (page.totalElements === 0) {
-      <div class="empty-state">Aucun paiement d'inscription trouvé.</div>
+      <div class="empty-state">Aucun paiement trouvé.</div>
     } @else {
 
       <div class="card">
         <p class="card__count">{{ page.totalElements }} paiement{{ page.totalElements > 1 ? 's' : '' }}</p>
 
-        <div role="table" class="table" aria-label="Frais d'inscription">
+        <div role="table" class="table" aria-label="Liste des paiements">
           <div role="rowgroup">
             <div role="row" class="row row--head">
               <span role="columnheader">Date</span>
-              <span role="columnheader">Candidat</span>
+              <span role="columnheader">{{ typeOnglet === 'INSCRIPTION' ? 'Candidat' : 'Payeur' }}</span>
               <span role="columnheader" class="col-right">Montant</span>
               <span role="columnheader">Statut</span>
               <span role="columnheader">Référence</span>
@@ -103,9 +124,7 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
                     <span class="text-muted">—</span>
                   }
                 </span>
-                <span role="cell" class="col-right montant">
-                  {{ p.montant | number:'1.0-0' }} FCFA
-                </span>
+                <span role="cell" class="col-right montant">{{ p.montant | number:'1.0-0' }} FCFA</span>
                 <span role="cell">
                   <span class="badge" [class]="'badge--' + badgeStatut(p.statut)">{{ labelStatut(p.statut) }}</span>
                 </span>
@@ -119,9 +138,13 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
                 </span>
                 <span role="cell" class="row__actions">
                   @if (p.statut === 'PENDING') {
-                    <button type="button" class="btn btn--ok btn--sm" (click)="ouvrirConfirmation(p)">
+                    <button type="button" class="btn btn--sm btn--primary" (click)="ouvrirConfirmation(p)">
                       Confirmer
                     </button>
+                  } @else if (p.statut === 'COMPLETED') {
+                    <span class="action-done">✓ Payé</span>
+                  } @else {
+                    <span class="text-muted">—</span>
                   }
                 </span>
               </div>
@@ -141,24 +164,29 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
   }
 
   <!-- Modale confirmation manuelle -->
-  @if (paiementAConfirmer; as p) {
+  @if (paiementAConfirmer) {
     <div class="modal-bg" (click)="fermerConfirmation()">
-      <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-        <h2>Confirmer le paiement manuellement</h2>
-        @if (p.prenomCandidat || p.nomCandidat) {
-          <p class="modal__candidat">{{ p.prenomCandidat }} {{ p.nomCandidat }}</p>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titre" (click)="$event.stopPropagation()">
+        <h2 id="modal-titre">Confirmer le paiement manuellement</h2>
+        @if (paiementAConfirmer.prenomCandidat || paiementAConfirmer.nomCandidat) {
+          <p class="modal__candidat">{{ paiementAConfirmer.prenomCandidat }} {{ paiementAConfirmer.nomCandidat }}</p>
         }
-        <p>{{ p.montant | number:'1.0-0' }} FCFA</p>
-        <label for="reference">Référence (reçu, numéro de transaction…)</label>
-        <textarea id="reference" class="modal__textarea" maxlength="255" [value]="referenceSaisie"
-          (input)="referenceSaisie = $any($event.target).value" rows="3"></textarea>
+        <p class="modal__montant">{{ paiementAConfirmer.montant | number:'1.0-0' }} FCFA</p>
+        <div class="field">
+          <label for="reference">Référence (reçu, numéro de transaction…)</label>
+          <textarea id="reference" class="field__input" maxlength="255" rows="3"
+            [value]="referenceSaisie"
+            (input)="referenceSaisie = $any($event.target).value"></textarea>
+        </div>
         @if (erreurConfirmation) {
-          <p class="modal__err" role="alert">{{ erreurConfirmation }}</p>
+          <div class="banner banner--err" role="alert" style="margin-top:12px">{{ erreurConfirmation }}</div>
         }
         <div class="modal__actions">
           <button type="button" class="btn btn--ghost" (click)="fermerConfirmation()">Annuler</button>
-          <button type="button" class="btn btn--ok" [disabled]="!referenceSaisie.trim() || confirmationEnCours" (click)="confirmer()">
-            {{ confirmationEnCours ? 'Confirmation…' : 'Confirmer' }}
+          <button type="button" class="btn btn--primary"
+            [disabled]="!referenceSaisie.trim() || confirmationEnCours"
+            (click)="confirmer()">
+            {{ confirmationEnCours ? 'Confirmation…' : 'Confirmer le paiement' }}
           </button>
         </div>
       </div>
@@ -168,6 +196,11 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
 </div>
 `,
   styles: [`
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 0; }
+    .tab { padding: 10px 20px; border: none; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: -2px; transition: color .15s, border-color .15s; }
+    .tab:hover { color: var(--text); }
+    .tab--active { color: var(--primary); border-bottom-color: var(--primary); }
+
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
     .chip { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: background .15s, color .15s; }
     .chip:hover { background: var(--surface-hover, #f1f5f9); }
@@ -176,8 +209,8 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
 
     .card__count { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
 
-    .row { display: grid; grid-template-columns: 120px 1fr 110px 110px 160px 90px 90px; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-    .row--head { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .row { display: grid; grid-template-columns: 120px 1fr 110px 110px 160px 90px 110px; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .row--head { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; background: var(--surface); }
     .row--data { font-size: 14px; }
     .row--data:last-child { border-bottom: none; }
     .row--data:hover { background: var(--surface-hover, #f8f9fa); }
@@ -188,8 +221,9 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
     .candidat-nom { display: block; font-weight: 500; }
     .candidat-email { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .montant { font-weight: 600; font-variant-numeric: tabular-nums; }
-    .reference { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+    .reference { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .text-muted { color: var(--text-muted); }
+    .action-done { font-size: 12px; color: #065f46; font-weight: 500; }
 
     .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .badge--success { background: #d1fae5; color: #065f46; }
@@ -199,20 +233,36 @@ const FILTRES: { val: StatutPaiementFiltre; lbl: string }[] = [
     .badge--info    { background: #dbeafe; color: #1e40af; }
     .badge--ghost   { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
 
+    .btn--primary { background: var(--primary); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn--primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn--sm { padding: 4px 10px; font-size: 12px; }
+
     .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
     .pagination__info { font-size: 13px; color: var(--text-muted); }
 
-    .modal__candidat { font-weight: 600; margin-bottom: 4px; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: var(--surface, #fff); border-radius: 12px; padding: 28px 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .modal h2 { margin: 0 0 12px; font-size: 18px; }
+    .modal__candidat { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+    .modal__montant { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+    .modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+    .field__input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; resize: vertical; box-sizing: border-box; }
+    .field__input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 99,102,241), .15); }
   `],
 })
 export class PaymentsComponent implements OnInit, OnDestroy {
   private paiementSvc = inject(PaiementService);
+  private cdr = inject(ChangeDetectorRef);
 
   isLoading = true;
   erreur: string | null = null;
   page: Page<PaiementBrut> | null = null;
   pageCourante = 0;
   filtre: StatutPaiementFiltre = 'TOUS';
+  typeOnglet: TypeOnglet = 'INSCRIPTION';
 
   paiementAConfirmer: PaiementBrut | null = null;
   referenceSaisie = '';
@@ -220,11 +270,20 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   confirmationEnCours = false;
 
   readonly filtres = FILTRES;
+  readonly onglets = ONGLETS;
 
   private sub = new Subscription();
 
   ngOnInit(): void { this.chargerPage(0); }
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  ongletActif() { return ONGLETS.find(o => o.val === this.typeOnglet)!; }
+
+  setOnglet(type: TypeOnglet): void {
+    this.typeOnglet = type;
+    this.filtre = 'TOUS';
+    this.chargerPage(0);
+  }
 
   setFiltre(f: StatutPaiementFiltre): void {
     this.filtre = f;
@@ -237,9 +296,9 @@ export class PaymentsComponent implements OnInit, OnDestroy {
     this.pageCourante = page;
     const statut = this.filtre === 'TOUS' ? undefined : this.filtre;
     this.sub.add(
-      this.paiementSvc.lister(page, 20, 'INSCRIPTION', statut).pipe(
+      this.paiementSvc.lister(page, 20, this.typeOnglet, statut).pipe(
         catchError(err => { this.erreur = messageErreur(err, 'Erreur de chargement.'); return of(null); }),
-        finalize(() => { this.isLoading = false; })
+        finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
       ).subscribe(res => { if (res) this.page = res; })
     );
   }
@@ -247,16 +306,20 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   labelStatut(s: string): string { return LABEL_STATUT[s] ?? s; }
 
   badgeStatut(s: string): string {
-    return ({ COMPLETED: 'success', PENDING: 'warning', FAILED: 'danger', EXPIRED: 'neutral', REFUNDED: 'info' } as Record<string,string>)[s] ?? 'neutral';
+    return ({ COMPLETED: 'success', PENDING: 'warning', FAILED: 'danger', EXPIRED: 'neutral', REFUNDED: 'info' } as Record<string, string>)[s] ?? 'neutral';
   }
 
   ouvrirConfirmation(p: PaiementBrut): void {
     this.paiementAConfirmer = p;
     this.referenceSaisie = '';
     this.erreurConfirmation = null;
+    this.cdr.markForCheck();
   }
 
-  fermerConfirmation(): void { this.paiementAConfirmer = null; }
+  fermerConfirmation(): void {
+    this.paiementAConfirmer = null;
+    this.cdr.markForCheck();
+  }
 
   confirmer(): void {
     if (!this.paiementAConfirmer || !this.referenceSaisie.trim()) return;
@@ -265,11 +328,17 @@ export class PaymentsComponent implements OnInit, OnDestroy {
     const id = this.paiementAConfirmer.id;
     this.sub.add(
       this.paiementSvc.confirmerManuellement(id, this.referenceSaisie.trim()).pipe(
-        catchError(err => { this.erreurConfirmation = messageErreur(err, 'Échec de la confirmation.'); return of(null); }),
-        finalize(() => { this.confirmationEnCours = false; })
+        catchError(err => {
+          this.erreurConfirmation = messageErreur(err, 'Échec de la confirmation.');
+          return of(null);
+        }),
+        finalize(() => { this.confirmationEnCours = false; this.cdr.markForCheck(); })
       ).subscribe(paiement => {
         if (!paiement || !this.page) return;
-        this.page = { ...this.page, content: this.page.content.map(p => p.id === id ? paiement : p) };
+        this.page = {
+          ...this.page,
+          content: this.page.content.map(p => p.id === id ? paiement : p),
+        };
         this.fermerConfirmation();
       })
     );
