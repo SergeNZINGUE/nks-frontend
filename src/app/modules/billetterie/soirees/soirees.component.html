@@ -49,14 +49,14 @@
             <div class="soiree-card__adresse">{{ s.adresse }}</div>
           }
           <div class="soiree-card__actions">
-            @if (s.statut === 'PLANIFIEE') {
+            @if (s.statut === 'PLANIFIEE' || s.statut === 'EN_COURS') {
               <a
                 [routerLink]="['/billetterie/reserver', s.id]"
                 class="btn btn--primary">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Réserver ma place
               </a>
             }
-            @if (s.statut !== 'PLANIFIEE') {
+            @if (s.statut !== 'PLANIFIEE' && s.statut !== 'EN_COURS') {
               <span class="btn btn--disabled">
                 {{ s.statut === 'TERMINEE' ? 'Soirée terminée' : 'Réservations fermées' }}
               </span>
