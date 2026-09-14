@@ -492,3 +492,9 @@ administrateur → notification → puis paiement depuis l'espace candidat.
     </footer>
   </div>
 }
+
+<!-- Barre basse mobile — commune aux 3 états ci-dessus (succès / fermé / stepper),
+     comme app-site-header en haut de page. Aucune clé "inscription" n'existe dans
+     app-bottom-nav (cf. bottom-nav.component.ts) : 'home' est la plus proche, cette
+     page n'appartenant à aucune des sections existantes (galerie/classement/billetterie/profil). -->
+<app-bottom-nav active="home" />

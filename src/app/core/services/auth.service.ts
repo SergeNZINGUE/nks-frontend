@@ -72,6 +72,7 @@ export class AuthService {
   isCandidat(): boolean     { return this.hasRole('CANDIDAT'); }
   isJury(): boolean         { return this.hasRole('JURY'); }
   isAgent(): boolean        { return this.hasRole('AGENT_ACCUEIL'); }
+  isHotesse(): boolean      { return this.hasRole('HOTESSE'); }
 
   /** true si le candidat connecté doit être redirigé vers /mon-espace/consentement — cf. consentGuard. */
   consentementRequis(): boolean {

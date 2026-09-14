@@ -345,6 +345,32 @@ export interface ReservationResponse {
   urlPaiement: string;
   montantTotal: number;
   statut: string;
+  /**
+   * Jeton d'accès "post-achat" (13/09/2026, fix IDOR billetterie) — scopé à CETTE
+   * réservation précise, `scope=["read"]` uniquement (pas "cancel", pas mes-tickets).
+   * Utilisable immédiatement pour GET /reservations/{id}/ticket sans passer par l'OTP.
+   * ⚠️ Ne JAMAIS mettre dans une URL/query string — header X-Ticket-Access-Token
+   * uniquement, stocké en sessionStorage (jamais localStorage) côté client.
+   */
+  ticketAccessToken: string;
+  /** Durée de vie du ticketAccessToken en secondes (~1500s / 25min). */
+  ticketAccessTokenExpiresIn: number;
+}
+
+/** Réponse générique de POST /reservations/mes-tickets/otp/demander — toujours 200. */
+export interface OtpDemandeResponse {
+  message: string;
+}
+
+/**
+ * Réponse de POST /reservations/mes-tickets/otp/verifier — jeton "phone-wide"
+ * (scope=["read","cancel"]), valable pour toutes les réservations de ce numéro.
+ * ⚠️ Ne JAMAIS mettre dans une URL — header X-Ticket-Access-Token uniquement,
+ * gardé en mémoire composant (pas de sessionStorage/localStorage pour ce jeton-là).
+ */
+export interface OtpVerifierResponse {
+  accessToken: string;
+  expiresInSeconds: number;
 }
 
 export interface Reservation {
@@ -356,6 +382,23 @@ export interface Reservation {
   statut: StatutReservation;
   qrCodeUrl?: string;
   qrUuid?: string;
+}
+
+/**
+ * bf.laterrasse.nks.dto.billetterie.TicketAvecQrResponse — GET /reservations/{id}/ticket?telephone=.
+ * Un élément par billet physique de la réservation (nbPlaces=3 → 3 éléments, 3 qrUuid distincts).
+ * ⚠️ Volontairement distinct de `Reservation.qrUuid` (jamais renseigné par mes-tickets, cf.
+ * commentaire backend sur TicketAvecQrResponse : la recherche par téléphone seul ne doit jamais
+ * exposer de qrUuid).
+ *
+ * `statut` : EXPIRE ajouté côté serveur quand la soirée du billet passe à TERMINEE (clôture
+ * admin) et que le billet n'a jamais été consommé — cf. tickets.component.html pour le rendu.
+ */
+export interface TicketAvecQr {
+  ticketId: string;
+  qrUuid: string;
+  nomSpectateur: string;
+  statut: 'EMIS' | 'UTILISE' | 'EXPIRE' | 'ANNULE';
 }
 
 export interface ScanResponse {

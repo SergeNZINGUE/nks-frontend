@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 import { EditionService } from '@core/services/edition.service';
+import { AuthService } from '@core/services/auth.service';
 
 /**
  * En-tête public — conforme au cadre « DESKTOP HOME HI-FI » du prototype :
@@ -21,6 +22,7 @@ import { EditionService } from '@core/services/edition.service';
 })
 export class SiteHeaderComponent implements OnInit {
   private editionSvc = inject(EditionService);
+  private authSvc = inject(AuthService);
 
   readonly liens = [
     { libelle: 'Accueil',     route: '/',            exact: true  },
@@ -32,6 +34,11 @@ export class SiteHeaderComponent implements OnInit {
 
   /** Faux par défaut : le bouton « S'inscrire » n'apparaît qu'une fois la fenêtre d'inscription confirmée ouverte. */
   inscriptionsOuvertes = false;
+
+  /** Bascule Connexion / Mon espace — même route que la clé 'profil' de app-bottom-nav. */
+  isLoggedIn(): boolean {
+    return this.authSvc.isLoggedIn();
+  }
 
   ngOnInit(): void {
     this.editionSvc.enCours().pipe(

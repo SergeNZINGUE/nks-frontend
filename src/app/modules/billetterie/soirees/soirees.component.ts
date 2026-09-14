@@ -9,10 +9,11 @@ import { SoireeEvent } from '@core/models';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from '@shared/components/site-footer/site-footer.component';
+import { BottomNavComponent } from '@shared/components/bottom-nav/bottom-nav.component';
 
 @Component({
   selector: 'app-soirees',
-  imports: [DatePipe, RouterModule, TopbarComponent, SiteHeaderComponent, SiteFooterComponent],
+  imports: [DatePipe, RouterModule, TopbarComponent, SiteHeaderComponent, SiteFooterComponent, BottomNavComponent],
   templateUrl: './soirees.component.html',
   styleUrls: ['./soirees.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,

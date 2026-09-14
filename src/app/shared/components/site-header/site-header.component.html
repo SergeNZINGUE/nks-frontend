@@ -17,7 +17,11 @@
     </nav>
 
     <div class="site-header__actions">
-      <a routerLink="/login" class="site-header__connexion">Connexion</a>
+      @if (isLoggedIn()) {
+        <a routerLink="/mon-espace" class="site-header__connexion">Mon espace</a>
+      } @else {
+        <a routerLink="/login" class="site-header__connexion">Connexion</a>
+      }
       @if (inscriptionsOuvertes) {
         <a routerLink="/inscription" class="btn btn--primary btn--sm">S'inscrire</a>
       }

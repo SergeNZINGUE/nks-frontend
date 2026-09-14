@@ -152,6 +152,7 @@ export class LoginComponent {
     if (this.auth.isCandidat())     return '/mon-espace';
     if (this.auth.isJury())         return '/jury';
     if (this.auth.isAgent())        return '/scan';
+    if (this.auth.isHotesse())      return '/hotesse';
     return '/';
   }
 }

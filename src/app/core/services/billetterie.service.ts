@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import {
@@ -10,8 +10,17 @@ import {
   Reservation,
   ScanResponse,
   DroitVoteResponse,
+  TicketAvecQr,
+  OtpDemandeResponse,
+  OtpVerifierResponse,
   Page,
 } from '@core/models';
+
+/** En-tête exigé par les endpoints "mes-tickets" gatés (fix IDOR du 13/09/2026) —
+ *  jamais en query string, toujours en header, jamais persisté en localStorage. */
+function headerAccesTicket(token: string): { headers: HttpHeaders } {
+  return { headers: new HttpHeaders({ 'X-Ticket-Access-Token': token }) };
+}
 
 /** Corps de POST /admin/billetterie/tickets-gratuits — Map<String,Object> lu champ par champ côté backend. */
 export interface TicketsGratuitsRequest {
@@ -56,18 +65,58 @@ export class BilletterieService {
   }
 
   /**
+   * POST /reservations/mes-tickets/otp/demander — fix IDOR du 13/09/2026.
+   * Toujours 200 (que le numéro existe ou non) — réponse générique, sauf 429 si rate-limit
+   * atteint (3 demandes/10min par numéro ou 10/10min par IP).
+   */
+  demanderOtp(telephone: string): Observable<OtpDemandeResponse> {
+    return this.http.post<OtpDemandeResponse>(`${this.base}/reservations/mes-tickets/otp/demander`, { telephone });
+  }
+
+  /**
+   * POST /reservations/mes-tickets/otp/verifier — renvoie un jeton "phone-wide"
+   * (scope=["read","cancel"]) valable pour toutes les réservations de ce numéro.
+   * 400 OTP_INVALIDE si code faux/expiré/trop de tentatives/numéro inconnu — traité côté
+   * appelant comme un message d'erreur uniforme.
+   */
+  verifierOtp(telephone: string, code: string): Observable<OtpVerifierResponse> {
+    return this.http.post<OtpVerifierResponse>(`${this.base}/reservations/mes-tickets/otp/verifier`, { telephone, code });
+  }
+
+  /**
    * GET /reservations/mes-tickets?telephone= — BilletterieController.mesTickets()
    * CdC §3.6.2 : accès aux tickets sans création de compte, via le numéro de téléphone.
+   * Fix IDOR du 13/09/2026 : exige désormais le jeton "phone-wide" issu de /otp/verifier,
+   * transmis via le header X-Ticket-Access-Token (jamais en query string).
    */
-  mesTickets(telephone: string): Observable<Reservation[]> {
+  mesTickets(telephone: string, token: string): Observable<Reservation[]> {
     return this.http.get<Reservation[]>(`${this.base}/reservations/mes-tickets`, {
       params: new HttpParams().set('telephone', telephone),
+      ...headerAccesTicket(token),
     });
   }
 
-  /** DELETE /reservations/{id} — annulation (remboursement manuel, décision client) */
-  annuler(reservationId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/reservations/${reservationId}`);
+  /**
+   * GET /reservations/{id}/ticket?telephone= — BilletterieController.ticket()
+   * Renvoie un TicketAvecQrResponse par billet physique de la réservation (nbPlaces=3 → 3
+   * éléments, 3 qrUuid distincts) — vérifié via le même contrôle `telephone` que mesTickets().
+   * C'est le seul endpoint qui expose réellement le qrUuid (mesTickets() ne l'expose jamais).
+   * Accepte SOIT le jeton phone-wide (mes-tickets), SOIT le jeton post-achat scopé à CETTE
+   * réservation (ReservationResponse.ticketAccessToken) — les deux via le même header.
+   */
+  ticketsAvecQr(reservationId: string, telephone: string, token: string): Observable<TicketAvecQr[]> {
+    return this.http.get<TicketAvecQr[]>(`${this.base}/reservations/${reservationId}/ticket`, {
+      params: new HttpParams().set('telephone', telephone),
+      ...headerAccesTicket(token),
+    });
+  }
+
+  /**
+   * DELETE /reservations/{id} — annulation (remboursement manuel, décision client).
+   * Exige le jeton phone-wide (seul jeton dont le scope contient "cancel").
+   */
+  annuler(reservationId: string, token: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/reservations/${reservationId}`, headerAccesTicket(token));
   }
 
   /**

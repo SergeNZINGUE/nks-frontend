@@ -21,6 +21,7 @@ import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from '@shared/components/site-footer/site-footer.component';
 import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
+import { BottomNavComponent } from '@shared/components/bottom-nav/bottom-nav.component';
 import { environment } from '@env/environment';
 
 /** Règles médias — CdC §3.1.1 + arbitrage client (README backend §1) */
@@ -52,7 +53,15 @@ function estUrlCloudinaryValide(url: string | undefined | null): boolean {
 
 @Component({
   selector: 'app-inscription',
-  imports: [ReactiveFormsModule, RouterModule, TopbarComponent, SiteHeaderComponent, SiteFooterComponent, StarMarkComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterModule,
+    TopbarComponent,
+    SiteHeaderComponent,
+    SiteFooterComponent,
+    StarMarkComponent,
+    BottomNavComponent,
+  ],
   templateUrl: './inscription.component.html',
   styleUrls: ['./inscription.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
