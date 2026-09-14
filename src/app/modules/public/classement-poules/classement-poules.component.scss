@@ -166,12 +166,25 @@ $nks-bronze: #CD7F32;
   margin-bottom: $sp-8;
 
   &__header {
+    position: relative;
     display: flex;
     align-items: baseline;
-    gap: $sp-3;
-    padding: $sp-3 $sp-4 $sp-3;
-    border-bottom: 2px solid rgba($nks-gold, 0.25);
+    flex-wrap: wrap;
+    gap: $sp-1 $sp-3;
+    padding: $sp-3 $sp-4 $sp-4;
     margin-bottom: $sp-4;
+
+    // Séparateur en dégradé qui s'estompe sur les bords plutôt qu'un trait plein
+    // uniforme (cf. .login-title__underline dans login.component.scss) — plus
+    // discret que l'ancien `border-bottom: 2px solid`.
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline: $sp-4;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba($nks-gold, 0.35), transparent);
+    }
   }
 
   &__nom {
@@ -181,7 +194,13 @@ $nks-bronze: #CD7F32;
     margin: 0;
   }
 
-  &__count { font-size: 12px; color: $nks-text-secondary; }
+  &__soiree {
+    font-size: 12px;
+    font-weight: 500;
+    color: $nks-text-secondary;
+  }
+
+  &__count { font-size: 12px; color: $nks-text-secondary; margin-left: auto; }
 
   &__vide {
     padding: $sp-4;

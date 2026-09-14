@@ -1,7 +1,9 @@
 <app-site-header />
 
 <div class="page classement-poules">
-  <app-topbar title="Classement par poule" backLink="/classement" backLabel="Classement global" />
+  <app-topbar
+    title="Classement par poule"
+    backLink="/classement" backLabel="Classement global" />
 
   <!-- Bandeau LIVE -->
   @if (!loading) {
@@ -89,6 +91,9 @@
 
         <header class="poule-section__header">
           <h2 class="poule-section__nom">{{ pVue.poule.nom }}</h2>
+          @if (pVue.soiree) {
+            <span class="poule-section__soiree">Soirée du {{ pVue.soiree.dateHeure | date:'d MMMM yyyy, HH:mm':'':'fr' }}</span>
+          }
           <span class="poule-section__count">
             {{ pVue.candidats.length }} candidat{{ pVue.candidats.length > 1 ? 's' : '' }}
           </span>

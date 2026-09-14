@@ -2,13 +2,15 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { forkJoin, interval, of, startWith, Subscription, switchMap, catchError } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { ClassementService } from '@core/services/classement.service';
 import { EditionService } from '@core/services/edition.service';
 import { PouleDuoService } from '@core/services/poule-duo.service';
+import { SoireeService } from '@core/services/soiree.service';
 import { MediaService } from '@core/services/media.service';
 import { CandidatService } from '@core/services/candidat.service';
-import { CandidatPublicResponse, Phase, PouleResponse, ResultatPhase } from '@core/models';
+import { CandidatPublicResponse, Phase, PouleResponse, ResultatPhase, SoireeEvent } from '@core/models';
 import { environment } from '@env/environment';
 
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
@@ -27,6 +29,8 @@ interface CandidatDansPoule {
 interface PouleVue {
   poule: PouleResponse;
   candidats: CandidatDansPoule[];
+  /** Soirée programmée pour cette poule (résolue via poule.soireeId), ou null si pas encore programmée. */
+  soiree: SoireeEvent | null;
 }
 
 @Component({
@@ -43,6 +47,7 @@ interface PouleVue {
     RouterLink,
     DecimalPipe,
     DatePipe,
+    FormsModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
 })
@@ -50,6 +55,7 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
   private classementSvc = inject(ClassementService);
   private editionSvc    = inject(EditionService);
   private pouleSvc      = inject(PouleDuoService);
+  private soireeSvc     = inject(SoireeService);
   private mediaSvc      = inject(MediaService);
   private candidatSvc   = inject(CandidatService);
   private cdr           = inject(ChangeDetectorRef);
@@ -60,6 +66,9 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
   pouleSelectionneeId: string | null = null;
   loading  = true;
   lastUpdate = new Date();
+
+  /** Soirées de l'édition, indexées par id — pour résoudre poule.soireeId → date/heure/lieu. */
+  private soireesParId = new Map<string, SoireeEvent>();
 
   /** Phase avec voteActif=true — pilote l'affichage du CTA "Voter". */
   phaseActiveId: string | null  = null;
@@ -74,9 +83,13 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
       this.editionSvc.enCours().subscribe(edition => {
         if (!edition) { this.loading = false; return; }
 
-        this.editionSvc.phases(edition.id).pipe(catchError(() => of([]))).subscribe(phases => {
-          this.phases       = phases;
+        forkJoin([
+          this.editionSvc.phases(edition.id).pipe(catchError(() => of([] as Phase[]))),
+          this.soireeSvc.lister(edition.id).pipe(catchError(() => of([] as SoireeEvent[]))),
+        ]).subscribe(([phases, soirees]) => {
+          this.phases        = phases;
           this.phaseActiveId = phases.find(p => p.voteActif)?.id ?? null;
+          this.soireesParId  = new Map(soirees.map(s => [s.id, s]));
 
           const defaut = phases.find(p => p.voteActif)
             ?? phases.find(p => p.statut === 'EN_COURS')
@@ -128,7 +141,8 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
             tousCandidats.push(a.candidat);
             return { candidat: a.candidat, resultat: null, rang: 0 };
           });
-          return { poule, candidats };
+          const soiree = poule.soireeId ? (this.soireesParId.get(poule.soireeId) ?? null) : null;
+          return { poule, candidats, soiree };
         });
 
         this.chargerPhotos(tousCandidats);

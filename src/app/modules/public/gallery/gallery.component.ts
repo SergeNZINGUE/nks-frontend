@@ -38,7 +38,6 @@ export class GalleryComponent implements OnInit {
 
   candidats: CandidatPublicResponse[] = [];
   loading = true;
-  loadingMore = false;
   erreur: string | null = null;
   editionId: string | null = null;
   /** null tant qu'aucune phase n'a voteActif=true — masque le CTA "Voter" (même garde que candidate-profile.component). */
@@ -53,10 +52,16 @@ export class GalleryComponent implements OnInit {
   /** Candidat ciblé par la modale de vote — null tant qu'aucune carte n'a déclenché "Voter". */
   candidatVote: CandidatPublicResponse | null = null;
 
-  page = 0;
-  pageSize = 12;
+  /**
+   * Chargement en une seule page : l'édition compte quelques dizaines de candidats
+   * (21 constatés en EN_COURS le 2026-09-14, backend n'impose aucun plafond de `size`
+   * — vérifié via GET /candidats?...&size=500, `numberOfElements` = total réel). Une
+   * valeur haute couvre la totalité sans pagination manuelle ni scroll infini, adapté
+   * tant que le total reste de l'ordre de quelques centaines. À revoir (scroll infini)
+   * si le volume de candidats par édition change d'ordre de grandeur.
+   */
+  pageSize = 500;
   totalElements = 0;
-  hasMore = false;
 
   filtreStatut: StatutProfilCandidat = 'ACTIF';
 
@@ -91,8 +96,6 @@ export class GalleryComponent implements OnInit {
       next: res => {
         this.candidats     = res.content;
         this.totalElements = res.totalElements;
-        this.page          = 0;
-        this.hasMore       = res.totalPages > 1;
         this.loading       = false;
         this.chargerPhotos(this.candidats);
       },
@@ -106,21 +109,6 @@ export class GalleryComponent implements OnInit {
           ? 'Serveur injoignable. Vérifie que l\'API est démarrée.'
           : `Impossible de charger les candidats (erreur ${err?.status ?? 'inconnue'}).`;
       },
-    });
-  }
-
-  chargerPlus(): void {
-    if (!this.editionId || this.loadingMore || !this.hasMore) return;
-    this.loadingMore = true;
-    this.page++;
-    this.candidatSvc.galerie(this.editionId, this.page, this.pageSize, this.filtreStatut).subscribe({
-      next: res => {
-        this.candidats.push(...res.content);
-        this.hasMore     = this.page < res.totalPages - 1;
-        this.loadingMore = false;
-        this.chargerPhotos(res.content);
-      },
-      error: () => { this.loadingMore = false; },
     });
   }
 
