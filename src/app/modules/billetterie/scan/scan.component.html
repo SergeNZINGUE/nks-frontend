@@ -31,7 +31,9 @@
             <span>Places</span> <strong>{{ resultat.nbPlaces }}</strong>
           </div>
         }
-        @if (resultat.timestampPremierScan && resultat.resultat === 'DEJA_UTILISE') {
+        <!-- Repli défensif : n'affiche l'horodatage à part que si le motif backend
+             (qui l'inclut désormais dans son texte) est absent, pour éviter la duplication -->
+        @if (!resultat.motif && resultat.timestampPremierScan && resultat.resultat === 'DEJA_UTILISE') {
           <div class="resultat__detail">
             <span>Premier scan</span> <strong>{{ resultat.timestampPremierScan | date:'dd/MM/yyyy HH:mm' }}</strong>
           </div>

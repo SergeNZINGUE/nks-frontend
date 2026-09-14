@@ -414,6 +414,8 @@ export interface ScanResponse {
   nomSpectateur: string | null;
   nbPlaces: number | null;
   timestampPremierScan: string | null;
+  /** Texte complet prêt à afficher expliquant le résultat — null si resultat === 'VALIDE' */
+  motif: string | null;
 }
 
 /** Candidat éligible au vote sur place — dto/candidat/CandidatPublicResponse.java */

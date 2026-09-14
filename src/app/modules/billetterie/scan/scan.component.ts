@@ -120,11 +120,16 @@ export class ScanComponent implements OnInit, OnDestroy {
   }
 
   get resultatTexte(): string {
+    if (!this.resultat) return '';
+    // Le backend fournit désormais un motif précis et prêt à afficher pour
+    // INVALIDE/DEJA_UTILISE (ex. mauvaise soirée, déjà scanné à telle heure).
+    // On ne garde le libellé générique qu'en repli défensif si motif est absent.
+    if (this.resultat.motif) return this.resultat.motif;
     const map: Record<string, string> = {
       VALIDE:       'Ticket valide — accès autorisé',
       INVALIDE:     'Ticket invalide ou inconnu',
       DEJA_UTILISE: 'Ticket déjà scanné',
     };
-    return this.resultat ? (map[this.resultat.resultat] ?? this.resultat.resultat) : '';
+    return map[this.resultat.resultat] ?? this.resultat.resultat;
   }
 }
