@@ -4,6 +4,31 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .scan-page { min-height: 100dvh; background: $bg; }
 
+// ── Overlay de validation — plein écran, volontairement impossible à manquer même dans
+// l'agitation d'une soirée (retour terrain du 13/09/2026 : le petit texte précédent, sous la
+// caméra, passait inaperçu).
+.scan-loader {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  background: rgba($bg, 0.94);
+
+  &__logo { width: 88px; height: auto; animation: scan-loader-pulse 1.4s ease-in-out infinite; }
+
+  &__spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid rgba($gold, 0.25); border-top-color: $gold;
+    animation: scan-loader-spin 0.8s linear infinite;
+  }
+
+  &__texte { font-family: t.$font-title; color: $gold; font-size: 18px; margin: 0; }
+}
+
+@keyframes scan-loader-spin { to { transform: rotate(360deg); } }
+@keyframes scan-loader-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(0.94); }
+}
+
 .scan-container { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
 
 .scan-instructions { text-align: center; margin-bottom: 24px;
@@ -63,3 +88,33 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 
 .icon { width: 16px; height: 16px; flex-shrink: 0; vertical-align: -3px; }
+
+// ── Bascule scan caméra / saisie manuelle
+.scan-mode-tabs { display: flex; gap: 8px; }
+.scan-mode-tab {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 12px; border-radius: t.$radius-md; font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid $border; color: $muted; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  &--actif { border-color: $gold; color: $gold; background: rgba(t.$nks-gold, 0.08); }
+}
+
+// ── Viewport caméra (html5-qrcode dessine sa vidéo + son cadre de visée dans ce conteneur).
+// Élément toujours présent dans le template (jamais dans un bloc @if qui pourrait le détruire
+// pendant que la librairie le gère encore), donc centré indépendamment de son parent du moment.
+.scan-camera__viewport {
+  width: 100%; max-width: 320px; aspect-ratio: 1 / 1; overflow: hidden;
+  border-radius: t.$radius-lg; border: 2px solid $gold; background: $surface;
+  margin: 0 auto 16px;
+
+  ::ng-deep video { width: 100% !important; height: 100% !important; object-fit: cover; }
+  // html5-qrcode ajoute ses propres boutons/liens (sélecteur de caméra, permission) : on les
+  // garde fonctionnels mais discrets, l'UI NKS (onglets, erreurs) porte déjà l'essentiel.
+  ::ng-deep img, ::ng-deep a { display: none; }
+}
+
+.scan-camera {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+
+  &__statut { color: $muted; font-size: 13px; }
+}

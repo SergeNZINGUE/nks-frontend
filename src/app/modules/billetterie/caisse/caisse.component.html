@@ -1,8 +1,25 @@
 <div class="scan-page">
 
-  <app-topbar title="Hôtesse — Activer un vote" backLink="/" backLabel="Retour à l'accueil" [showBackOnDesktop]="true" />
+  <!-- Overlay plein écran pendant la validation — la soirée est bruyante/agitée, un petit texte
+       discret sous la caméra passe inaperçu (retour terrain du 13/09/2026) : ici impossible à
+       manquer, avec le logo NKS pour que l'hôtesse reconnaisse l'app même en un coup d'œil rapide. -->
+  @if (isValidating) {
+    <div class="scan-loader" role="status" aria-live="polite">
+      <img src="assets/logos/nks.png" alt="" class="scan-loader__logo" />
+      <div class="scan-loader__spinner" aria-hidden="true"></div>
+      <p class="scan-loader__texte">Validation en cours…</p>
+    </div>
+  }
+
+  <app-topbar title="Hôtesse — Activer un vote" [logo]="true" backLink="/" backLabel="Retour à l'accueil" [showBackOnDesktop]="true" />
 
   <div class="scan-container">
+
+    <!-- Toujours présent dans le DOM (html5-qrcode y insère lui-même la vidéo/le canvas) —
+         seule la visibilité change (`hidden`), jamais sa présence : un `@if` qui le détruirait
+         pendant qu'il gère encore la caméra provoque un conflit avec Angular et fige la page. -->
+    <div id="caisse-scanner" class="scan-camera__viewport"
+      [hidden]="modeManuel || !!resultat || !cameraActivee || !soireeActive"></div>
 
     <!-- Résultat -->
     @if (resultat) {
@@ -34,55 +51,85 @@
     <!-- Formulaire -->
     @if (!resultat) {
       <div>
-        <div class="scan-instructions">
-          <p>Sélectionne la soirée, puis saisis l'UUID du billet du client — à l'entrée ou à table, à chaque service. Le scan d'entrée se fait automatiquement si ce n'est pas déjà fait.</p>
-        </div>
-        @if (erreur) {
-          <div class="toast toast--error"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> {{ erreur }}</div>
-        }
         @if (chargementSoirees) {
-          <div class="scan-instructions">Chargement des soirées…</div>
+          <div class="scan-instructions">Chargement…</div>
         }
-        @if (!chargementSoirees && soirees.length === 0) {
+
+        @if (!chargementSoirees && !soireeActive) {
           <div class="toast toast--error">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Aucune soirée planifiée ou en cours.
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Aucune soirée en cours actuellement — le scan sera possible dès que la soirée sera activée par un administrateur.
           </div>
         }
-        @if (soirees.length > 0) {
+
+        @if (soireeActive) {
+          <div class="scan-instructions">
+            <p>Soirée en cours : <strong>{{ soireeActive.nom }}</strong></p>
+            <p>Scanne le QR du billet du client — à l'entrée ou à table, à chaque service. Le scan d'entrée se fait automatiquement si ce n'est pas déjà fait.</p>
+          </div>
+
+          @if (erreur) {
+            <div class="toast toast--error"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> {{ erreur }}</div>
+          }
+
           <form [formGroup]="form" (ngSubmit)="valider()" class="scan-form">
-            <div class="form-group">
-              <label for="soireeId">Soirée *</label>
-              <select id="soireeId" formControlName="soireeId">
-                @for (s of soirees; track s) {
-                  <option [value]="s.id">{{ s.nom }}</option>
+            <div class="scan-mode-tabs" role="tablist">
+              <button type="button" role="tab" [attr.aria-selected]="!modeManuel"
+                class="scan-mode-tab" [class.scan-mode-tab--actif]="!modeManuel"
+                (click)="basculerModeManuel(false)">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+                Scanner
+              </button>
+              <button type="button" role="tab" [attr.aria-selected]="modeManuel"
+                class="scan-mode-tab" [class.scan-mode-tab--actif]="modeManuel"
+                (click)="basculerModeManuel(true)">
+                Saisie manuelle
+              </button>
+            </div>
+
+            @if (!modeManuel) {
+              <div class="scan-camera">
+                @if (!cameraActivee) {
+                  <button type="button" class="btn btn--primary btn--full" (click)="activerCamera()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    Activer la caméra
+                  </button>
+                  <p class="scan-camera__statut">Ton navigateur va te demander l'autorisation d'utiliser la caméra — accepte pour pouvoir scanner.</p>
                 }
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="qrUuid">UUID du billet *</label>
-              <input
-                id="qrUuid"
-                type="text"
-                formControlName="qrUuid"
-                placeholder="Ex. a3f2e1d0-4b5c-6789-abcd-ef0123456789"
-                autocomplete="off"
-                autofocus
-                />
-              @if (form.get('qrUuid')?.hasError('required') && form.get('qrUuid')?.touched) {
-                <span class="form-error">UUID requis.</span>
-              }
-              @if (form.get('qrUuid')?.hasError('pattern') && form.get('qrUuid')?.touched) {
-                <span class="form-error">Format UUID invalide (8-4-4-4-12 caractères hexadécimaux).</span>
-              }
-            </div>
-            <button type="submit" class="btn btn--primary btn--full" [disabled]="form.invalid || isValidating">
-              @if (!isValidating) {
-                <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg> Valider la consommation</span>
-              }
-              @if (isValidating) {
-                <span>⏳ Validation…</span>
-              }
-            </button>
+                @if (erreurCamera) {
+                  <div class="toast toast--error">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    {{ erreurCamera }}
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="form-group">
+                <label for="qrUuid">UUID du billet *</label>
+                <input
+                  id="qrUuid"
+                  type="text"
+                  formControlName="qrUuid"
+                  placeholder="Ex. a3f2e1d0-4b5c-6789-abcd-ef0123456789"
+                  autocomplete="off"
+                  autofocus
+                  />
+                @if (form.get('qrUuid')?.hasError('required') && form.get('qrUuid')?.touched) {
+                  <span class="form-error">UUID requis.</span>
+                }
+                @if (form.get('qrUuid')?.hasError('pattern') && form.get('qrUuid')?.touched) {
+                  <span class="form-error">Format UUID invalide (8-4-4-4-12 caractères hexadécimaux).</span>
+                }
+              </div>
+              <button type="submit" class="btn btn--primary btn--full" [disabled]="form.invalid || isValidating">
+                @if (!isValidating) {
+                  <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg> Valider la consommation</span>
+                }
+                @if (isValidating) {
+                  <span>⏳ Validation…</span>
+                }
+              </button>
+            }
           </form>
         }
       </div>
