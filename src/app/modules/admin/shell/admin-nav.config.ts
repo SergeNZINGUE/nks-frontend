@@ -57,8 +57,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     titre: 'Candidats',
     items: [
-      // ORGANISATEUR exclu : valider/rejeter une candidature reste ADMIN/SUPER_ADMIN.
-      { label: 'Candidatures',  route: '/back-office/candidatures', icon: 'clipboard', statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN'] },
+      { label: 'Candidatures',  route: '/back-office/candidatures', icon: 'clipboard', statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANISATEUR'] },
       // ORGANISATEUR exclu : création d'un membre du jury (AdminController) reste ADMIN/SUPER_ADMIN.
       { label: 'Jury',          route: '/back-office/jury',         icon: 'mic',       statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN'] },
       { label: 'Votes',         route: '/back-office/votes',        icon: 'vote',      statut: 'ready' },

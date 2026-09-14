@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-import { Subscription, filter, startWith } from 'rxjs';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { Subscription, catchError, filter, finalize, of, startWith } from 'rxjs';
 
 import { AuthService } from '@core/services/auth.service';
+import { ModalComponent } from '../shared/ui/modal/modal.component';
+import { messageErreur } from '@core/utils/http-error.util';
 import { ADMIN_NAV, AdminNavItem } from './admin-nav.config';
 
 /** Libellé FR affiché pour le rôle courant — priorité au rôle le plus élevé si plusieurs. */
@@ -26,7 +29,7 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
  */
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterModule, NgTemplateOutlet],
+  imports: [RouterModule, NgTemplateOutlet, ReactiveFormsModule, ModalComponent],
   template: `
 <div class="shell" [class.shell--sidebar-ouverte]="sidebarOuverte" [class.shell--sidebar-repliee]="sidebarRepliee">
 
@@ -80,6 +83,10 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
           <span class="sidebar__account-sub">Espace back-office</span>
         </div>
       </div>
+      <button type="button" class="sidebar__site-link" [title]="sidebarRepliee ? 'Modifier le mot de passe' : ''" (click)="ouvrirModalMdp()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="sidebar__item-label">Modifier le mot de passe</span>
+      </button>
       <a routerLink="/" class="sidebar__site-link" [title]="sidebarRepliee ? 'Voir le site public' : ''">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
         <span class="sidebar__item-label">Voir le site public</span>
@@ -171,6 +178,48 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
     }
   }
 </ng-template>
+
+@if (modalMdpOuvert) {
+  <app-modal titre="Modifier le mot de passe" (fermer)="fermerModalMdp()">
+    @if (erreurMdp) {
+      <div class="toast toast--error" style="margin-bottom:12px;padding:10px 14px;background:#fee2e2;color:#991b1b;border-radius:8px;font-size:13px;">
+        {{ erreurMdp }}
+      </div>
+    }
+    <form [formGroup]="formMdp" (ngSubmit)="changerMotDePasse()" class="mdp-form" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label for="adm-mdp-actuel" style="font-size:13px;font-weight:500;color:var(--text-muted)">Mot de passe actuel</label>
+        <input id="adm-mdp-actuel" type="password" formControlName="motDePasseActuel" autocomplete="current-password"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
+        @if (formMdp.get('motDePasseActuel')?.invalid && formMdp.get('motDePasseActuel')?.touched) {
+          <span style="font-size:12px;color:#dc2626;">Champ requis.</span>
+        }
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label for="adm-mdp-nouveau" style="font-size:13px;font-weight:500;color:var(--text-muted)">Nouveau mot de passe <small>(min. 8 caractères)</small></label>
+        <input id="adm-mdp-nouveau" type="password" formControlName="nouveauMotDePasse" autocomplete="new-password"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
+        @if (formMdp.get('nouveauMotDePasse')?.hasError('minlength') && formMdp.get('nouveauMotDePasse')?.touched) {
+          <span style="font-size:12px;color:#dc2626;">8 caractères minimum.</span>
+        }
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label for="adm-mdp-confirm" style="font-size:13px;font-weight:500;color:var(--text-muted)">Confirmer le nouveau mot de passe</label>
+        <input id="adm-mdp-confirm" type="password" formControlName="confirmation" autocomplete="new-password"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
+        @if (formMdp.hasError('mismatch') && formMdp.get('confirmation')?.touched) {
+          <span style="font-size:12px;color:#dc2626;">Les mots de passe ne correspondent pas.</span>
+        }
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+        <button type="button" class="btn btn--ghost" (click)="fermerModalMdp()">Annuler</button>
+        <button type="submit" class="btn btn--primary" [disabled]="isChangingPassword || formMdp.invalid">
+          {{ isChangingPassword ? 'Modification…' : 'Modifier le mot de passe' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
 `,
   styleUrls: ['./admin-shell.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -178,12 +227,22 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
 export class AdminShellComponent implements OnInit, OnDestroy {
   protected authSvc = inject(AuthService);
   private router = inject(Router);
+  private fb = inject(FormBuilder);
   private sub = new Subscription();
 
   nav = ADMIN_NAV;
   sidebarOuverte = false;
   sidebarRepliee = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1';
   fil: string[] = [];
+
+  modalMdpOuvert = false;
+  isChangingPassword = false;
+  erreurMdp: string | null = null;
+  formMdp: FormGroup = this.fb.group({
+    motDePasseActuel: ['', Validators.required],
+    nouveauMotDePasse: ['', [Validators.required, Validators.minLength(8)]],
+    confirmation: ['', Validators.required],
+  }, { validators: this.mdpIdentiques });
 
   get roleLabel(): string {
     const roles = this.authSvc.roles;
@@ -225,5 +284,39 @@ export class AdminShellComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authSvc.logout();
     this.router.navigate(['/']);
+  }
+
+  private mdpIdentiques(control: AbstractControl): ValidationErrors | null {
+    const n = control.get('nouveauMotDePasse')?.value;
+    const c = control.get('confirmation')?.value;
+    return n && c && n !== c ? { mismatch: true } : null;
+  }
+
+  ouvrirModalMdp(): void {
+    this.formMdp.reset();
+    this.erreurMdp = null;
+    this.modalMdpOuvert = true;
+  }
+
+  fermerModalMdp(): void {
+    this.modalMdpOuvert = false;
+  }
+
+  changerMotDePasse(): void {
+    this.formMdp.markAllAsTouched();
+    if (this.formMdp.invalid || this.isChangingPassword) return;
+    this.erreurMdp = null;
+    this.isChangingPassword = true;
+    const { motDePasseActuel, nouveauMotDePasse } = this.formMdp.value;
+    let echec = false;
+    this.sub.add(
+      this.authSvc.changerMotDePasse({ motDePasseActuel, nouveauMotDePasse }).pipe(
+        catchError(err => { echec = true; this.erreurMdp = messageErreur(err, 'Échec du changement de mot de passe.'); return of(undefined); }),
+        finalize(() => { this.isChangingPassword = false; }),
+      ).subscribe(() => {
+        if (echec) return;
+        this.modalMdpOuvert = false;
+      })
+    );
   }
 }

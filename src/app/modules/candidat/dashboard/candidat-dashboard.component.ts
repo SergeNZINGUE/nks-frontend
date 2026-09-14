@@ -30,11 +30,14 @@ interface MembrePoule {
   codeCandidat: string;
   prenom: string;
   nom: string;
+  ordrePassage: number | null;
 }
 
 interface MonAffectation {
   phaseLabel: string;
   texte: string;
+  ordrePassage?: number | null;
+  chansonImposee?: string | null;
   /** Uniquement pour type 'POULE' — le duo affiche déjà son partenaire dans `texte`. */
   membres?: MembrePoule[];
 }
@@ -251,13 +254,21 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
           map(resultats => resultats.find(r => r.appartient) ?? null),
         );
       }),
-      map(trouve => trouve ? {
-        phaseLabel: this.labelPhase(phase.nom),
-        texte: `Poule ${trouve.nom}`,
-        membres: trouve.candidats
+      map(trouve => {
+        if (!trouve) return null;
+        const monAff = trouve.candidats.find(a => a.candidat.id === profilId);
+        const adversaires = trouve.candidats
           .filter(a => a.candidat.id !== profilId)
-          .map(a => ({ id: a.candidat.id, codeCandidat: a.candidat.codeCandidat, prenom: a.candidat.prenom, nom: a.candidat.nom })),
-      } : null),
+          .sort((a, b) => (a.ordrePassage ?? 999) - (b.ordrePassage ?? 999))
+          .map(a => ({ id: a.candidat.id, codeCandidat: a.candidat.codeCandidat, prenom: a.candidat.prenom, nom: a.candidat.nom, ordrePassage: a.ordrePassage }));
+        return {
+          phaseLabel: this.labelPhase(phase.nom),
+          texte: `Poule ${trouve.nom}`,
+          ordrePassage: monAff?.ordrePassage ?? null,
+          chansonImposee: monAff?.chansonImposee ?? null,
+          membres: adversaires,
+        };
+      }),
       catchError(() => of(null)),
     );
   }

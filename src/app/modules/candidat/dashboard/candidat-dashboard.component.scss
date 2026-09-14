@@ -292,9 +292,29 @@ $gold:    t.$nks-gold;
   box-shadow: t.$shadow-card;
   padding: 14px 16px;
 
-  &__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   &__phase { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: $muted; }
   &__nom { font-size: 15px; font-weight: 700; color: $text; }
+
+  &__passage {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: $gold;
+    font-weight: 600;
+    .icon { width: 13px; height: 13px; }
+  }
+
+  &__chanson {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: $muted;
+    font-style: italic;
+    .icon { width: 13px; height: 13px; flex-shrink: 0; }
+  }
 
   &__btn {
     display: inline-flex;
@@ -344,6 +364,21 @@ $gold:    t.$nks-gold;
   border: 1px solid rgba($gold, 0.3);
   border-radius: t.$radius-full;
   padding: 2px 10px;
+  flex-shrink: 0;
+}
+
+.membres-list__nom {
+  flex: 1;
+  color: $text;
+}
+
+.membres-list__passage {
+  font-size: 12px;
+  color: $muted;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: t.$radius-full;
+  padding: 2px 8px;
   flex-shrink: 0;
 }
 
