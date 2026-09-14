@@ -89,6 +89,32 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
 .icon { width: 16px; height: 16px; flex-shrink: 0; vertical-align: -3px; }
 
+// ── Sélecteur d'action (entrée vs consommation bonus) — visuellement distinct des onglets
+// scan/saisie manuelle ci-dessous : c'est le mode qui détermine QUEL endpoint sera appelé,
+// l'hôtesse doit voir sans ambiguïté lequel est actif (retour terrain : confusion opérationnelle
+// à tout prix éviter entre "j'active un billet" et "je note juste une conso").
+.action-mode {
+  display: flex; gap: 8px; margin-bottom: 8px;
+
+  &__tab {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 10px; border-radius: t.$radius-md; font-size: 13px; font-weight: 700;
+    background: rgba(255,255,255,0.04); border: 2px solid $border; color: $muted; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+
+    &--actif.action-mode__tab--entree { border-color: $gold; color: $gold; background: rgba(t.$nks-gold, 0.1); }
+    &--actif.action-mode__tab--bonus  { border-color: t.$nks-success; color: t.$nks-success; background: rgba(t.$nks-success, 0.1); }
+  }
+
+  &__hint {
+    font-size: 13px; text-align: center; margin: 0 0 16px; padding: 8px 10px;
+    border-radius: t.$radius-md; color: $gold; background: rgba(t.$nks-gold, 0.08);
+    border: 1px solid rgba($gold, 0.3);
+
+    &--bonus { color: t.$nks-success; background: rgba(t.$nks-success, 0.08); border-color: rgba(t.$nks-success, 0.3); }
+  }
+}
+
 // ── Bascule scan caméra / saisie manuelle
 .scan-mode-tabs { display: flex; gap: 8px; }
 .scan-mode-tab {

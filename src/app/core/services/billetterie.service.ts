@@ -10,6 +10,7 @@ import {
   Reservation,
   ScanResponse,
   DroitVoteResponse,
+  ConsommationBonusResponse,
   TicketAvecQr,
   OtpDemandeResponse,
   OtpVerifierResponse,
@@ -146,6 +147,16 @@ export class BilletterieService {
    */
   validerConsommation(qrUuid: string, soireeId: string): Observable<DroitVoteResponse> {
     return this.http.post<DroitVoteResponse>(`${this.base}/caisse/consommations`, { qrUuid, soireeId });
+  }
+
+  /**
+   * POST /caisse/consommations-bonus — CaisseController.ajouterConsommationBonus() — rôle
+   * HOTESSE requis. À utiliser pour chaque consommation réelle SUPPLÉMENTAIRE au bar, une fois
+   * le billet déjà validé à l'entrée (ne scanne pas l'entrée, ne crée pas le droit de vote de
+   * base — 409/400 si le billet est encore EMIS, cf. messageErreur côté appelant).
+   */
+  ajouterConsommationBonus(qrUuid: string, soireeId: string): Observable<ConsommationBonusResponse> {
+    return this.http.post<ConsommationBonusResponse>(`${this.base}/caisse/consommations-bonus`, { qrUuid, soireeId });
   }
 
   /**

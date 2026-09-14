@@ -5,7 +5,7 @@ import { Subscription, catchError, of } from 'rxjs';
 import { Html5Qrcode } from 'html5-qrcode';
 
 import { BilletterieService } from '@core/services/billetterie.service';
-import { DroitVoteResponse, SoireeEvent } from '@core/models';
+import { ConsommationBonusResponse, DroitVoteResponse, SoireeEvent } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 
@@ -51,6 +51,17 @@ export class CaisseComponent implements OnInit, OnDestroy {
   chargementSoirees = true;
   /** Au plus une soirée EN_COURS à la fois — null tant qu'aucune n'est active. */
   soireeActive: SoireeEvent | null = null;
+
+  /**
+   * Deux actions distinctes possibles depuis le même scan/saisie : `false` (par défaut) =
+   * valider l'entrée (scan + création du droit de vote de base) via `valider()`/`resultat` ;
+   * `true` = enregistrer une consommation supplémentaire au bar (vote bonus) via
+   * `enregistrerConsommationBonus()`/`resultatBonus`, sans repasser par l'activation d'entrée.
+   * Un seul mode actif à la fois — bascule explicite par l'hôtesse, jamais déduit automatiquement,
+   * pour éviter toute ambiguïté opérationnelle sur ce qui va être enregistré.
+   */
+  modeConsommationBonus = false;
+  resultatBonus: ConsommationBonusResponse | null = null;
 
   /** Scan caméra par défaut (gain de temps pour l'hôtesse) — bascule possible vers saisie manuelle en secours. */
   modeManuel = false;
@@ -107,8 +118,22 @@ export class CaisseComponent implements OnInit, OnDestroy {
     else if (this.cameraActivee) this.demarrerScanner();
   }
 
+  /**
+   * Bascule "Valider une entrée" ↔ "Ajouter une consommation" (vote bonus) — réutilise le même
+   * scanner/saisie manuelle, seul l'endpoint appelé une fois le QR décodé change. Réinitialise
+   * systématiquement les deux résultats pour ne jamais laisser affiché le résultat de l'autre mode.
+   */
+  basculerModeConsommationBonus(bonus: boolean): void {
+    this.modeConsommationBonus = bonus;
+    this.resultat = null;
+    this.resultatBonus = null;
+    this.erreur = null;
+    this.form.get('qrUuid')!.reset('');
+    if (!this.modeManuel && this.cameraActivee) setTimeout(() => this.demarrerScanner(), 0);
+  }
+
   private async demarrerScanner(): Promise<void> {
-    if (this.scannerEnCours || this.modeManuel || this.resultat || !this.soireeActive) return;
+    if (this.scannerEnCours || this.modeManuel || this.resultat || this.resultatBonus || !this.soireeActive) return;
     this.erreurCamera = null;
 
     // getUserMedia (donc la caméra) n'est exposé par le navigateur que sur un "contexte
@@ -159,7 +184,13 @@ export class CaisseComponent implements OnInit, OnDestroy {
     this.traitementEnCours = true;
     this.arreterScanner();
     this.form.get('qrUuid')!.setValue(uuid);
-    this.valider();
+    this.soumettre();
+  }
+
+  /** Point d'entrée unique du formulaire (scan ou saisie manuelle) — répartit vers le bon endpoint selon le mode actif. */
+  soumettre(): void {
+    if (this.modeConsommationBonus) this.enregistrerConsommationBonus();
+    else this.valider();
   }
 
   valider(): void {
@@ -194,5 +225,53 @@ export class CaisseComponent implements OnInit, OnDestroy {
     this.erreur = null;
     this.form.get('qrUuid')!.reset('');
     if (!this.modeManuel && this.cameraActivee) setTimeout(() => this.demarrerScanner(), 0);
+  }
+
+  /**
+   * POST /caisse/consommations-bonus — n'appelle jamais /caisse/consommations : le billet doit
+   * déjà avoir été validé à l'entrée (409/400 backend sinon, message dédié ci-dessous).
+   */
+  enregistrerConsommationBonus(): void {
+    this.form.markAllAsTouched();
+    if (this.form.invalid) { this.traitementEnCours = false; return; }
+
+    this.isValidating = true;
+    this.resultatBonus = null;
+    this.erreur = null;
+
+    const { qrUuid, soireeId } = this.form.value;
+
+    this.billetterieSvc.ajouterConsommationBonus(qrUuid.trim(), soireeId).subscribe({
+      next: res => {
+        this.isValidating = false;
+        this.traitementEnCours = false;
+        this.resultatBonus = res;
+        this.form.get('qrUuid')!.reset('');
+      },
+      error: err => {
+        this.isValidating = false;
+        this.traitementEnCours = false;
+        this.erreur = messageErreur(err,
+          "Impossible d'enregistrer la consommation — le billet doit d'abord être validé à l'entrée.");
+        if (!this.modeManuel && this.cameraActivee) setTimeout(() => this.demarrerScanner(), 0);
+      },
+    });
+  }
+
+  nouvelleConsommationBonus(): void {
+    this.resultatBonus = null;
+    this.erreur = null;
+    this.form.get('qrUuid')!.reset('');
+    if (!this.modeManuel && this.cameraActivee) setTimeout(() => this.demarrerScanner(), 0);
+  }
+
+  /** Nombre de consommations déjà cumulées dans la tranche en cours, vers le prochain vote bonus. */
+  progressionVersProchainVoteBonus(res: ConsommationBonusResponse): number {
+    const reste = res.nbConsommationsSupplementaires % res.seuil;
+    return reste === 0 ? res.seuil : reste;
+  }
+
+  plafondVotesBonusAtteint(res: ConsommationBonusResponse): boolean {
+    return res.plafond !== null && res.nbVotesBonusDebloquesAuTotal >= res.plafond;
   }
 }

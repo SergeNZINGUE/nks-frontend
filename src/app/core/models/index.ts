@@ -268,6 +268,14 @@ export interface SoireeEvent {
    * aucun moyen pour l'admin de l'activer autrement qu'en base.
    */
   resultatsPublies: boolean;
+  /**
+   * Seuil de consommations réelles au bar donnant droit à +1 vote bonus (au-delà du vote de
+   * base offert à l'entrée) — configurable par soirée par l'admin. `null` = fonctionnalité
+   * désactivée pour cette soirée (pas de votes bonus).
+   */
+  nbConsommationsPourVoteBonus: number | null;
+  /** Plafond de votes bonus par billet — `null` = pas de plafond. */
+  plafondVotesBonus: number | null;
 }
 
 export interface Classement {
@@ -419,20 +427,39 @@ export interface CandidatVoteSurPlace {
   statutProfil: string;
 }
 
+/** dto/votesurplace/DroitVoteResponse.java — un vote déjà exprimé (historique). */
+export interface VoteExprimeResponse {
+  candidatId: string;
+  candidatCode: string;
+  dateVote: string;
+}
+
 /**
  * dto/votesurplace/DroitVoteResponse.java — GET/POST /vote-sur-place et POST /caisse/consommations.
- * `candidats` n'est renseigné que si statut === 'DISPONIBLE' (choix du vote encore possible).
+ * Contrat cassant du 14/09/2026 (votes bonus liés à la consommation) : un billet peut désormais
+ * donner droit à 0, 1 ou plusieurs votes (1 de base + N bonus selon la consommation au bar).
+ * `candidats` n'est renseigné que si `nbVotesDisponibles > 0` (au moins un vote encore possible).
  */
 export interface DroitVoteResponse {
-  droitId: string;
-  statut: 'DISPONIBLE' | 'UTILISE';
   nomSpectateur: string;
-  dateEmission: string;
-  /** true si le lien de vote a bien été transmis par WhatsApp au numéro du billet. */
-  lienWhatsappEnvoye: boolean;
-  candidatVoteId: string | null;
-  dateVote: string | null;
+  nbVotesDisponibles: number;
+  nbVotesTotal: number;
+  votesExprimes: VoteExprimeResponse[];
   candidats: CandidatVoteSurPlace[];
+}
+
+/**
+ * dto/caisse/ConsommationBonusResponse.java — POST /caisse/consommations-bonus.
+ * Enregistre une consommation supplémentaire (hors entrée) et calcule si elle débloque un
+ * nouveau vote bonus (tranche de `seuil` consommations, jusqu'à `plafond` si défini).
+ */
+export interface ConsommationBonusResponse {
+  nbConsommationsSupplementaires: number;
+  seuil: number;
+  plafond: number | null;
+  nbVotesBonusDebloquesAuTotal: number;
+  nouveauVoteDebloque: boolean;
+  nbVotesDisponiblesTotal: number;
 }
 
 export interface DashboardResponse {

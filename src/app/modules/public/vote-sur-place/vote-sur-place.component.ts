@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { catchError, of } from 'rxjs';
 
 import { BilletterieService } from '@core/services/billetterie.service';
@@ -16,7 +17,7 @@ import { messageErreur } from '@core/utils/http-error.util';
  */
 @Component({
   selector: 'app-vote-sur-place',
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe],
   templateUrl: './vote-sur-place.component.html',
   styleUrls: ['./vote-sur-place.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -33,7 +34,8 @@ export class VoteSurPlaceComponent implements OnInit {
   erreur: string | null = null;
   droit: DroitVoteResponse | null = null;
   candidatChoisi: string | null = null;
-  voteConfirme = false;
+  /** true une fois qu'il ne reste plus aucun vote disponible sur ce billet (0/N). */
+  tousVotesUtilises = false;
 
   /**
    * Champ facultatif, purement déclaratif — jamais vérifié ni requis pour voter. Sert
@@ -60,7 +62,7 @@ export class VoteSurPlaceComponent implements OnInit {
           return;
         }
         this.droit = res;
-        if (res.statut === 'UTILISE') this.voteConfirme = true;
+        if (res.nbVotesDisponibles === 0) this.tousVotesUtilises = true;
         else this.capturerPosition();
       });
   }
@@ -82,10 +84,15 @@ export class VoteSurPlaceComponent implements OnInit {
   }
 
   choisir(candidatId: string): void {
-    if (this.voteConfirme) return;
+    if (this.tousVotesUtilises) return;
     this.candidatChoisi = candidatId;
   }
 
+  /**
+   * Vote pour le candidat choisi. Le billet peut porter plusieurs votes (1 de base + N bonus) :
+   * tant que `nbVotesDisponibles > 0` après ce vote, on réaffiche la liste des candidats pour un
+   * vote suivant au lieu de basculer directement sur l'état final "tous les votes sont utilisés".
+   */
   confirmer(): void {
     if (!this.candidatChoisi || this.isVoting) return;
     this.isVoting = true;
@@ -100,7 +107,8 @@ export class VoteSurPlaceComponent implements OnInit {
       next: res => {
         this.isVoting = false;
         this.droit = res;
-        this.voteConfirme = true;
+        this.candidatChoisi = null;
+        this.tousVotesUtilises = res.nbVotesDisponibles === 0;
       },
       error: err => {
         this.isVoting = false;

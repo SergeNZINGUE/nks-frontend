@@ -62,6 +62,11 @@ import { messageErreur } from '@core/utils/http-error.util';
             <div>
               <div class="phase-card__nom">{{ s.nom }}</div>
               <div class="phase-card__dates">{{ s.dateHeure | date:'dd/MM/yyyy HH:mm' }} · {{ s.lieu }} · {{ s.capaciteMax }} places · {{ s.statut }}</div>
+              @if (s.nbConsommationsPourVoteBonus) {
+                <div class="field-hint">
+                  Votes bonus : 1 tous les {{ s.nbConsommationsPourVoteBonus }}{{ s.plafondVotesBonus ? ' (plafond ' + s.plafondVotesBonus + ')' : '' }}
+                </div>
+              }
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <button type="button" class="btn btn--sm btn--ghost" (click)="ouvrirEditionSoiree(s)">✏ Modifier</button>
@@ -142,6 +147,10 @@ import { messageErreur } from '@core/utils/http-error.util';
             <div class="field field--sm"><label for="capaciteMax">Capacité max</label><input id="capaciteMax" type="number" min="1" formControlName="capaciteMax" /></div>
           </div>
           <div class="field"><label for="adresse">Adresse (optionnel)</label><input id="adresse" type="text" formControlName="adresse" maxlength="255" /></div>
+          <div class="form__row">
+            <div class="field field--sm"><label for="nbConso">Consommations pour 1 vote bonus (optionnel)</label><input id="nbConso" type="number" min="1" formControlName="nbConsommationsPourVoteBonus" /></div>
+            <div class="field field--sm"><label for="plafondVotes">Plafond de votes bonus (optionnel)</label><input id="plafondVotes" type="number" min="1" formControlName="plafondVotesBonus" /></div>
+          </div>
           @if (erreurCreation) {
             <div class="field-error" role="alert">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -193,6 +202,10 @@ import { messageErreur } from '@core/utils/http-error.util';
             Résultats publiés
           </label>
           <p class="field-hint">Une fois coché, chaque candidat voit ses points (votes/jury/public) et son rang pour la phase de cette soirée, depuis son espace.</p>
+          <div class="form__row">
+            <div class="field field--sm"><label for="editNbConso">Consommations pour 1 vote bonus (optionnel)</label><input id="editNbConso" type="number" min="1" formControlName="nbConsommationsPourVoteBonus" /></div>
+            <div class="field field--sm"><label for="editPlafondVotes">Plafond de votes bonus (optionnel)</label><input id="editPlafondVotes" type="number" min="1" formControlName="plafondVotesBonus" /></div>
+          </div>
           @if (erreurEditionSoiree) {
             <div class="field-error" role="alert">{{ erreurEditionSoiree }}</div>
           }
@@ -233,6 +246,8 @@ export class SoireesComponent implements OnInit, OnDestroy {
     lieu: ['', [Validators.required, Validators.maxLength(150)]],
     adresse: [''],
     capaciteMax: [200, [Validators.required, Validators.min(1)]],
+    nbConsommationsPourVoteBonus: [null as number | null],
+    plafondVotesBonus: [null as number | null],
   });
   erreurCreation: string | null = null;
   creationEnCours = false;
@@ -248,6 +263,8 @@ export class SoireesComponent implements OnInit, OnDestroy {
     statut: ['PLANIFIEE', Validators.required],
     voteSurPlaceActif: [false],
     resultatsPublies: [false],
+    nbConsommationsPourVoteBonus: [null as number | null],
+    plafondVotesBonus: [null as number | null],
   });
   erreurEditionSoiree: string | null = null;
   editionSoireeEnCours = false;
@@ -302,7 +319,10 @@ export class SoireesComponent implements OnInit, OnDestroy {
   }
 
   ouvrirModalCreation(): void {
-    this.formSoiree.reset({ phaseId: '', nom: '', dateHeure: '', lieu: '', adresse: '', capaciteMax: 200 });
+    this.formSoiree.reset({
+      phaseId: '', nom: '', dateHeure: '', lieu: '', adresse: '', capaciteMax: 200,
+      nbConsommationsPourVoteBonus: null, plafondVotesBonus: null,
+    });
     this.erreurCreation = null;
     this.modalCreationOuverte = true;
   }
@@ -325,6 +345,8 @@ export class SoireesComponent implements OnInit, OnDestroy {
       statut: 'PLANIFIEE' as const,
       voteSurPlaceActif: false,
       resultatsPublies: false,
+      nbConsommationsPourVoteBonus: v.nbConsommationsPourVoteBonus || null,
+      plafondVotesBonus: v.plafondVotesBonus || null,
     };
     this.sub.add(
       this.soireeSvc.creer(v.phaseId, corps).pipe(
@@ -352,6 +374,8 @@ export class SoireesComponent implements OnInit, OnDestroy {
       statut: s.statut,
       voteSurPlaceActif: s.voteSurPlaceActif,
       resultatsPublies: s.resultatsPublies,
+      nbConsommationsPourVoteBonus: s.nbConsommationsPourVoteBonus,
+      plafondVotesBonus: s.plafondVotesBonus,
     });
   }
 

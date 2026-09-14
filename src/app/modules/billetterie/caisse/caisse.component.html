@@ -19,9 +19,9 @@
          seule la visibilité change (`hidden`), jamais sa présence : un `@if` qui le détruirait
          pendant qu'il gère encore la caméra provoque un conflit avec Angular et fige la page. -->
     <div id="caisse-scanner" class="scan-camera__viewport"
-      [hidden]="modeManuel || !!resultat || !cameraActivee || !soireeActive"></div>
+      [hidden]="modeManuel || !!resultat || !!resultatBonus || !cameraActivee || !soireeActive"></div>
 
-    <!-- Résultat -->
+    <!-- Résultat — entrée (vote de base) -->
     @if (resultat) {
       <div class="resultat resultat--success">
         <div class="resultat__icon" aria-hidden="true">
@@ -32,15 +32,10 @@
           <span>Nom</span> <strong>{{ resultat.nomSpectateur }}</strong>
         </div>
         <div class="resultat__detail">
-          <span>Lien de vote</span>
-          <strong>{{ resultat.lienWhatsappEnvoye ? '✅ Envoyé par WhatsApp' : '⚠️ Non envoyé' }}</strong>
+          <span>Votes disponibles</span> <strong>{{ resultat.nbVotesDisponibles }} / {{ resultat.nbVotesTotal }}</strong>
         </div>
         <p class="field-hint">
-          @if (resultat.lienWhatsappEnvoye) {
-            Le client a reçu son lien de vote personnel par WhatsApp — inutile de le lui montrer ou de le lui transmettre toi-même.
-          } @else {
-            L'envoi WhatsApp a échoué (numéro invalide, réseau…) — vérifie le numéro du client ou contacte un administrateur.
-          }
+          Le client peut voter dès maintenant sur son lien personnel de vote sur place.
         </p>
         <button class="btn btn--ghost btn--full" (click)="nouvelleValidation()">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Nouvelle validation
@@ -48,8 +43,43 @@
       </div>
     }
 
+    <!-- Résultat — consommation bonus -->
+    @if (resultatBonus) {
+      <div class="resultat" [class.resultat--success]="resultatBonus.nouveauVoteDebloque" [class.resultat--warning]="!resultatBonus.nouveauVoteDebloque">
+        <div class="resultat__icon" aria-hidden="true">
+          @if (resultatBonus.nouveauVoteDebloque) {
+            <span style="font-size:40px;line-height:1">🎉</span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+          }
+        </div>
+        @if (resultatBonus.nouveauVoteDebloque) {
+          <div class="resultat__texte">Vote bonus débloqué !</div>
+          <div class="resultat__detail">
+            <span>Solde total</span> <strong>{{ resultatBonus.nbVotesDisponiblesTotal }} vote(s)</strong>
+          </div>
+        } @else if (plafondVotesBonusAtteint(resultatBonus)) {
+          <div class="resultat__texte">Consommation enregistrée</div>
+          <div class="resultat__detail">
+            <span>Plafond atteint</span> <strong>{{ resultatBonus.plafond }} vote(s) bonus max</strong>
+          </div>
+        } @else {
+          <div class="resultat__texte">Consommation enregistrée</div>
+          <div class="resultat__detail">
+            <span>Progression</span> <strong>{{ progressionVersProchainVoteBonus(resultatBonus) }}/{{ resultatBonus.seuil }} vers le prochain vote bonus</strong>
+          </div>
+        }
+        <div class="resultat__detail">
+          <span>Consommations totales</span> <strong>{{ resultatBonus.nbConsommationsSupplementaires }}</strong>
+        </div>
+        <button class="btn btn--ghost btn--full" (click)="nouvelleConsommationBonus()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Nouvelle consommation
+        </button>
+      </div>
+    }
+
     <!-- Formulaire -->
-    @if (!resultat) {
+    @if (!resultat && !resultatBonus) {
       <div>
         @if (chargementSoirees) {
           <div class="scan-instructions">Chargement…</div>
@@ -68,11 +98,35 @@
             <p>Scanne le QR du billet du client — à l'entrée ou à table, à chaque service. Le scan d'entrée se fait automatiquement si ce n'est pas déjà fait.</p>
           </div>
 
+          <!-- Sélecteur d'action — bien distinct des onglets scan/saisie ci-dessous : détermine
+               CE QUI sera enregistré (entrée vs simple consommation), jamais déduit automatiquement. -->
+          <div class="action-mode" role="tablist" aria-label="Action à effectuer">
+            <button type="button" role="tab" [attr.aria-selected]="!modeConsommationBonus"
+              class="action-mode__tab action-mode__tab--entree" [class.action-mode__tab--actif]="!modeConsommationBonus"
+              (click)="basculerModeConsommationBonus(false)">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg>
+              Valider une entrée
+            </button>
+            <button type="button" role="tab" [attr.aria-selected]="modeConsommationBonus"
+              class="action-mode__tab action-mode__tab--bonus" [class.action-mode__tab--actif]="modeConsommationBonus"
+              (click)="basculerModeConsommationBonus(true)">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12h20"/></svg>
+              Ajouter une consommation
+            </button>
+          </div>
+          <p class="action-mode__hint" [class.action-mode__hint--bonus]="modeConsommationBonus">
+            @if (!modeConsommationBonus) {
+              Mode actif : validation d'entrée — crée le vote de base pour un billet pas encore scanné.
+            } @else {
+              Mode actif : consommation supplémentaire au bar — nécessite un billet déjà validé à l'entrée, peut débloquer un vote bonus.
+            }
+          </p>
+
           @if (erreur) {
             <div class="toast toast--error"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> {{ erreur }}</div>
           }
 
-          <form [formGroup]="form" (ngSubmit)="valider()" class="scan-form">
+          <form [formGroup]="form" (ngSubmit)="soumettre()" class="scan-form">
             <div class="scan-mode-tabs" role="tablist">
               <button type="button" role="tab" [attr.aria-selected]="!modeManuel"
                 class="scan-mode-tab" [class.scan-mode-tab--actif]="!modeManuel"
@@ -123,10 +177,13 @@
               </div>
               <button type="submit" class="btn btn--primary btn--full" [disabled]="form.invalid || isValidating">
                 @if (!isValidating) {
-                  <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg> Valider la consommation</span>
+                  <span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/></svg>
+                    {{ modeConsommationBonus ? 'Ajouter la consommation' : 'Valider la consommation' }}
+                  </span>
                 }
                 @if (isValidating) {
-                  <span>⏳ Validation…</span>
+                  <span>⏳ {{ modeConsommationBonus ? 'Enregistrement…' : 'Validation…' }}</span>
                 }
               </button>
             }

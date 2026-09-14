@@ -17,16 +17,33 @@
 
   @if (!isLoading && droit) {
 
-    @if (voteConfirme) {
+    @if (tousVotesUtilises) {
       <div class="vsp-confirmation">
         <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
-        <p>Ton vote a bien été enregistré. Merci !</p>
-        <p class="vsp-hint">Un seul vote possible par billet pour cette soirée.</p>
+        <p>Tous tes votes ont bien été enregistrés. Merci !</p>
+        <p class="vsp-hint">{{ droit.nbVotesTotal }} vote(s) au total pour ce billet sur cette soirée.</p>
+
+        @if (droit.votesExprimes.length > 0) {
+          <ul class="vsp-historique">
+            @for (v of droit.votesExprimes; track v.candidatId + v.dateVote) {
+              <li><strong>{{ v.candidatCode }}</strong> — {{ v.dateVote | date:'dd/MM/yyyy HH:mm' }}</li>
+            }
+          </ul>
+        }
       </div>
     }
 
-    @if (!voteConfirme) {
+    @if (!tousVotesUtilises) {
       <p class="vsp-instructions">Bonjour {{ droit.nomSpectateur }}, choisis le candidat pour lequel tu souhaites voter :</p>
+      <p class="vsp-hint">Il te reste {{ droit.nbVotesDisponibles }} vote(s) sur {{ droit.nbVotesTotal }}.</p>
+
+      @if (droit.votesExprimes.length > 0) {
+        <ul class="vsp-historique">
+          @for (v of droit.votesExprimes; track v.candidatId + v.dateVote) {
+            <li><strong>{{ v.candidatCode }}</strong> — {{ v.dateVote | date:'dd/MM/yyyy HH:mm' }}</li>
+          }
+        </ul>
+      }
 
       @if (erreur) {
         <div class="vsp-toast">{{ erreur }}</div>
