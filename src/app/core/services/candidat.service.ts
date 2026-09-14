@@ -66,9 +66,21 @@ export class CandidatService {
     return this.http.put<CandidatPublicResponse>(`${this.base}/mon-profil`, { biographie });
   }
 
-  /** PUT /candidats/{id} — ADMIN/SUPER_ADMIN — mise à jour biographie + chansonPreselection. */
-  mettreAJourAdmin(id: string, biographie: string | null, chansonPreselection: string | null): Observable<CandidatPublicResponse> {
-    return this.http.put<CandidatPublicResponse>(`${this.base}/${id}`, { biographie, chansonPreselection });
+  /**
+   * PUT /candidats/{id} — ADMIN/SUPER_ADMIN — mise à jour biographie + chansonPreselection
+   * (Candidat) et prenom/nom/email/telephone (Utilisateur lié). `email`/`telephone` sont
+   * soumis à une contrainte d'unicité vérifiée côté serveur (erreur 400 exploitable via
+   * messageErreur() en cas de conflit).
+   */
+  mettreAJourAdmin(id: string, donnees: {
+    biographie: string | null;
+    chansonPreselection: string | null;
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+  }): Observable<CandidatPublicResponse> {
+    return this.http.put<CandidatPublicResponse>(`${this.base}/${id}`, donnees);
   }
 
   /**

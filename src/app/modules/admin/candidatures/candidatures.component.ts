@@ -271,6 +271,18 @@ interface DetailComplement {
         @if (modifProfilOuvert && complement(d.id)?.candidat; as cd) {
           <div class="dossier__champ" style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
             <strong>Modifier le profil</strong>
+            <label for="editPrenom" style="display:block;margin-top:8px;font-size:.85rem">Prénom</label>
+            <input id="editPrenom" type="text" [formControl]="prenomCtrl" maxlength="100"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit" />
+            <label for="editNom" style="display:block;margin-top:8px;font-size:.85rem">Nom</label>
+            <input id="editNom" type="text" [formControl]="nomCtrl" maxlength="100"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit" />
+            <label for="editEmail" style="display:block;margin-top:8px;font-size:.85rem">E-mail</label>
+            <input id="editEmail" type="email" [formControl]="emailCtrl" maxlength="255"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit" />
+            <label for="editTelephone" style="display:block;margin-top:8px;font-size:.85rem">Téléphone</label>
+            <input id="editTelephone" type="tel" [formControl]="telephoneCtrl" maxlength="20"
+              style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit" />
             <label for="editBio" style="display:block;margin-top:8px;font-size:.85rem">Biographie</label>
             <textarea id="editBio" [formControl]="biographieCtrl" rows="3" maxlength="2000"
               style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px;font:inherit;resize:vertical"></textarea>
@@ -283,7 +295,7 @@ interface DetailComplement {
             <div style="display:flex;gap:8px;margin-top:10px">
               <button type="button" class="btn btn--ghost btn--sm" (click)="modifProfilOuvert=false">Annuler</button>
               <button type="button" class="btn btn--primary btn--sm" [disabled]="modifProfilEnCours"
-                (click)="enregistrerProfil(cd.id)">
+                (click)="enregistrerProfil(cd.id, d.id)">
                 {{ modifProfilEnCours ? '…' : 'Enregistrer' }}
               </button>
             </div>
@@ -293,7 +305,7 @@ interface DetailComplement {
         <div class="modal__actions">
           @if (complement(d.id)?.candidat; as cd) {
             @if (!modifProfilOuvert) {
-              <button type="button" class="btn btn--ghost" (click)="ouvrirModifProfil(cd)">✏ Modifier le profil</button>
+              <button type="button" class="btn btn--ghost" (click)="ouvrirModifProfil(cd, d)">✏ Modifier le profil</button>
             }
           }
           @if (d.statut === 'EN_ATTENTE') {
@@ -435,6 +447,10 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   modifProfilOuvert = false;
   biographieCtrl = new FormControl('');
   chansonCtrl = new FormControl('', [Validators.maxLength(255)]);
+  prenomCtrl = new FormControl('', [Validators.required, Validators.maxLength(100)]);
+  nomCtrl = new FormControl('', [Validators.required, Validators.maxLength(100)]);
+  emailCtrl = new FormControl('', [Validators.required, Validators.email, Validators.maxLength(255)]);
+  telephoneCtrl = new FormControl('', [Validators.required, Validators.maxLength(20)]);
   modifProfilEnCours = false;
   erreurModifProfil: string | null = null;
 
@@ -510,27 +526,56 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
     this.erreurModifProfil = null;
   }
 
-  ouvrirModifProfil(cd: CandidatPublicResponse): void {
+  /**
+   * `cd` (CandidatPublicResponse) fournit biographie/chanson ; `d` (CandidatureDetailResponse)
+   * fournit prenom/nom/email/telephone — CandidatPublicResponse n'expose jamais ces derniers
+   * (confidentialité, cf. dto/candidat/CandidatPublicResponse.java).
+   */
+  ouvrirModifProfil(cd: CandidatPublicResponse, d: CandidatureDetailResponse): void {
     this.modifProfilOuvert = true;
     this.biographieCtrl.setValue(cd.biographie ?? '');
     this.chansonCtrl.setValue(cd.chansonPreselection ?? '');
+    this.prenomCtrl.setValue(d.prenom);
+    this.nomCtrl.setValue(d.nom);
+    this.emailCtrl.setValue(d.email);
+    this.telephoneCtrl.setValue(d.telephone);
     this.erreurModifProfil = null;
   }
 
-  enregistrerProfil(candidatId: string): void {
-    if (this.chansonCtrl.invalid) return;
+  enregistrerProfil(candidatId: string, candidatureId: string): void {
+    if (this.chansonCtrl.invalid || this.prenomCtrl.invalid || this.nomCtrl.invalid
+        || this.emailCtrl.invalid || this.telephoneCtrl.invalid) {
+      return;
+    }
     this.modifProfilEnCours = true;
     this.erreurModifProfil = null;
-    const bio = this.biographieCtrl.value || null;
-    const chanson = this.chansonCtrl.value || null;
+    const donnees = {
+      biographie: this.biographieCtrl.value || null,
+      chansonPreselection: this.chansonCtrl.value || null,
+      prenom: (this.prenomCtrl.value ?? '').trim(),
+      nom: (this.nomCtrl.value ?? '').trim(),
+      email: (this.emailCtrl.value ?? '').trim(),
+      telephone: (this.telephoneCtrl.value ?? '').trim(),
+    };
     this.sub.add(
-      this.candidatSvc.mettreAJourAdmin(candidatId, bio, chanson).pipe(
+      this.candidatSvc.mettreAJourAdmin(candidatId, donnees).pipe(
         catchError(err => { this.erreurModifProfil = messageErreur(err, 'Échec de la mise à jour du profil.'); return of(null); }),
         finalize(() => { this.modifProfilEnCours = false; })
       ).subscribe(res => {
         if (!res) return;
-        const comp = this.dossierOuvert ? this.complements.get(this.dossierOuvert.id) : null;
+        const comp = this.complements.get(candidatureId);
         if (comp) comp.candidat = res;
+        if (this.dossierOuvert && this.dossierOuvert.id === candidatureId) {
+          this.dossierOuvert = {
+            ...this.dossierOuvert,
+            prenom: donnees.prenom, nom: donnees.nom, email: donnees.email, telephone: donnees.telephone,
+          };
+        }
+        const ligne = this.page?.content.find(c => c.id === candidatureId);
+        if (ligne) {
+          ligne.prenom = donnees.prenom; ligne.nom = donnees.nom;
+          ligne.email = donnees.email; ligne.telephone = donnees.telephone;
+        }
         this.modifProfilOuvert = false;
       })
     );
