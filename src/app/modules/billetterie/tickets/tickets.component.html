@@ -1,105 +1,233 @@
+<app-site-header />
+
 <div class="tickets-page">
 
   <app-topbar title="Mes tickets" backLink="/billetterie" backLabel="Retour à la billetterie" [showBackOnDesktop]="true" />
 
-  <!-- GAP-03 Notice -->
-  <div class="gap-notice">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> <strong>QR codes en démonstration</strong> — l'endpoint OTP backend sera branché une fois implémenté (GAP-03).
+  <div class="hero-glow" aria-hidden="true"></div>
+
+  <!-- Bandeau organisateur — NKS x La Terrasse (mêmes logos que le reste du site) -->
+  <div class="brand-band">
+    <img src="assets/logos/nks.png" alt="Night Karaoke Stars" class="brand-band__logo brand-band__logo--nks" />
+    <span class="brand-band__sep" aria-hidden="true"></span>
+    <img src="assets/logos/la-terrasse.png" alt="La Terrasse" class="brand-band__logo brand-band__logo--terrasse" />
   </div>
 
-  <!-- Recherche par téléphone — CdC §3.6.2 (accès sans compte) -->
-  <div class="recherche-tel">
-    <label for="tel">Retrouve tes tickets avec ton numéro de téléphone</label>
-    <div class="recherche-tel__row">
-      <input
-        id="tel"
-        type="tel"
-        inputmode="numeric"
-        [formControl]="telephoneCtrl"
-        placeholder="Ex : 70000000"
-        (keyup.enter)="rechercher()"
-        />
-      <button class="btn btn--primary" (click)="rechercher()" [disabled]="isLoading || throttled">
-        @if (!isLoading) {
-          <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Rechercher</span>
-        }
-        @if (isLoading) {
-          <span>⏳…</span>
-        }
-      </button>
-    </div>
-    @if (telephoneCtrl.invalid && telephoneCtrl.touched) {
-      <span class="form-error">
-        Numéro invalide — 8 chiffres attendus.
-      </span>
-    }
-  </div>
-
-  <!-- Skeleton -->
-  @if (isLoading) {
-    <div class="skeleton-wrapper">
-      @for (i of [1,2]; track i) {
-        <div class="skeleton skeleton--card"></div>
-      }
-    </div>
-  }
-
-  <!-- Erreur -->
-  @if (!isLoading && erreur) {
-    <div class="empty-state">
-      <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></p>
-      <p>{{ erreur }}</p>
-      <a routerLink="/billetterie" class="btn btn--ghost">← Billetterie</a>
-    </div>
-  }
-
-  <!-- Vide -->
-  @if (!isLoading && !erreur && rechercheEffectuee && reservations.length === 0) {
-    <div class="empty-state">
-      <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></p>
-      <p>Aucun ticket trouvé pour ce numéro.</p>
-      <a routerLink="/billetterie" class="btn btn--primary">Réserver une soirée</a>
-    </div>
-  }
-
-  <!-- Liste tickets -->
-  @if (!isLoading && reservations.length > 0) {
-    <div class="tickets-list">
-      @for (r of reservations; track r) {
-        <div class="ticket-card">
-          <div class="ticket-card__header">
-            <div class="ticket-card__info">
-              <h3>{{ r.nomReservant }}</h3>
-              <span class="places">{{ r.nbPlaces }} place{{ r.nbPlaces > 1 ? 's' : '' }}</span>
-            </div>
-            <span class="badge badge--{{ statutClass(r.statut) }}">{{ statutLabel(r.statut) }}</span>
-          </div>
-          <!-- QR code (visible si réservation confirmée) — généré localement, le qrUuid
-               brut n'est volontairement plus affiché en texte dans le DOM (IDOR, cf. audit). -->
-          @if (r.statut === 'CONFIRMEE' && r.qrUuid) {
-            <div class="qr-section">
-              <p class="qr-label">Présente ce QR code à l'entrée</p>
-              @if (qrDataUrl(r.qrUuid); as src) {
-                <img [src]="src" alt="QR Code ticket" class="qr-img" />
-              } @else {
-                <div class="qr-img qr-img--loading" aria-hidden="true"></div>
-              }
-              <!-- Une fois une consommation validée par une hôtesse, ce même billet donne droit
-                   à un vote sur place — cf. écran hôtesse (rôle HOTESSE). -->
-              <a [routerLink]="['/vote-sur-place', r.soireeId, r.qrUuid]" class="btn btn--ghost btn--full" style="margin-top: 10px;">
-                Voter sur place (après une consommation validée)
-              </a>
-            </div>
-          }
-          <!-- Attente confirmation -->
-          @if (r.statut === 'PENDING') {
-            <div class="pending-notice">
-              ⏳ En attente de confirmation du paiement Mobile Money.
-            </div>
-          }
+  <!-- ═══ Étape 1 : saisie du numéro — CdC §3.6.2 (accès sans compte) ═══ -->
+  @if (etape === 'telephone') {
+    <div class="recherche-tel">
+      <label for="tel" class="recherche-tel__label">Retrouve tes tickets avec ton numéro de téléphone</label>
+      <div class="recherche-tel__row">
+        <div class="recherche-tel__control">
+          <svg class="recherche-tel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
+          <input
+            id="tel"
+            type="tel"
+            inputmode="numeric"
+            class="input-field recherche-tel__input"
+            [formControl]="telephoneCtrl"
+            placeholder="Ex : 70000000"
+            (keyup.enter)="demanderCode()"
+            />
         </div>
+        <button class="btn btn--primary" (click)="demanderCode()" [disabled]="isEnvoiOtp || throttled">
+          @if (!isEnvoiOtp) {
+            <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Recevoir un code</span>
+          }
+          @if (isEnvoiOtp) {
+            <span class="btn__spinner" aria-hidden="true"></span>
+          }
+        </button>
+      </div>
+      @if (telephoneCtrl.invalid && telephoneCtrl.touched) {
+        <span class="form-error">
+          Numéro invalide — 8 chiffres attendus.
+        </span>
+      }
+      @if (erreurOtp) {
+        <span class="form-error">{{ erreurOtp }}</span>
       }
     </div>
   }
 
+  <!-- ═══ Étape 2 : vérification du code OTP (fix IDOR — mes-tickets gaté) ═══ -->
+  @if (etape === 'verification') {
+    <div class="recherche-tel">
+      <label for="code" class="recherche-tel__label">
+        Code envoyé au {{ telephoneCtrl.value }} — saisis le code reçu par WhatsApp ou SMS
+      </label>
+      <div class="recherche-tel__row">
+        <div class="recherche-tel__control">
+          <svg class="recherche-tel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input
+            id="code"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            class="input-field recherche-tel__input"
+            [formControl]="codeCtrl"
+            placeholder="Code à 6 chiffres"
+            (keyup.enter)="verifierCode()"
+            />
+        </div>
+        <button class="btn btn--primary" (click)="verifierCode()" [disabled]="isVerification">
+          @if (!isVerification) {
+            <span>Valider</span>
+          }
+          @if (isVerification) {
+            <span class="btn__spinner" aria-hidden="true"></span>
+          }
+        </button>
+      </div>
+      @if (codeCtrl.invalid && codeCtrl.touched) {
+        <span class="form-error">Code invalide — 6 chiffres attendus.</span>
+      }
+      @if (erreurOtp) {
+        <span class="form-error">{{ erreurOtp }}</span>
+      }
+      @if (otpMessage) {
+        <span class="otp-info">{{ otpMessage }}</span>
+      }
+      <div class="recherche-tel__actions">
+        <button type="button" class="btn btn--text" (click)="renvoyerCode()" [disabled]="isEnvoiOtp || throttled">
+          Je n'ai rien reçu, renvoyer un code
+        </button>
+        <button type="button" class="btn btn--text" (click)="modifierTelephone()">
+          Modifier le numéro
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══ Étape 3 : résultats (jeton phone-wide obtenu) ═══ -->
+  @if (etape === 'resultats') {
+
+    <!-- Skeleton -->
+    @if (isLoading) {
+      <div class="skeleton-wrapper">
+        @for (i of [1,2]; track i) {
+          <div class="skeleton skeleton--card"></div>
+        }
+      </div>
+    }
+
+    <!-- Erreur -->
+    @if (!isLoading && erreur) {
+      <div class="empty-state">
+        <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></p>
+        <p>{{ erreur }}</p>
+        <a routerLink="/billetterie" class="btn btn--ghost">← Billetterie</a>
+      </div>
+    }
+
+    <!-- Vide -->
+    @if (!isLoading && !erreur && rechercheEffectuee && reservations.length === 0) {
+      <div class="empty-state">
+        <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></p>
+        <p>Aucun ticket trouvé pour ce numéro.</p>
+        <a routerLink="/billetterie" class="btn btn--primary">Réserver une soirée</a>
+      </div>
+    }
+
+    <!-- Liste tickets -->
+    @if (!isLoading && reservations.length > 0) {
+      <div class="tickets-list">
+        @for (r of reservations; track r) {
+          <div class="ticket-card">
+            <div class="ticket-card__header">
+              <div class="ticket-card__info">
+                <span class="ticket-card__eyebrow">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 1 0 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 1 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                  Billet NKS
+                </span>
+                <h3>{{ r.nomReservant }}</h3>
+                <span class="places">{{ r.nbPlaces }} place{{ r.nbPlaces > 1 ? 's' : '' }}</span>
+              </div>
+              <span class="badge badge--{{ statutClass(r.statut) }}">{{ statutLabel(r.statut) }}</span>
+            </div>
+            <!-- QR codes (visibles si réservation confirmée) — un par billet physique (GET
+                 /reservations/{id}/ticket?telephone=), généré localement. Le qrUuid brut n'est
+                 volontairement jamais affiché en texte dans le DOM (IDOR, cf. audit). -->
+            @if (r.statut === 'CONFIRMEE') {
+              <!-- Grille responsive (1 col mobile, jusqu'à 3 col si l'espace le permet) —
+                   même pattern de breakpoints que .poule-grid (classement-poules). -->
+              <div class="qr-grid">
+                @if (chargementTickets(r.id)) {
+                  <div class="qr-section">
+                    <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+                  </div>
+                } @else {
+                  @for (ticket of ticketsDe(r.id); track ticket.ticketId; let i = $index) {
+                    <!-- ticket.statut piloté par le serveur : EMIS (nominal) / UTILISE (scanné à
+                         l'entrée) / EXPIRE (soirée clôturée, jamais consommé) / ANNULE (billet
+                         annulé individuellement — rare, la réservation est en général déjà ANNULEE). -->
+                    <div class="qr-section" [class.qr-section--inactif]="ticket.statut === 'EXPIRE' || ticket.statut === 'ANNULE'">
+                      @if (ticket.statut === 'UTILISE' || ticket.statut === 'EXPIRE' || ticket.statut === 'ANNULE') {
+                        <span class="badge badge--{{ ticketStatutClass(ticket.statut) }} qr-section__badge">
+                          {{ ticketStatutLabel(ticket.statut) }}
+                        </span>
+                      }
+
+                      @if (ticket.statut === 'EXPIRE') {
+                        <p class="qr-label">Billet expiré — la soirée est terminée</p>
+                      } @else if (ticket.statut === 'ANNULE') {
+                        <p class="qr-label">Ce billet a été annulé</p>
+                      } @else {
+                        <p class="qr-label">
+                          Présente ce QR code à l'entrée
+                          @if (r.nbPlaces > 1) {
+                            <span class="qr-label__count">— Billet {{ i + 1 }}/{{ r.nbPlaces }}</span>
+                          }
+                        </p>
+                      }
+
+                      @if (ticket.statut !== 'ANNULE') {
+                        @if (qrDataUrl(ticket.qrUuid); as src) {
+                          <img [src]="src" alt="QR Code billet {{ i + 1 }}" class="qr-img" />
+                        } @else {
+                          <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+                        }
+                        <button type="button" class="btn btn--ghost btn--full"
+                          [disabled]="!qrDataUrl(ticket.qrUuid) || billetEnCoursDeGeneration[ticket.ticketId]"
+                          (click)="telechargerBillet(r, ticket, i, r.nbPlaces)">
+                          @if (!billetEnCoursDeGeneration[ticket.ticketId]) {
+                            <span>Télécharger mon billet</span>
+                          }
+                          @if (billetEnCoursDeGeneration[ticket.ticketId]) {
+                            <span class="btn__spinner" aria-hidden="true"></span>
+                          }
+                        </button>
+                      }
+
+                      <!-- Une fois une consommation validée par une hôtesse, ce même billet donne droit
+                           à un vote sur place — cf. écran hôtesse (rôle HOTESSE). Un billet expiré
+                           (soirée clôturée) ou annulé n'y donne jamais droit. -->
+                      @if (ticket.statut !== 'EXPIRE' && ticket.statut !== 'ANNULE') {
+                        <a [routerLink]="['/vote-sur-place', r.soireeId, ticket.qrUuid]" class="btn btn--ghost btn--full">
+                          @if (ticket.statut === 'UTILISE') {
+                            Voter sur place
+                          } @else {
+                            Voter sur place (après une consommation validée)
+                          }
+                        </a>
+                      }
+                    </div>
+                  }
+                }
+              </div>
+            }
+            <!-- Attente confirmation -->
+            @if (r.statut === 'PENDING') {
+              <div class="pending-notice">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                En attente de confirmation du paiement Mobile Money.
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <app-bottom-nav active="billetterie" />
 </div>

@@ -1,23 +1,17 @@
+<app-site-header />
+
 <div class="reservation-page">
 
   <app-topbar title="Réservation" backLink="/billetterie" backLabel="Retour à la billetterie" [showBackOnDesktop]="true" />
 
-  <!-- Stepper -->
-  @if (etape !== 'confirmation') {
-    <div class="stepper">
-      <div class="step" [class.step--active]="etape === 'categorie'" [class.step--done]="etape === 'infos' || etape === 'paiement'">
-        <span class="step__dot">1</span><span class="step__label">Catégorie</span>
-      </div>
-      <div class="step__line"></div>
-      <div class="step" [class.step--active]="etape === 'infos'" [class.step--done]="etape === 'paiement'">
-        <span class="step__dot">2</span><span class="step__label">Infos</span>
-      </div>
-      <div class="step__line"></div>
-      <div class="step" [class.step--active]="etape === 'paiement'">
-        <span class="step__dot">3</span><span class="step__label">Paiement</span>
-      </div>
-    </div>
-  }
+  <div class="hero-glow" aria-hidden="true"></div>
+
+  <!-- Bandeau organisateur — NKS x La Terrasse (mêmes logos que le reste du site) -->
+  <div class="brand-band">
+    <img src="assets/logos/nks.png" alt="Night Karaoke Stars" class="brand-band__logo brand-band__logo--nks" />
+    <span class="brand-band__sep" aria-hidden="true"></span>
+    <img src="assets/logos/la-terrasse.png" alt="La Terrasse" class="brand-band__logo brand-band__logo--terrasse" />
+  </div>
 
   <!-- Loading -->
   @if (isLoading) {
@@ -29,169 +23,188 @@
   }
 
   <!-- Erreur -->
-  @if (!isLoading && erreur && etape === 'categorie') {
+  @if (!isLoading && erreur && etape === 'reservation') {
     <div class="empty-state">
       <p class="empty-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></p><p>{{ erreur }}</p>
       <a routerLink="/billetterie" class="btn btn--ghost">← Retour</a>
     </div>
   }
 
-  <!-- ═══ Étape 1 : Sélection catégorie ═══ -->
-  @if (!isLoading && etape === 'categorie' && !erreur) {
+  <!-- ═══ Étape unique fusionnée : catégorie + informations + récap + paiement ═══ -->
+  @if (!isLoading && etape === 'reservation' && !erreur) {
     <div class="step-content">
-      <h2 class="step-title">Choisis ta catégorie</h2>
+      <h2 class="step-title">Réserve ta place</h2>
+
       @if (categories.length === 0) {
         <div class="empty-state">
           <p>Aucune catégorie disponible pour cette soirée.</p>
         </div>
       }
-      <div class="categories-list">
-        @for (cat of categories; track cat) {
-          <button type="button" class="categorie-card"
-            [class.categorie-card--full]="placesRestantes(cat) === 0"
-            [disabled]="placesRestantes(cat) === 0"
-            [attr.aria-pressed]="categorieSelectionnee?.id === cat.id"
-            (click)="selectionnerCategorie(cat)">
-            <div class="categorie-card__header">
-              <span class="categorie-card__nom">{{ cat.nom }}</span>
-              <span class="categorie-card__prix">{{ cat.prix | number }} FCFA</span>
-            </div>
-            <div class="categorie-card__dispo">
-              @if (placesRestantes(cat) > 0) {
-                <span class="dispo-ok">
-                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                  {{ placesRestantes(cat) }} place{{ placesRestantes(cat) > 1 ? 's' : '' }} restante{{ placesRestantes(cat) > 1 ? 's' : '' }}
+
+      @if (categories.length > 0) {
+        <div class="form-group">
+          <label for="categorie-select">Catégorie de billet *</label>
+          <select id="categorie-select" class="select-field"
+            [value]="categorieSelectionnee?.id ?? ''"
+            (change)="onCategorieChange($any($event.target).value)">
+            <option value="" disabled [selected]="!categorieSelectionnee">— Choisis une catégorie —</option>
+            @for (cat of categories; track cat.id) {
+              <option [value]="cat.id" [disabled]="placesRestantes(cat) === 0">
+                {{ libelleCategorie(cat) }}
+              </option>
+            }
+          </select>
+        </div>
+
+        @if (categorieSelectionnee) {
+          <form [formGroup]="formInfos" class="res-form res-form--reveal">
+            <div class="form-group">
+              <label>Nom complet *</label>
+              <input type="text" formControlName="nomReservant" placeholder="Ex. Fatima Coulibaly" />
+              @if (formInfos.get('nomReservant')?.invalid && formInfos.get('nomReservant')?.touched) {
+                <span class="form-error">
+                  Nom requis (min 3 caractères).
                 </span>
               }
-              @if (placesRestantes(cat) === 0) {
-                <span class="dispo-full">
-                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-                  Complet
+            </div>
+            <div class="form-group">
+              <label>Téléphone *</label>
+              <input type="tel" formControlName="telephoneReservant" placeholder="+226 70 00 00 00" />
+              @if (formInfos.get('telephoneReservant')?.invalid && formInfos.get('telephoneReservant')?.touched) {
+                <span class="form-error">
+                  Numéro invalide.
                 </span>
               }
             </div>
+            <div class="form-group">
+              <label>Email <small>(optionnel — pour recevoir le ticket)</small></label>
+              <input type="email" formControlName="emailReservant" placeholder="email@exemple.com" />
+            </div>
+            <div class="form-group">
+              <label>Nombre de places * <small>(max {{ placesRestantes(categorieSelectionnee) }})</small></label>
+              <input type="number" formControlName="nbPlaces" min="1" [max]="placesRestantes(categorieSelectionnee)" />
+            </div>
+            <div class="montant-total">
+              Total estimé : <strong>{{ montantTotal | number }} FCFA</strong>
+            </div>
+          </form>
+
+          <div class="paiement-recap">
+            <div class="detail-row"><span>Catégorie</span><strong>{{ categorieSelectionnee?.nom }}</strong></div>
+            <div class="detail-row"><span>Places</span><strong>{{ formInfos.get('nbPlaces')?.value }}</strong></div>
+            <div class="detail-row"><span>Prix unitaire</span><strong>{{ categorieSelectionnee?.prix | number }} FCFA</strong></div>
+            <div class="detail-row detail-row--total"><span>Total à payer</span><strong>{{ montantTotal | number }} FCFA</strong></div>
+          </div>
+
+          <div class="paiement-info">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <p>
+              Paiement sécurisé. Tu recevras une demande de paiement sur le numéro
+              <strong>{{ formInfos.get('telephoneReservant')?.value }}</strong>.
+            </p>
+          </div>
+
+          @if (erreur) {
+            <div class="toast toast--error">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              {{ erreur }}
+            </div>
+          }
+          <button type="button" class="btn btn--primary btn--full btn--lg"
+            [disabled]="!categorieSelectionnee || formInfos.invalid || isSubmitting"
+            (click)="soumettre()">
+            @if (!isSubmitting) {
+              <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Confirmer et payer {{ montantTotal | number }} FCFA</span>
+            }
+            @if (isSubmitting) {
+              <span class="spinner spinner--inline"></span><span>Traitement en cours…</span>
+            }
           </button>
         }
-      </div>
-    </div>
-  }
-
-  <!-- ═══ Étape 2 : Infos réservant ═══ -->
-  @if (etape === 'infos') {
-    <div class="step-content">
-      <h2 class="step-title">Tes informations</h2>
-      <div class="categorie-recap">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
-        <strong>{{ categorieSelectionnee?.nom }}</strong> — {{ categorieSelectionnee?.prix | number }} FCFA/place
-        <button class="btn-link" (click)="retourCategories()">Changer</button>
-      </div>
-      <form [formGroup]="formInfos" class="res-form">
-        <div class="form-group">
-          <label>Nom complet *</label>
-          <input type="text" formControlName="nomReservant" placeholder="Ex. Fatima Coulibaly" />
-          @if (formInfos.get('nomReservant')?.invalid && formInfos.get('nomReservant')?.touched) {
-            <span class="form-error">
-              Nom requis (min 3 caractères).
-            </span>
-          }
-        </div>
-        <div class="form-group">
-          <label>Téléphone *</label>
-          <input type="tel" formControlName="telephoneReservant" placeholder="+226 70 00 00 00" />
-          @if (formInfos.get('telephoneReservant')?.invalid && formInfos.get('telephoneReservant')?.touched) {
-            <span class="form-error">
-              Numéro invalide.
-            </span>
-          }
-        </div>
-        <div class="form-group">
-          <label>Email <small>(optionnel — pour recevoir le ticket)</small></label>
-          <input type="email" formControlName="emailReservant" placeholder="email@exemple.com" />
-        </div>
-        <div class="form-group">
-          <label>Nombre de places *</label>
-          <input type="number" formControlName="nbPlaces" min="1" max="10" />
-        </div>
-        <div class="montant-total">
-          Total estimé : <strong>{{ montantTotal | number }} FCFA</strong>
-        </div>
-        <button type="button" class="btn btn--primary btn--full" [disabled]="formInfos.invalid" (click)="passerAuPaiement()">
-          Continuer →
-        </button>
-      </form>
-    </div>
-  }
-
-  <!-- ═══ Étape 3 : Récapitulatif + paiement ═══ -->
-  @if (etape === 'paiement') {
-    <div class="step-content">
-      <h2 class="step-title">Confirme ta réservation</h2>
-      <div class="montant-recap">
-        {{ formInfos.get('nbPlaces')?.value }} place(s) × {{ categorieSelectionnee?.prix | number }} FCFA
-        = <strong>{{ montantTotal | number }} FCFA</strong>
-      </div>
-      <p class="text-muted" style="text-align:center;">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Paiement sécurisé — LigdiCash. Tu recevras une demande de paiement sur le numéro
-        {{ formInfos.get('telephoneReservant')?.value }}.
-      </p>
-      @if (erreur) {
-        <div class="toast toast--error">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-          {{ erreur }}
-        </div>
       }
-      <button type="button" class="btn btn--primary btn--full"
-        [disabled]="isSubmitting"
-        (click)="soumettre()">
-        @if (!isSubmitting) {
-          <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Confirmer et payer {{ montantTotal | number }} FCFA</span>
-        }
-        @if (isSubmitting) {
-          <span class="spinner spinner--inline"></span><span>Traitement en cours…</span>
-        }
-      </button>
-      <button type="button" class="btn btn--ghost btn--full" (click)="etape = 'infos'">← Retour</button>
     </div>
   }
 
   <!-- ═══ Confirmation ═══ -->
   @if (etape === 'confirmation' && confirmation) {
     <div class="confirmation">
-      <div class="confirmation__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></div>
-      <h2>Réservation enregistrée !</h2>
-      @switch (issuePaiement) {
-        @case ('confirme') {
-          <p class="confirmation__issue confirmation__issue--ok">Paiement confirmé — tes billets sont émis.</p>
+      <div class="confirmation__content">
+        <div class="confirmation__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></div>
+        <h2>Réservation enregistrée !</h2>
+        @switch (issuePaiement) {
+          @case ('confirme') {
+            <p class="confirmation__issue confirmation__issue--ok">Paiement confirmé — tes billets sont émis.</p>
+          }
+          @case ('echoue') {
+            <p class="confirmation__issue confirmation__issue--err">Le paiement n'a pas abouti. Tes places ont été remises en vente.</p>
+          }
+          @case ('attente') {
+            <p>Paiement ouvert dans un nouvel onglet — cette page se met à jour dès la confirmation.</p>
+          }
+          @default {
+            <p>Finalise ton paiement pour recevoir ton ticket.</p>
+          }
         }
-        @case ('echoue') {
-          <p class="confirmation__issue confirmation__issue--err">Le paiement n'a pas abouti. Tes places ont été remises en vente.</p>
+        <div class="confirmation__details">
+          <div class="detail-row"><span>Référence</span><strong>{{ confirmation.reservationId }}</strong></div>
+          <div class="detail-row"><span>Montant</span><strong>{{ confirmation.montantTotal | number }} FCFA</strong></div>
+          <div class="detail-row"><span>Statut</span><strong>{{ confirmation.statut }}</strong></div>
+        </div>
+        @if (confirmation.urlPaiement && issuePaiement !== 'confirme') {
+          <a [href]="confirmation.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
+            {{ paiementOuvert ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
+          </a>
         }
-        @case ('attente') {
-          <p>Paiement ouvert dans un nouvel onglet — cette page se met à jour dès la confirmation.</p>
-        }
-        @default {
-          <p>Finalise ton paiement pour recevoir ton ticket.</p>
-        }
-      }
-      <div class="confirmation__details">
-        <div class="detail-row"><span>Référence</span><strong>{{ confirmation.reservationId }}</strong></div>
-        <div class="detail-row"><span>Montant</span><strong>{{ confirmation.montantTotal | number }} FCFA</strong></div>
-        <div class="detail-row"><span>Statut</span><strong>{{ confirmation.statut }}</strong></div>
       </div>
-      @if (confirmation.urlPaiement && issuePaiement !== 'confirme') {
-        <a [href]="confirmation.urlPaiement" target="_blank" rel="noopener" class="btn btn--primary btn--full btn--lg">
-          {{ paiementOuvert ? 'Rouvrir la page de paiement' : 'Ouvrir la page de paiement' }} <app-star-mark [size]="14" />
-        </a>
+
+      <!-- Billet(s) + QR — disponibles immédiatement (catégorie gratuite) ou dès confirmation
+           du paiement (chargerTicketsConfirmation() rappelé quand issuePaiement === 'confirme'). -->
+      @if (chargementTickets) {
+        <div class="billet-section">
+          <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+        </div>
       }
-      <p class="confirmation__hint">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg> Tu recevras ton ticket QR code par SMS ou email dès confirmation du paiement.
-      </p>
-      <div class="confirmation__actions">
-        <a routerLink="/billetterie/mes-tickets" class="btn btn--secondary">Voir mes tickets</a>
-        <a routerLink="/billetterie" class="btn btn--ghost">Retour à la billetterie</a>
+      @if (erreurTickets) {
+        <p class="toast toast--error">{{ erreurTickets }}</p>
+      }
+      @if (!chargementTickets && tickets.length > 0) {
+        <div class="billets-list">
+          @for (ticket of tickets; track ticket.ticketId; let i = $index) {
+            <div class="billet-section">
+              <p class="qr-label">
+                Ton billet
+                @if (tickets.length > 1) {
+                  <span class="qr-label__count">— {{ i + 1 }}/{{ tickets.length }}</span>
+                }
+              </p>
+              @if (qrDataUrl(ticket.qrUuid); as src) {
+                <img [src]="src" alt="QR Code billet {{ i + 1 }}" class="qr-img" />
+              } @else {
+                <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+              }
+              <button type="button" class="btn btn--ghost btn--full"
+                [disabled]="!qrDataUrl(ticket.qrUuid) || billetEnCoursDeGeneration[ticket.ticketId]"
+                (click)="telechargerBillet(ticket, i)">
+                @if (!billetEnCoursDeGeneration[ticket.ticketId]) {
+                  <span>Télécharger mon billet</span>
+                }
+                @if (billetEnCoursDeGeneration[ticket.ticketId]) {
+                  <span class="spinner spinner--inline"></span>
+                }
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="confirmation__content">
+        <div class="confirmation__actions">
+          <a routerLink="/billetterie/mes-tickets" class="btn btn--secondary">Voir mes tickets</a>
+          <a routerLink="/billetterie" class="btn btn--ghost">Retour à la billetterie</a>
+        </div>
       </div>
     </div>
   }
 
+  <app-bottom-nav active="billetterie" />
 </div>

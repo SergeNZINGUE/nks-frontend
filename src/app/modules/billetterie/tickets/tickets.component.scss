@@ -2,7 +2,15 @@
 $bg: t.$nks-bg-primary; $surface: t.$nks-bg-surface; $border: t.$nks-border;
 $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 
-.tickets-page { min-height: 100dvh; background: $bg; padding-bottom: 40px; }
+:host { display: block; }
+
+.tickets-page {
+  position: relative;
+  min-height: 100dvh;
+  background: $bg;
+  padding-bottom: 40px;
+  overflow-x: clip;
+}
 
 .topbar {
   display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid $border;
@@ -10,43 +18,154 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   &__title { font-family: t.$font-title; color: $gold; font-size: 18px; }
 }
 
-.gap-notice {
-  margin: 12px 16px; padding: 10px 14px; border-radius: t.$radius-md; font-size: 12px;
-  background: rgba(t.$nks-info, 0.08); border: 1px solid rgba(t.$nks-info, 0.25); color: t.$nks-info;
+// Halo ambiant derrière le bandeau de marque — même langage visuel que la
+// page de connexion (login-glow), pour une cohérence NKS x La Terrasse.
+.hero-glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  translate: -50% 0;
+  width: 420px;
+  height: 240px;
+  background: radial-gradient(closest-side, rgba($gold, 0.20), transparent 75%);
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.skeleton-wrapper { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+// ── Bandeau organisateur : NKS x La Terrasse ────────────────────────────────
+.brand-band {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: t.$sp-4;
+  padding: t.$sp-6 t.$sp-4 t.$sp-4;
+
+  &__logo {
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+
+    &--nks { height: 44px; }
+    &--terrasse {
+      height: 40px;
+      border-radius: 50%;
+      background: $text;
+      padding: 3px;
+    }
+  }
+
+  &__sep {
+    width: 1px;
+    height: 28px;
+    background: linear-gradient(180deg, transparent, rgba($gold, 0.5), transparent);
+  }
+}
+
+// ── Recherche par téléphone ──────────────────────────────────────────────
+.recherche-tel {
+  position: relative; z-index: 1;
+  margin: 16px; padding: t.$sp-5 t.$sp-4;
+  background: $surface; border: 1px solid $border; border-radius: t.$radius-lg;
+  @include t.surface-sheen;
+
+  &__label {
+    display: block; font-size: 13px; font-weight: 600; color: $muted; margin-bottom: t.$sp-3;
+  }
+
+  &__row { display: flex; gap: t.$sp-2; align-items: flex-start; }
+
+  &__control { position: relative; flex: 1; display: flex; align-items: center; }
+
+  &__icon {
+    position: absolute; left: t.$sp-3; width: 18px; height: 18px;
+    color: $muted; pointer-events: none;
+  }
+
+  &__input.input-field { padding-left: t.$sp-10; }
+}
+
+.form-error { display: block; margin-top: t.$sp-2; font-size: 12px; color: t.$nks-error; }
+.otp-info { display: block; margin-top: t.$sp-2; font-size: 12px; color: t.$nks-success; }
+
+.recherche-tel__actions {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: t.$sp-2;
+  margin-top: t.$sp-4;
+}
+
+.skeleton-wrapper { position: relative; z-index: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .skeleton {
-  background: rgba(255,255,255,0.06); border-radius: t.$radius-md;
+  border-radius: t.$radius-lg;
   &--card { height: 140px; }
 }
 
 .empty-state {
+  position: relative; z-index: 1;
   text-align: center; padding: 60px 24px;
   // SVG inline : dimensionné par width/height, font-size n'aurait aucun effet.
-  .empty-icon { margin-bottom: 12px; color: $muted; .icon { width: 48px; height: 48px; } }
+  .empty-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 88px; height: 88px; margin-bottom: 16px; border-radius: 50%;
+    background: rgba($gold, 0.08); border: 1px solid rgba($gold, 0.2);
+    color: $gold; .icon { width: 40px; height: 40px; }
+  }
   p { color: $muted; font-size: 14px; margin-bottom: 20px; }
 }
 
-.tickets-list { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.tickets-list { position: relative; z-index: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 
 .ticket-card {
+  position: relative;
   background: $surface; border: 1px solid $border; border-radius: t.$radius-lg; overflow: hidden;
+  @include t.surface-sheen;
+  animation: ticket-enter t.$dur-enter t.$ease-out both;
 
   &__header {
     display: flex; justify-content: space-between; align-items: flex-start;
     padding: 16px 16px 12px; gap: 12px;
   }
+  &__eyebrow {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: $gold; margin-bottom: 6px;
+  }
   &__info h3 { font-family: t.$font-title; color: $text; font-size: 16px; margin: 0 0 4px; }
 }
 
+@keyframes ticket-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-card { animation: none; }
+}
+
 .places { font-size: 13px; color: $muted; }
+
+// Grille responsive des billets d'une même réservation — 1 colonne par défaut (mobile),
+// jusqu'à 3 colonnes si l'espace le permet. Mêmes breakpoints que .poule-grid
+// (classement-poules.component.scss) pour rester cohérent avec le reste du site.
+.qr-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: t.$sp-4;
+
+  @media (min-width: 480px) { grid-template-columns: 1fr 1fr; }
+  @media (min-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+}
 
 .qr-section {
   border-top: 1px dashed $border; padding: 16px; text-align: center;
   background: rgba(255,255,255,0.02);
 }
+// Billet EXPIRE (soirée clôturée) ou ANNULE — même pattern d'atténuation que
+// .card--terminee/--annulee (soirees.component.scss).
+.qr-section--inactif { opacity: 0.6; }
+.qr-section__badge { display: inline-block; margin-bottom: 10px; }
 .qr-label { font-size: 12px; color: $muted; margin-bottom: 12px; }
+.qr-label__count { color: $gold; font-weight: 600; margin-left: 4px; }
 .qr-img {
   width: 180px; height: 180px; border-radius: t.$radius-md;
   border: 2px solid rgba($gold,0.3); display: block; margin: 0 auto 10px;
@@ -57,6 +176,7 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 
 .pending-notice {
+  display: flex; align-items: center; gap: 8px;
   border-top: 1px solid $border; padding: 12px 16px;
   font-size: 13px; color: t.$nks-warning;
   background: rgba(t.$nks-warning, 0.05);
@@ -75,12 +195,45 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 11px 20px; border-radius: t.$radius-md; font-size: 14px; font-weight: 600;
   text-decoration: none; cursor: pointer; border: 1px solid transparent;
+  transition: filter t.$dur-fast t.$ease-out, opacity t.$dur-fast t.$ease-out;
   &--primary { background: $gold; color: t.$nks-bg-primary; }
   &--ghost   { background: transparent; color: $gold; border-color: rgba($gold, 0.4); }
+  // Action secondaire discrète (renvoyer un code / modifier le numéro) — pas de bordure,
+  // pour ne pas concurrencer le bouton "Valider".
+  &--text    { background: transparent; color: $muted; border-color: transparent; padding: 6px 4px; font-weight: 500; }
+  &--full    { width: 100%; margin-top: 10px; }
+  &:hover:not(:disabled) { filter: brightness(1.08); }
+  &--text:hover:not(:disabled) { color: $gold; filter: none; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn__spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: t.$nks-bg-primary;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn__spinner { animation-duration: 1.4s; }
 }
 
 @media (min-width: 640px) {
-  .tickets-list { max-width: 640px; margin: 0 auto; }
+  .recherche-tel,
+  .skeleton-wrapper { max-width: 640px; margin-left: auto; margin-right: auto; }
+
+  // .tickets-list reste large (contrairement à .recherche-tel/.skeleton-wrapper) pour
+  // laisser .qr-grid ci-dessous utiliser l'espace disponible jusqu'à 3 colonnes —
+  // un billet en carte est plus dense qu'un simple formulaire de recherche.
+  .tickets-list { max-width: 1100px; margin-left: auto; margin-right: auto; }
+
+  .brand-band {
+    &__logo--nks { height: 56px; }
+    &__logo--terrasse { height: 50px; }
+  }
 }
 
 
