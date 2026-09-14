@@ -136,7 +136,7 @@ export class LoginComponent {
     this.auth.login(this.form.value).subscribe({
       next: () => {
         this.idleSvc.reinitialiser();
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? this.redirectByRole();
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? this.auth.redirectByRole();
         this.router.navigateByUrl(returnUrl);
       },
       error: err => {
@@ -144,15 +144,5 @@ export class LoginComponent {
         this.error = messageErreur(err, 'Identifiants incorrects.');
       },
     });
-  }
-
-  private redirectByRole(): string {
-    if (this.auth.isAdmin())        return '/back-office';
-    if (this.auth.isOrganisateur()) return '/back-office';
-    if (this.auth.isCandidat())     return '/mon-espace';
-    if (this.auth.isJury())         return '/jury';
-    if (this.auth.isAgent())        return '/scan';
-    if (this.auth.isHotesse())      return '/hotesse';
-    return '/';
   }
 }

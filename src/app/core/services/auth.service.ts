@@ -74,6 +74,23 @@ export class AuthService {
   isAgent(): boolean        { return this.hasRole('AGENT_ACCUEIL'); }
   isHotesse(): boolean      { return this.hasRole('HOTESSE'); }
 
+  /**
+   * Destination "Mon espace" selon le rôle réellement détenu — `/mon-espace` est réservé au
+   * rôle CANDIDAT (roleGuard), y renvoyer un admin/hôtesse/jury produit /unauthorized (bug
+   * constaté le 14/09/2026 sur le lien "Mon espace" du header public, qui pointait en dur
+   * dessus). Même logique que LoginComponent.redirectByRole(), centralisée ici pour ne plus
+   * la dupliquer.
+   */
+  redirectByRole(): string {
+    if (this.isAdmin())        return '/back-office';
+    if (this.isOrganisateur()) return '/back-office';
+    if (this.isCandidat())     return '/mon-espace';
+    if (this.isJury())         return '/jury';
+    if (this.isAgent())        return '/scan';
+    if (this.isHotesse())      return '/hotesse';
+    return '/';
+  }
+
   /** true si le candidat connecté doit être redirigé vers /mon-espace/consentement — cf. consentGuard. */
   consentementRequis(): boolean {
     return localStorage.getItem(CONSENTEMENT_KEY) === '1';

@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 
 import { RouterLink } from '@angular/router';
+
+import { AuthService } from '@core/services/auth.service';
 
 type NavItem = 'home' | 'galerie' | 'classement' | 'billetterie' | 'profil';
 
@@ -19,13 +21,23 @@ type NavItem = 'home' | 'galerie' | 'classement' | 'billetterie' | 'profil';
     changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class BottomNavComponent {
+  private authSvc = inject(AuthService);
+
   readonly active = input<NavItem>('home');
 
-  items: { key: NavItem; label: string; route: string }[] = [
-    { key: 'home',        label: 'Accueil',    route: '/' },
-    { key: 'galerie',     label: 'Candidats',  route: '/galerie' },
-    { key: 'classement',  label: 'Classement', route: '/classement' },
-    { key: 'billetterie', label: 'Tickets',    route: '/billetterie' },
-    { key: 'profil',      label: 'Mon espace', route: '/mon-espace' },
-  ];
+  /**
+   * "Mon espace" pointait en dur sur `/mon-espace` (réservé au rôle CANDIDAT par roleGuard) —
+   * un admin/hôtesse/jury connecté atterrissait sur /unauthorized (bug constaté le 14/09/2026).
+   * Route calculée à chaque accès plutôt que figée dans le tableau, pour refléter le rôle
+   * réel de l'utilisateur connecté (ou /login s'il ne l'est pas).
+   */
+  get items(): { key: NavItem; label: string; route: string }[] {
+    return [
+      { key: 'home',        label: 'Accueil',    route: '/' },
+      { key: 'galerie',     label: 'Candidats',  route: '/galerie' },
+      { key: 'classement',  label: 'Classement', route: '/classement' },
+      { key: 'billetterie', label: 'Tickets',    route: '/billetterie' },
+      { key: 'profil',      label: 'Mon espace', route: this.authSvc.isLoggedIn() ? this.authSvc.redirectByRole() : '/login' },
+    ];
+  }
 }

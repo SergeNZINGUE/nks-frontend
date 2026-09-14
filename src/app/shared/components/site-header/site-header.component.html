@@ -18,7 +18,7 @@
 
     <div class="site-header__actions">
       @if (isLoggedIn()) {
-        <a routerLink="/mon-espace" class="site-header__connexion">Mon espace</a>
+        <a [routerLink]="espaceUrl()" class="site-header__connexion">Mon espace</a>
       } @else {
         <a routerLink="/login" class="site-header__connexion">Connexion</a>
       }

@@ -35,9 +35,19 @@ export class SiteHeaderComponent implements OnInit {
   /** Faux par défaut : le bouton « S'inscrire » n'apparaît qu'une fois la fenêtre d'inscription confirmée ouverte. */
   inscriptionsOuvertes = false;
 
-  /** Bascule Connexion / Mon espace — même route que la clé 'profil' de app-bottom-nav. */
+  /** Bascule Connexion / Mon espace. */
   isLoggedIn(): boolean {
     return this.authSvc.isLoggedIn();
+  }
+
+  /**
+   * Destination réelle de "Mon espace" selon le rôle détenu — `/mon-espace` est réservé au
+   * rôle CANDIDAT (roleGuard) ; y renvoyer un admin/hôtesse/jury produit /unauthorized (bug
+   * constaté le 14/09/2026, lien alors en dur sur `/mon-espace`). Même logique que
+   * LoginComponent après connexion, centralisée dans AuthService.
+   */
+  espaceUrl(): string {
+    return this.authSvc.redirectByRole();
   }
 
   ngOnInit(): void {
