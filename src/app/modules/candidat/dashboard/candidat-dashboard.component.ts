@@ -10,6 +10,7 @@ import { ParametresService } from '@core/services/parametres.service';
 import { EditionService } from '@core/services/edition.service';
 import { AuthService } from '@core/services/auth.service';
 import { PouleDuoService } from '@core/services/poule-duo.service';
+import { SoireeService } from '@core/services/soiree.service';
 import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.component';
 import { BadgeComponent, BadgeVariant } from '../../admin/shared/ui/badge/badge.component';
 import { ModalComponent } from '../../admin/shared/ui/modal/modal.component';
@@ -38,6 +39,7 @@ interface MonAffectation {
   texte: string;
   ordrePassage?: number | null;
   chansonImposee?: string | null;
+  soireeDateHeure?: string | null;
   /** Uniquement pour type 'POULE' — le duo affiche déjà son partenaire dans `texte`. */
   membres?: MembrePoule[];
 }
@@ -65,6 +67,7 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   private editionSvc = inject(EditionService);
   private authSvc = inject(AuthService);
   private pouleDuoSvc = inject(PouleDuoService);
+  private soireeSvc = inject(SoireeService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -233,11 +236,16 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
   private resoudreAffectation(phase: Phase, profilId: string): Observable<MonAffectation | null> {
     if (phase.typePhase === 'DUO') {
       return this.pouleDuoSvc.duosPhase(phase.id).pipe(
-        map(duos => {
+        switchMap(duos => {
           const duo = duos.find(d => d.candidat1.id === profilId || d.candidat2.id === profilId);
-          if (!duo) return null;
+          if (!duo) return of(null);
           const partenaire = duo.candidat1.id === profilId ? duo.candidat2 : duo.candidat1;
-          return { phaseLabel: this.labelPhase(phase.nom), texte: `Duo avec ${partenaire.prenom} ${partenaire.nom}` };
+          const base: MonAffectation = { phaseLabel: this.labelPhase(phase.nom), texte: `Duo avec ${partenaire.prenom} ${partenaire.nom}` };
+          if (!duo.soireeId) return of(base);
+          return this.soireeSvc.detail(duo.soireeId).pipe(
+            map(s => ({ ...base, soireeDateHeure: s.dateHeure })),
+            catchError(() => of(base)),
+          );
         }),
         catchError(() => of(null)),
       );
@@ -247,27 +255,32 @@ export class CandidatDashboardComponent implements OnInit, OnDestroy {
         if (!poules.length) return of(null);
         return forkJoin(poules.map(poule =>
           this.pouleDuoSvc.candidatsPoule(poule.id).pipe(
-            map(candidats => ({ nom: poule.nom, candidats, appartient: candidats.some(a => a.candidat.id === profilId) })),
-            catchError(() => of({ nom: poule.nom, candidats: [], appartient: false })),
+            map(candidats => ({ nom: poule.nom, soireeId: poule.soireeId, candidats, appartient: candidats.some(a => a.candidat.id === profilId) })),
+            catchError(() => of({ nom: poule.nom, soireeId: null as string | null, candidats: [], appartient: false })),
           )
         )).pipe(
           map(resultats => resultats.find(r => r.appartient) ?? null),
         );
       }),
-      map(trouve => {
-        if (!trouve) return null;
+      switchMap(trouve => {
+        if (!trouve) return of(null);
         const monAff = trouve.candidats.find(a => a.candidat.id === profilId);
         const adversaires = trouve.candidats
           .filter(a => a.candidat.id !== profilId)
           .sort((a, b) => (a.ordrePassage ?? 999) - (b.ordrePassage ?? 999))
           .map(a => ({ id: a.candidat.id, codeCandidat: a.candidat.codeCandidat, prenom: a.candidat.prenom, nom: a.candidat.nom, ordrePassage: a.ordrePassage }));
-        return {
+        const base: MonAffectation = {
           phaseLabel: this.labelPhase(phase.nom),
           texte: `Poule ${trouve.nom}`,
           ordrePassage: monAff?.ordrePassage ?? null,
           chansonImposee: monAff?.chansonImposee ?? null,
           membres: adversaires,
         };
+        if (!trouve.soireeId) return of(base);
+        return this.soireeSvc.detail(trouve.soireeId).pipe(
+          map(s => ({ ...base, soireeDateHeure: s.dateHeure })),
+          catchError(() => of(base)),
+        );
       }),
       catchError(() => of(null)),
     );

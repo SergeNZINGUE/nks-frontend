@@ -296,6 +296,16 @@ $gold:    t.$nks-gold;
   &__phase { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: $muted; }
   &__nom { font-size: 15px; font-weight: 700; color: $text; }
 
+  &__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: $text;
+    font-weight: 500;
+    .icon { width: 13px; height: 13px; flex-shrink: 0; }
+  }
+
   &__passage {
     display: inline-flex;
     align-items: center;
