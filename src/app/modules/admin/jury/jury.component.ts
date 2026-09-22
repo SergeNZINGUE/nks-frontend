@@ -184,6 +184,21 @@ import { messageErreur } from '@core/utils/http-error.util';
         <button type="button" class="btn btn--primary" [disabled]="!soireeSelectionneeId || chargementGrille" (click)="ouvrirGrilleDeliberation()">
           {{ chargementGrille ? 'Chargement…' : 'Grille de délibération' }}
         </button>
+        @if (soireeSelectionnee && !soireeSelectionnee.votesArretesLe && !soireeSelectionnee.deliberationVerrouilee) {
+          <button type="button" class="btn btn--warn" [disabled]="arreterVotesEnCours" (click)="demandeArretVotes = true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg>
+            {{ arreterVotesEnCours ? 'Arrêt…' : 'Arrêt des votes' }}
+          </button>
+        }
+        @if (soireeSelectionnee?.votesArretesLe && !soireeSelectionnee?.deliberationVerrouilee) {
+          <button type="button" class="btn btn--err" [disabled]="finDeliberationEnCours" (click)="demandeFinDeliberation = true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            {{ finDeliberationEnCours ? 'Clôture…' : 'Fin délibération' }}
+          </button>
+        }
+        @if (soireeSelectionnee?.deliberationVerrouilee) {
+          <span class="badge-tbl badge-tbl--ELIMINE" style="align-self:center;">Délibération clôturée</span>
+        }
         <button type="button" class="btn btn--err" [disabled]="!soireeSelectionneeId || clotureEnCours" (click)="demandeCloture = true">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           {{ clotureEnCours ? 'Clôture…' : 'Clôturer la notation de cette soirée' }}
@@ -238,6 +253,30 @@ import { messageErreur } from '@core/utils/http-error.util';
       [enCours]="desactivationEnCoursId === j.id"
       (confirmed)="confirmerDesactivation(j)"
       (cancelled)="juryADesactiver = null" />
+  }
+
+  @if (demandeArretVotes) {
+    <app-confirm-dialog
+      titre="Arrêt des votes"
+      message="Figer la photo des votes (en ligne et sur place) pour la délibération ? Les votes seront capturés tels quels à cet instant. La grille de délibération affichera ces valeurs figées."
+      libelleConfirmer="Arrêter les votes"
+      [danger]="false"
+      [enCours]="arreterVotesEnCours"
+      [erreur]="erreurArretVotes"
+      (confirmed)="confirmerArretVotes()"
+      (cancelled)="demandeArretVotes = false; erreurArretVotes = null" />
+  }
+
+  @if (demandeFinDeliberation) {
+    <app-confirm-dialog
+      titre="Fin de délibération"
+      message="Clôturer la délibération ? Les notes jury seront verrouillées et les scores des candidats éliminés seront définitivement figés. Les qualifiés conservent leurs points pour la phase suivante. Action irréversible."
+      libelleConfirmer="Clôturer la délibération"
+      [danger]="true"
+      [enCours]="finDeliberationEnCours"
+      [erreur]="erreurFinDeliberation"
+      (confirmed)="confirmerFinDeliberation()"
+      (cancelled)="demandeFinDeliberation = false; erreurFinDeliberation = null" />
   }
 
   @if (demandeCloture) {
@@ -362,6 +401,14 @@ export class JuryComponent implements OnInit, OnDestroy {
   clotureEnCours = false;
   erreurCloture: string | null = null;
   messageCloture: string | null = null;
+
+  demandeArretVotes = false;
+  arreterVotesEnCours = false;
+  erreurArretVotes: string | null = null;
+
+  demandeFinDeliberation = false;
+  finDeliberationEnCours = false;
+  erreurFinDeliberation: string | null = null;
 
   chargementGrille = false;
   erreurGrille: string | null = null;
@@ -526,6 +573,10 @@ export class JuryComponent implements OnInit, OnDestroy {
     );
   }
 
+  get soireeSelectionnee(): SoireeEvent | undefined {
+    return this.soirees.find(s => s.id === this.soireeSelectionneeId);
+  }
+
   selectionnerSoiree(id: string): void {
     this.soireeSelectionneeId = id;
     this.notes = [];
@@ -560,6 +611,43 @@ export class JuryComponent implements OnInit, OnDestroy {
 
   fermerGrilleDeliberation(): void {
     this.grille = null;
+  }
+
+  confirmerArretVotes(): void {
+    if (!this.soireeSelectionneeId) return;
+    this.arreterVotesEnCours = true;
+    this.erreurArretVotes = null;
+    let echec = false;
+    this.sub.add(
+      this.jurySvc.arreterVotesSoiree(this.soireeSelectionneeId).pipe(
+        catchError(err => { echec = true; this.erreurArretVotes = messageErreur(err, 'Échec de l\'arrêt des votes.'); return of(undefined); }),
+        finalize(() => { this.arreterVotesEnCours = false; })
+      ).subscribe(() => {
+        if (echec) return;
+        this.demandeArretVotes = false;
+        const now = new Date().toISOString();
+        this.soirees = this.soirees.map(s => s.id === this.soireeSelectionneeId ? { ...s, votesArretesLe: now } : s);
+        this.messageCloture = 'Votes figés — la grille de délibération affiche désormais les scores au moment de l\'arrêt.';
+      })
+    );
+  }
+
+  confirmerFinDeliberation(): void {
+    if (!this.soireeSelectionneeId) return;
+    this.finDeliberationEnCours = true;
+    this.erreurFinDeliberation = null;
+    let echec = false;
+    this.sub.add(
+      this.jurySvc.cloturerDeliberationSoiree(this.soireeSelectionneeId).pipe(
+        catchError(err => { echec = true; this.erreurFinDeliberation = messageErreur(err, 'Échec de la clôture de délibération.'); return of(undefined); }),
+        finalize(() => { this.finDeliberationEnCours = false; })
+      ).subscribe(() => {
+        if (echec) return;
+        this.demandeFinDeliberation = false;
+        this.soirees = this.soirees.map(s => s.id === this.soireeSelectionneeId ? { ...s, deliberationVerrouilee: true } : s);
+        this.messageCloture = 'Délibération clôturée — notes jury verrouillées, scores éliminés figés définitivement.';
+      })
+    );
   }
 
   confirmerCloture(): void {

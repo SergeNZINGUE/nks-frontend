@@ -317,6 +317,13 @@
     &:hover:not(:disabled) { background: rgba($nks-error, 0.25); }
   }
 
+  &--warn {
+    background: rgba(230, 150, 30, 0.15);
+    color: #e6961e;
+    border-color: rgba(230, 150, 30, 0.3);
+    &:hover:not(:disabled) { background: rgba(230, 150, 30, 0.25); }
+  }
+
   &--primary {
     background: $nks-gradient-gold;
     color: $nks-bg-primary;

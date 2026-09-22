@@ -276,6 +276,10 @@ export interface SoireeEvent {
   nbConsommationsPourVoteBonus: number | null;
   /** Plafond de votes bonus par billet — `null` = pas de plafond. */
   plafondVotesBonus: number | null;
+  /** ISO date de l'arrêt des votes (snapshot figé). null = votes toujours live. */
+  votesArretesLe: string | null;
+  /** true après clôture de la délibération — scores éliminés gelés, notes jury verrouillées. */
+  deliberationVerrouilee: boolean;
 }
 
 export interface Classement {

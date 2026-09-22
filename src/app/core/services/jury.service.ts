@@ -102,6 +102,8 @@ export interface GrilleDeliberationResponse {
   phaseId: string;
   phaseNom: string;
   notationCloturee: boolean;
+  /** ISO date du snapshot des votes (arrêt des votes). null si votes toujours live. */
+  votesArretesLe: string | null;
   criteres: CritereGrilleResponse[];
   candidats: LigneDeliberationResponse[];
 }
@@ -257,5 +259,24 @@ export class JuryService {
    */
   grilleDeliberation(soireeId: string): Observable<GrilleDeliberationResponse> {
     return this.http.get<GrilleDeliberationResponse>(`${this.base}/soirees/${soireeId}/grille-deliberation`);
+  }
+
+  /**
+   * PUT /soirees/{id}/arreter-votes — JuryController.arreterVotes() — ADMIN/SUPER_ADMIN.
+   * Prend un snapshot des votes (payants, sociaux, sur place) pour tous les candidats de la
+   * soirée. La grille de délibération utilisera ce snapshot au lieu des votes live. Idempotent
+   * une seule fois (lance ConflitEtat si déjà arrêté). 204 No Content en cas de succès.
+   */
+  arreterVotesSoiree(soireeId: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/soirees/${soireeId}/arreter-votes`, {});
+  }
+
+  /**
+   * PUT /soirees/{id}/cloturer-deliberation — JuryController.cloturerDeliberation() — ADMIN/SUPER_ADMIN.
+   * Requiert un snapshot préalable (arreterVotes). Verrouille les notes jury, recalcule le
+   * classement via snapshot, gèle les ResultatPhase des candidats ELIMINÉS. 204 No Content.
+   */
+  cloturerDeliberationSoiree(soireeId: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/soirees/${soireeId}/cloturer-deliberation`, {});
   }
 }

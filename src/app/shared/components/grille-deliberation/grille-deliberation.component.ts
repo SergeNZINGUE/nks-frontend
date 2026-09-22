@@ -32,11 +32,20 @@ const LABEL_PHASE: Record<string, string> = {
         {{ grille().notationCloturee ? 'Clôturée' : 'En cours' }}
       </span>
     </span>
+    @if (grille().votesArretesLe) {
+      <span>
+        <strong>Votes :</strong>
+        <span class="gd-badge gd-badge--gele">
+          Figés le {{ grille().votesArretesLe | date:'d MMM yyyy, HH:mm' }}
+        </span>
+      </span>
+    }
   </div>
 
   <p class="field-hint">
     Notes jury spécifiques à cette soirée. Vote public sur place : spécifique à cette soirée
     également. Votes en ligne (payants + sociaux) : cumulés sur toute la phase.
+    @if (grille().votesArretesLe) { <strong>Les scores de votes sont figés au moment de l'arrêt des votes.</strong> }
   </p>
 
   <div class="form__actions" style="margin-bottom: 12px;">
@@ -96,6 +105,7 @@ const LABEL_PHASE: Record<string, string> = {
     .gd-entete { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; font-size: 14px; }
     .gd-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; font-size: 12px; background: rgba(230,180,60,0.15); color: #e6b43c; border: 1px solid rgba(230,180,60,0.3); }
     .gd-badge--cloture { background: rgba(200,60,60,0.15); color: #d9534f; border-color: rgba(200,60,60,0.3); }
+    .gd-badge--gele { background: rgba(60,130,200,0.15); color: #4a9fd5; border-color: rgba(60,130,200,0.3); }
     .deliberation-ligne { border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
     .deliberation-ligne__header { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-wrap: wrap; }
     .deliberation-ligne__rang { font-weight: 700; opacity: 0.6; }
