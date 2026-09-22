@@ -347,6 +347,8 @@ export class SoireesComponent implements OnInit, OnDestroy {
       resultatsPublies: false,
       nbConsommationsPourVoteBonus: v.nbConsommationsPourVoteBonus || null,
       plafondVotesBonus: v.plafondVotesBonus || null,
+      votesArretesLe: null,
+      deliberationVerrouilee: false,
     };
     this.sub.add(
       this.soireeSvc.creer(v.phaseId, corps).pipe(
