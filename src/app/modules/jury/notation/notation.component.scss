@@ -171,6 +171,35 @@
   }
 }
 
+.passage-selector {
+  display: flex;
+  gap: $sp-2;
+  max-width: 600px;
+  margin: $sp-3 auto $sp-2;
+  padding: 0 $sp-4;
+}
+
+.passage-btn {
+  flex: 1;
+  padding: $sp-2 $sp-3;
+  border: 1px solid rgba($nks-gold, 0.3);
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $nks-text-secondary;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover { border-color: $nks-gold; color: $nks-gold; }
+
+  &--active {
+    background: rgba($nks-gold, 0.12);
+    border-color: $nks-gold;
+    color: $nks-gold;
+    font-weight: 600;
+  }
+}
+
 .banner-ok,
 .banner-err,
 .banner-warn {

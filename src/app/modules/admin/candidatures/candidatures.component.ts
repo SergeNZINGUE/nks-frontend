@@ -4,7 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, forkJoin, of, catchError, switchMap, finalize } from 'rxjs';
 
-import { AdminService, SmsBulkResponse, SMS_CANDIDATURE_VALIDEE, normaliserTelephone } from '@core/services/admin.service';
+import { AdminService, ReinitialiserMotDePasseCandidatResponse, SmsBulkResponse, SMS_CANDIDATURE_VALIDEE, normaliserTelephone } from '@core/services/admin.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { VideoService } from '@core/services/video.service';
 import { MediaService } from '@core/services/media.service';
@@ -302,12 +302,23 @@ interface DetailComplement {
           </div>
         }
 
-        <div class="modal__actions">
-          @if (complement(d.id)?.candidat; as cd) {
-            @if (!modifProfilOuvert) {
-              <button type="button" class="btn btn--ghost" (click)="ouvrirModifProfil(cd, d)">✏ Modifier le profil</button>
-            }
+        @if (complement(d.id)?.candidat; as cd) {
+          @if (!modifProfilOuvert) {
+            <div class="dossier__actions-secondaires">
+              <button type="button" class="btn btn--ghost btn--sm" (click)="ouvrirModifProfil(cd, d)">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                Modifier le profil
+              </button>
+              <button type="button" class="btn btn--ghost btn--sm"
+                (click)="demandeReinitMdp = { candidatureId: d.id, candidatId: cd.id, nom: d.prenom + ' ' + d.nom }">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                Réinitialiser le MDP
+              </button>
+            </div>
           }
+        }
+
+        <div class="modal__actions">
           @if (d.statut === 'EN_ATTENTE') {
             <button type="button" class="btn btn--ok" (click)="valider(d)" [disabled]="actionEnCours === d.id">
               @if (actionEnCours !== d.id) {
@@ -405,6 +416,44 @@ interface DetailComplement {
       (confirmed)="confirmerMasquage(v)"
       (cancelled)="videoAMasquer = null" />
   }
+
+  <!-- Confirmation réinitialisation mot de passe candidat -->
+  @if (demandeReinitMdp; as r) {
+    <app-confirm-dialog
+      titre="Réinitialiser le mot de passe"
+      [message]="messageReinitMdp(r.nom)"
+      libelleConfirmer="Réinitialiser"
+      [danger]="true"
+      [enCours]="reinitMdpEnCours"
+      [erreur]="erreurReinitMdp"
+      (confirmed)="confirmerReinitMdpCandidat()"
+      (cancelled)="demandeReinitMdp = null; erreurReinitMdp = null" />
+  }
+
+  <!-- Résultat réinitialisation : affichage du nouveau mot de passe pour copie -->
+  @if (resultatReinitMdp; as r) {
+    <div class="modal-bg modal-bg--top" (click)="fermerResultatReinit()">
+      <div class="modal modal--mdp-reinit" role="dialog" aria-modal="true" aria-labelledby="titre-mdp-reinit"
+        (click)="$event.stopPropagation()">
+        <h2 id="titre-mdp-reinit">Mot de passe réinitialisé</h2>
+        <p class="modal__hint">
+          Le nouveau mot de passe de <strong>{{ r.prenomNom }}</strong> a été transmis par WhatsApp/SMS et e-mail.
+        </p>
+        <p class="modal__hint" style="margin-top:-8px">
+          Vous pouvez aussi le copier et le partager directement :
+        </p>
+        <div class="mdp-reinit__bloc">
+          <code class="mdp-reinit__code">{{ r.nouveauMotDePasse }}</code>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="copierMdp(r.nouveauMotDePasse)">
+            {{ mdpCopie ? '✓ Copié !' : 'Copier' }}
+          </button>
+        </div>
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ok" (click)="fermerResultatReinit()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 `,
   styleUrls: ['./candidatures.component.scss'],
@@ -462,6 +511,12 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   videoAMasquer: Video | null = null;
   masquageEnCoursId: string | null = null;
   erreurMasquage: string | null = null;
+
+  demandeReinitMdp: { candidatureId: string; candidatId: string; nom: string } | null = null;
+  reinitMdpEnCours = false;
+  erreurReinitMdp: string | null = null;
+  resultatReinitMdp: ReinitialiserMotDePasseCandidatResponse | null = null;
+  mdpCopie = false;
 
   filtres: { val: Filtre; label: string }[] = [
     { val: 'EN_ATTENTE', label: 'En attente' },
@@ -664,9 +719,46 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   /** Échap ferme la modale au premier plan (activation, rejet, puis dossier) quel que soit l'élément ayant le focus */
   @HostListener('document:keydown.escape')
   onEchap(): void {
+    if (this.resultatReinitMdp) { this.fermerResultatReinit(); return; }
+    if (this.demandeReinitMdp && !this.reinitMdpEnCours) { this.demandeReinitMdp = null; this.erreurReinitMdp = null; return; }
     if (this.candidatureAactiver) { this.fermerModalActivation(); return; }
     if (this.candidatureArejeter) { this.fermerModal(); return; }
     if (this.dossierOuvert) this.fermerDossier();
+  }
+
+  messageReinitMdp(nom: string): string {
+    return `Générer un nouveau mot de passe temporaire pour ${nom} ? L'ancien mot de passe sera immédiatement invalidé. Le candidat recevra le nouveau par WhatsApp/SMS et e-mail.`;
+  }
+
+  confirmerReinitMdpCandidat(): void {
+    if (!this.demandeReinitMdp) return;
+    const { candidatId } = this.demandeReinitMdp;
+    this.reinitMdpEnCours = true;
+    this.erreurReinitMdp = null;
+    let echec = false;
+    this.sub.add(
+      this.adminSvc.reinitialiserMotDePasseCandidat(candidatId).pipe(
+        catchError(err => { echec = true; this.erreurReinitMdp = messageErreur(err, 'Échec de la réinitialisation.'); return of(null); }),
+        finalize(() => { this.reinitMdpEnCours = false; }),
+      ).subscribe(res => {
+        if (echec || !res) return;
+        this.demandeReinitMdp = null;
+        this.fermerDossier();
+        this.resultatReinitMdp = res;
+      })
+    );
+  }
+
+  fermerResultatReinit(): void {
+    this.resultatReinitMdp = null;
+    this.mdpCopie = false;
+  }
+
+  copierMdp(mdp: string): void {
+    navigator.clipboard.writeText(mdp).then(() => {
+      this.mdpCopie = true;
+      setTimeout(() => { this.mdpCopie = false; }, 2000);
+    });
   }
 
   ouvrirModalRejet(c: CandidatureDetailResponse): void {

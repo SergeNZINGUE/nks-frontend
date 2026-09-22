@@ -50,8 +50,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Phases',             route: '/back-office/phases',    icon: 'trophy',       statut: 'ready' },
       // ORGANISATEUR exclu : PouleDuoController est 100% ADMIN/SUPER_ADMIN.
       { label: 'Poules & Duos',      route: '/back-office/poules',    icon: 'users',        statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN'] },
-      // ORGANISATEUR exclu : ClassementController (calculer/publier) est 100% ADMIN/SUPER_ADMIN.
-      { label: 'Résultats & classement', route: '/back-office/resultats', icon: 'trending-up', statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN'] },
+      // ORGANISATEUR : peut voir les résultats et repêcher — ne peut pas recalculer ni publier (ClassementController reste ADMIN/SUPER_ADMIN).
+      { label: 'Résultats & classement', route: '/back-office/resultats', icon: 'trending-up', statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANISATEUR'] },
     ],
   },
   {

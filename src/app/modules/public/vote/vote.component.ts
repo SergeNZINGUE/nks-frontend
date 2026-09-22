@@ -46,6 +46,7 @@ export class VoteComponent implements OnInit, OnDestroy {
   candidat: CandidatPublicResponse | null = null;
   phaseId: string | null = null;
   loading = true;
+  candidatElimine = false;
   submitting = false;
   success: InitierVoteResponse | null = null;
   /** true une fois la page de paiement ouverte dans un nouvel onglet — cet onglet ne navigue jamais. */
@@ -96,6 +97,7 @@ export class VoteComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: phase => {
         this.phaseId = phase?.id ?? null;
+        this.candidatElimine = this.candidat?.statutProfil === 'ELIMINE';
         this.loading = false;
       },
       error: () => { this.loading = false; this.error = 'Candidat ou phase introuvable.'; },

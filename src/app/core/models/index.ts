@@ -285,6 +285,7 @@ export interface Classement {
   rangGlobal: number;
   totalPointsCumules: number;
   officiel: boolean;
+  statutProfil: StatutProfilCandidat;
 }
 
 export interface ResultatPhase {

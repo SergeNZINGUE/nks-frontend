@@ -56,10 +56,14 @@
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Réserver ma place
               </a>
             }
-            @if (s.statut !== 'PLANIFIEE' && s.statut !== 'EN_COURS') {
-              <span class="btn btn--disabled">
-                {{ s.statut === 'TERMINEE' ? 'Soirée terminée' : 'Réservations fermées' }}
-              </span>
+            @if (s.statut === 'TERMINEE') {
+              <a routerLink="/classement-poules" [queryParams]="{ soireeId: s.id }" class="btn btn--ghost">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+                Voir les résultats
+              </a>
+            }
+            @if (s.statut !== 'PLANIFIEE' && s.statut !== 'EN_COURS' && s.statut !== 'TERMINEE') {
+              <span class="btn btn--disabled">Réservations fermées</span>
             }
             <a routerLink="/billetterie/mes-tickets" class="btn btn--ghost">Mes tickets</a>
           </div>

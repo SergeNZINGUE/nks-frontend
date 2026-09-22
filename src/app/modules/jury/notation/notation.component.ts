@@ -95,10 +95,17 @@ const CRITERES_CDC: CritereLocal[] = [
       </div>
       <span class="score-bar__val">{{ totalPoints }} <span class="score-bar__max">/ {{ totalMax }}</span></span>
     </div>
+    <!-- Sélecteur de passage -->
+    <div class="passage-selector" role="group" aria-label="Sélection du passage">
+      <button type="button" class="passage-btn" [class.passage-btn--active]="numeroPassage === 1"
+        (click)="changerPassage(1)">Passage 1</button>
+      <button type="button" class="passage-btn" [class.passage-btn--active]="numeroPassage === 2"
+        (click)="changerPassage(2)">Passage 2</button>
+    </div>
     @if (dejaNote) {
       <div class="banner-ok" role="status">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
-        Notes déjà soumises — tu peux les modifier.
+        Notes passage {{ numeroPassage }} déjà soumises — tu peux les modifier.
       </div>
     }
     @if (erreurSoumission) {
@@ -178,6 +185,10 @@ export class NotationComponent implements OnInit, OnDestroy {
   erreurSoumission: string | null = null;
   /** true si les critères viennent du fallback seed (gap backend) */
   criteresFallback = false;
+  /** Passage actuellement affiché (1 ou 2) */
+  numeroPassage = 1;
+  /** Toutes les notes chargées pour ce candidat, tous passages confondus */
+  private allNotes: NoteJuryBrut[] = [];
 
   private sub = new Subscription();
 
@@ -231,25 +242,40 @@ export class NotationComponent implements OnInit, OnDestroy {
           this.criteresFallback = true;
         }
 
-        // Notes existantes pour CE candidat
-        const notesCeCandidat = notes.filter(n => n.candidatId === this.candidatId);
-        this.dejaNote = notesCeCandidat.length > 0;
+        // Stocker toutes les notes du candidat pour pouvoir switcher de passage
+        this.allNotes = notes.filter(n => n.candidatId === this.candidatId);
 
-        // Construire le formulaire
-        const controls: Record<string, unknown> = {};
-        for (const c of this.criteres) {
-          const existing = notesCeCandidat.find(n => n.critereId === c.id);
-          controls[`critere_${c.id}`] = [
-            existing?.valeur ?? c.noteMin,
-            [Validators.required, Validators.min(c.noteMin), Validators.max(c.noteMax)],
-          ];
-        }
-        this.form = this.fb.group(controls);
+        this.construireFormulaire();
       })
     );
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  private construireFormulaire(): void {
+    const notesDuPassage = this.allNotes.filter(n => n.numeroPassage === this.numeroPassage);
+    this.dejaNote = notesDuPassage.length > 0;
+    const controls: Record<string, unknown> = {};
+    for (const c of this.criteres) {
+      const existing = notesDuPassage.find(n => n.critereId === c.id);
+      controls[`critere_${c.id}`] = [
+        existing?.valeur ?? c.noteMin,
+        [Validators.required, Validators.min(c.noteMin), Validators.max(c.noteMax)],
+      ];
+    }
+    this.form = this.fb.group(controls);
+  }
+
+  changerPassage(p: 1 | 2): void {
+    if (this.numeroPassage === p) return;
+    if (this.form?.dirty) {
+      this.erreurSoumission = `Soumets d'abord les notes du passage ${this.numeroPassage} avant de changer.`;
+      return;
+    }
+    this.numeroPassage = p;
+    this.erreurSoumission = null;
+    this.construireFormulaire();
+  }
 
   val(critereId: string): number {
     return Number(this.form?.get(`critere_${critereId}`)?.value ?? 0);
@@ -288,8 +314,9 @@ export class NotationComponent implements OnInit, OnDestroy {
     this.erreurSoumission = null;
 
     const req: SaisirNotesRequest = {
-      candidatId: this.candidatId,
-      soireeId:   this.soireeId,
+      candidatId:    this.candidatId,
+      soireeId:      this.soireeId,
+      numeroPassage: this.numeroPassage,
       notes: this.criteres.map(c => ({
         critereId: c.id,
         valeur:    this.val(c.id),
@@ -305,7 +332,11 @@ export class NotationComponent implements OnInit, OnDestroy {
       ).subscribe(res => {
         this.isSubmitting = false;
         if (res !== null) {
-          this.router.navigate(['/jury']);
+          // Mettre à jour allNotes avec les valeurs sauvegardées (réponse serveur),
+          // sans naviguer : le juré peut enchaîner sur le passage suivant.
+          const autresPassages = this.allNotes.filter(n => n.numeroPassage !== this.numeroPassage);
+          this.allNotes = [...autresPassages, ...res];
+          this.construireFormulaire(); // reconstruit avec les nouvelles valeurs → form.pristine
         }
       })
     );

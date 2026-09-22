@@ -9,9 +9,10 @@ export interface NoteInput { critereId: string; valeur: number; }
 
 /** Corps de POST /jury/notes (SaisirNotesRequest.java) */
 export interface SaisirNotesRequest {
-  candidatId: string;
-  soireeId:   string;
-  notes:      NoteInput[];
+  candidatId:    string;
+  soireeId:      string;
+  numeroPassage: number;
+  notes:         NoteInput[];
 }
 
 /** dto/critere/CritereNotationResponse.java — GET /jury/criteres?soireeId= (ajouté 09/08/2026) */
@@ -29,15 +30,16 @@ export interface CritereNotationResponse {
  * ⚠️ `noteMax` du critère n'est plus disponible sur cette réponse, contrairement à avant.
  */
 export interface NoteJuryBrut {
-  id:          string;
-  juryId:      string;
-  candidatId:  string;
-  soireeId:    string;
-  critereId:   string;
-  critereNom:  string;
-  valeur:      number;
-  verrouille:  boolean;
-  dateSaisie:  string;
+  id:             string;
+  juryId:         string;
+  candidatId:     string;
+  soireeId:       string;
+  critereId:      string;
+  critereNom:     string;
+  numeroPassage:  number;
+  valeur:         number;
+  verrouille:     boolean;
+  dateSaisie:     string;
 }
 
 /** dto/admin/NoteDetailResponse.java — une note pour un critère précis. */

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { forkJoin, interval, of, startWith, Subscription, switchMap, catchError } from 'rxjs';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -59,6 +59,7 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
   private mediaSvc      = inject(MediaService);
   private candidatSvc   = inject(CandidatService);
   private cdr           = inject(ChangeDetectorRef);
+  private route         = inject(ActivatedRoute);
 
   phases: Phase[]               = [];
   phaseSelectionneeId: string | null = null;
@@ -75,10 +76,15 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
   candidatVote: CandidatPublicResponse | null = null;
   photoEnErreur = new Set<string>();
 
+  /** soireeId passé en query param (?soireeId=) — pré-sélectionne la poule liée, utilisé une seule fois. */
+  private soireeIdInitiale: string | null = null;
+
   private sub     = new Subscription();
   private pollSub = new Subscription();
 
   ngOnInit(): void {
+    this.soireeIdInitiale = this.route.snapshot.queryParamMap.get('soireeId');
+
     this.sub.add(
       this.editionSvc.enCours().subscribe(edition => {
         if (!edition) { this.loading = false; return; }
@@ -91,6 +97,8 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
           this.phaseActiveId = phases.find(p => p.voteActif)?.id ?? null;
           this.soireesParId  = new Map(soirees.map(s => [s.id, s]));
 
+          // Si un soireeId est fourni, chercher la phase qui contient une poule liée à cette soirée.
+          // On charge d'abord la phase par défaut ; l'affinage par poule se fait dans changerPhase().
           const defaut = phases.find(p => p.voteActif)
             ?? phases.find(p => p.statut === 'EN_COURS')
             ?? phases[phases.length - 1]
@@ -146,6 +154,16 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
         });
 
         this.chargerPhotos(tousCandidats);
+
+        // Pré-sélectionner la poule liée à la soirée demandée (query param ?soireeId=)
+        if (this.soireeIdInitiale) {
+          const match = this.poules.find(p => p.poule.soireeId === this.soireeIdInitiale);
+          if (match) {
+            this.pouleSelectionneeId = match.poule.id;
+            this.soireeIdInitiale = null; // consommé, ne s'applique plus si l'utilisateur change de phase
+          }
+        }
+
         this.demarrerPolling(phaseId);
       });
     });

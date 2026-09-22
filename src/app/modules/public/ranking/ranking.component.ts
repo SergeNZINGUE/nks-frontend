@@ -4,7 +4,7 @@ import { ClassementService } from '@core/services/classement.service';
 import { EditionService } from '@core/services/edition.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { MediaService } from '@core/services/media.service';
-import { Classement, CandidatPublicResponse } from '@core/models';
+import { Classement, CandidatPublicResponse, StatutProfilCandidat } from '@core/models';
 import { environment } from '@env/environment';
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
 import { TopbarComponent } from '../../../shared/components/topbar/topbar.component';
@@ -64,10 +64,13 @@ export class RankingComponent implements OnInit, OnDestroy {
         this.phaseActiveId = phase?.id ?? null;
       });
 
-      // Taille 100 : couvre la quasi-totalité des compositions de candidats d'une édition —
-      // seul le classement pilote l'ordre affiché, cette liste ne sert qu'à résoudre les profils.
-      this.candidatSvc.galerie(edition.id, 0, 100).pipe(catchError(() => of(null))).subscribe(page => {
-        this.candidats = page?.content ?? [];
+      // Charge ACTIF + ELIMINE pour résoudre noms/photos de tous les candidats présents
+      // dans le classement — les éliminés y restent visibles mais sans bouton vote.
+      forkJoin([
+        this.candidatSvc.galerie(edition.id, 0, 100, 'ACTIF').pipe(catchError(() => of(null))),
+        this.candidatSvc.galerie(edition.id, 0, 100, 'ELIMINE').pipe(catchError(() => of(null))),
+      ]).subscribe(([actifs, elimines]) => {
+        this.candidats = [...(actifs?.content ?? []), ...(elimines?.content ?? [])];
         this.chargerPhotos(this.candidats);
       });
 
@@ -150,9 +153,15 @@ export class RankingComponent implements OnInit, OnDestroy {
   }
 
   ouvrirVote(item: Classement): void {
-    const profil = this.profilClasse(item);
-    if (!profil) return;
-    this.candidatVote = profil;
+    this.candidatVote = this.profilClasse(item) ?? {
+      id: item.candidatId,
+      codeCandidat: item.codeCandidat,
+      prenom: '',
+      nom: item.codeCandidat,
+      biographie: null,
+      chansonPreselection: '',
+      statutProfil: item.statutProfil,
+    };
     this.cdr.detectChanges();
   }
 

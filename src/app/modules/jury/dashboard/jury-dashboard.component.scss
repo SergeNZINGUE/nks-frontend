@@ -124,6 +124,20 @@
   }
 }
 
+.terminee-banner {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  font-size: 13px;
+  color: $nks-text-secondary;
+  background: rgba($nks-success, 0.08);
+  border: 1px solid rgba($nks-success, 0.25);
+  border-radius: 8px;
+  padding: $sp-2 $sp-3;
+
+  .icon { width: 16px; height: 16px; color: $nks-success; flex-shrink: 0; }
+}
+
 .section {
   padding: $sp-4 $sp-4 0;
   max-width: 960px;

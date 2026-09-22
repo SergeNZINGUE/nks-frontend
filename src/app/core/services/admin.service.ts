@@ -63,6 +63,14 @@ export function normaliserTelephone(telephone: string): string {
   return '+226' + t;
 }
 
+/** bf.laterrasse.nks.dto.admin.ReinitialiserMotDePasseCandidatResponse */
+export interface ReinitialiserMotDePasseCandidatResponse {
+  nouveauMotDePasse: string;
+  prenomNom: string;
+  email: string;
+  telephone: string;
+}
+
 /** Structure réelle de CommunicationRequest (bf.laterrasse.nks.dto.admin.CommunicationRequest) */
 export interface CommunicationRequest {
   editionId: string;
@@ -243,6 +251,12 @@ export class AdminService {
   /** POST /admin/utilisateurs/{id}/reinitialiser-mot-de-passe */
   reinitialiserMotDePasse(id: string): Observable<void> {
     return this.http.post<void>(`${this.api}/admin/utilisateurs/${id}/reinitialiser-mot-de-passe`, {});
+  }
+
+  /** POST /admin/candidats/{candidatId}/reinitialiser-mot-de-passe — ADMIN/SUPER_ADMIN/ORGANISATEUR */
+  reinitialiserMotDePasseCandidat(candidatId: string): Observable<ReinitialiserMotDePasseCandidatResponse> {
+    return this.http.post<ReinitialiserMotDePasseCandidatResponse>(
+      `${this.api}/admin/candidats/${candidatId}/reinitialiser-mot-de-passe`, {});
   }
 
   /**

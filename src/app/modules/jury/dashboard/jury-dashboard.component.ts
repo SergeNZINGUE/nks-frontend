@@ -77,6 +77,16 @@ import { messageErreur } from '@core/utils/http-error.util';
         <div class="phase-banner__nom">{{ soireeSelectionnee.nom }}</div>
         <div class="phase-banner__sub">{{ soireeSelectionnee.dateHeure | date:'EEEE d MMMM yyyy, HH:mm' }} — {{ soireeSelectionnee.lieu }}</div>
         <div class="phase-banner__actions">
+          @if (soireeSelectionnee?.statut === 'TERMINEE') {
+            <div class="terminee-banner" role="alert">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9 12l2 2 4-4"/></svg>
+              Soirée terminée — la notation est clôturée.
+            </div>
+            <a routerLink="/classement-poules" [queryParams]="{ soireeId: soireeSelectionnee?.id }" class="btn btn--ghost">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              Voir les résultats
+            </a>
+          }
           <button type="button" class="btn btn--ghost" [disabled]="chargementGrille" (click)="ouvrirGrilleDeliberation()">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V7h6l4 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
             {{ chargementGrille ? 'Chargement…' : 'Grille de délibération' }}
@@ -107,8 +117,8 @@ import { messageErreur } from '@core/utils/http-error.util';
       </div>
     }
     @if (!isLoadingCandidats && soireeSelectionnee) {
-      <!-- Candidats à noter -->
-      @if (candidatsANoter.length) {
+      <!-- Candidats à noter (masqué si soirée terminée) -->
+      @if (candidatsANoter.length && soireeSelectionnee?.statut !== 'TERMINEE') {
         <section class="section">
           <h2 class="section__title">À noter ({{ candidatsANoter.length }})</h2>
           <div class="cards">
@@ -260,6 +270,7 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
 
   noter(c: CandidatBrut): void {
     if (!this.soireeSelectionnee) return;
+    if (this.soireeSelectionnee.statut === 'TERMINEE') return;
     this.router.navigate(['/jury/noter', c.id], {
       queryParams: { soireeId: this.soireeSelectionnee.id },
     });

@@ -59,14 +59,25 @@
           </div>
         </div>
       }
+      <!-- CANDIDAT ÉLIMINÉ -->
+      @if (candidatElimine) {
+        <div class="vote-carte vote-elimine">
+          <div class="vote-elimine__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </div>
+          <h2>Vote impossible</h2>
+          <p>Ce candidat a été éliminé de la compétition — il n'est plus possible de voter pour lui.</p>
+          <a routerLink="/classement-poules" class="btn btn--secondary btn--full">Voir le classement</a>
+        </div>
+      }
       <!-- AUCUNE PHASE ACTIVE -->
-      @if (!phaseId) {
+      @if (!phaseId && !candidatElimine) {
         <div class="vote-carte vote-inactif">
           <p>Le vote n'est pas ouvert en ce moment.</p>
         </div>
       }
       <!-- FORMULAIRE VOTE -->
-      @if (phaseId) {
+      @if (phaseId && !candidatElimine) {
         <form [formGroup]="form" (ngSubmit)="submit()" class="vote-carte vote-form">
           <p class="vote-form__label">Combien de votes ?</p>
           <div class="vote-options">

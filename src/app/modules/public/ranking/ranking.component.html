@@ -41,6 +41,7 @@
             [class.podium-carte--or]="i === 0"
             [class.podium-carte--argent]="i === 1"
             [class.podium-carte--bronze]="i === 2"
+            [class.podium-carte--elimine]="item.statutProfil === 'ELIMINE'"
             [style.order]="i === 0 ? 2 : i === 1 ? 1 : 3"
           >
             <a [routerLink]="['/candidat', item.candidatId]" class="podium-carte__lien">
@@ -60,10 +61,15 @@
               </h3>
               <p class="podium-carte__votes"><strong>{{ item.totalPointsCumules | number:'1.0-0' }}</strong> pts</p>
             </a>
-            @if (phaseActiveId && profilClasse(item)) {
+            @if (phaseActiveId && item.statutProfil !== 'ELIMINE') {
               <button type="button" class="btn btn--primary btn--sm podium-carte__voter" (click)="ouvrirVote(item)">
                 Voter <app-star-mark [size]="14" />
               </button>
+            } @else if (item.statutProfil === 'ELIMINE') {
+              <span class="badge-elimine podium-carte__voter" aria-label="Candidat éliminé">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                Éliminé
+              </span>
             }
           </article>
         }
@@ -73,7 +79,7 @@
       @if (reste.length) {
         <div class="ranking__list">
           @for (item of reste; track item; let i = $index) {
-            <div class="ranking-row">
+            <div class="ranking-row" [class.ranking-row--elimine]="item.statutProfil === 'ELIMINE'">
               <a [routerLink]="['/candidat', item.candidatId]" class="ranking-row__lien">
                 <span class="ranking-row__rang">#{{ i + 4 }}</span>
                 <div class="avatar ranking-row__avatar">
@@ -92,10 +98,15 @@
                 </span>
                 <b class="ranking-row__score">{{ item.totalPointsCumules | number:'1.0-1' }}</b>
               </a>
-              @if (phaseActiveId && profilClasse(item)) {
+              @if (phaseActiveId && item.statutProfil !== 'ELIMINE') {
                 <button type="button" class="btn btn--secondary btn--sm ranking-row__voter" (click)="ouvrirVote(item)">
                   Voter
                 </button>
+              } @else if (item.statutProfil === 'ELIMINE') {
+                <span class="badge-elimine badge-elimine--sm" aria-label="Candidat éliminé">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  Éliminé
+                </span>
               }
             </div>
           }
