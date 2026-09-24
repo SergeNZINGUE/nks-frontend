@@ -109,8 +109,10 @@ export class CandidatService {
     return this.http.post<ChoixTitre>(`${this.base}/mon-choix-titre`, { titreImposeId, titrePersonnel });
   }
 
-  /** Initiales pour placeholder photo (GAP-01) */
-  initiales(candidat: CandidatPublicResponse): string {
+  /** Initiales pour placeholder photo (GAP-01). Typé large (prenom/nom seuls) pour rester
+   *  compatible avec les DTOs candidat qui ne portent pas tous les mêmes champs annexes
+   *  (ex. CandidatVoteSurPlace, cf. vote-sur-place.component.ts). */
+  initiales(candidat: { prenom: string; nom: string }): string {
     return `${candidat.prenom[0] ?? ''}${candidat.nom[0] ?? ''}`.toUpperCase();
   }
 }

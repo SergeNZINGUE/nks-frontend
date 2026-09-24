@@ -343,13 +343,22 @@ export interface CategorieTicket {
   nbPlacesReservees: number;
 }
 
+/** Un billet = une personne = un numéro. */
+export interface BeneficiaireRequest {
+  telephone: string;
+  nom?: string;
+}
+
 export interface ReservationRequest {
   soireeId: string;
   categorieId: string;
   nbPlaces: number;
   nomReservant: string;
+  /** Contact du payeur — ne porte pas de billet. */
   telephoneReservant: string;
   emailReservant?: string;
+  /** Un élément par place : `beneficiaires.length === nbPlaces`. */
+  beneficiaires: BeneficiaireRequest[];
 }
 
 export interface ReservationResponse {
@@ -412,6 +421,8 @@ export interface TicketAvecQr {
   qrUuid: string;
   nomSpectateur: string;
   statut: 'EMIS' | 'UTILISE' | 'EXPIRE' | 'ANNULE';
+  /** Numéro du bénéficiaire, masqué côté serveur (ex. « +226 •• •• 45 12 ») — affichage uniquement. */
+  telephoneMasque: string;
 }
 
 export interface ScanResponse {
@@ -432,6 +443,11 @@ export interface CandidatVoteSurPlace {
   biographie: string | null;
   chansonPreselection: string | null;
   statutProfil: string;
+  /**
+   * Absent du DTO backend — rempli côté client après un appel séparé à
+   * MediaService.mediasCandidat() (même pattern que CandidatPublicResponse.photoUrl).
+   */
+  photoUrl?: string | null;
 }
 
 /** dto/votesurplace/DroitVoteResponse.java — un vote déjà exprimé (historique). */
@@ -453,6 +469,8 @@ export interface DroitVoteResponse {
   nbVotesTotal: number;
   votesExprimes: VoteExprimeResponse[];
   candidats: CandidatVoteSurPlace[];
+  /** true si ce téléphone a déjà servi à voter pour un AUTRE billet de la soirée (blocage dur). */
+  appareilDejaUtilise: boolean;
 }
 
 /**

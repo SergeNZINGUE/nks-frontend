@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { catchError, of, startWith, switchMap, takeWhile } from 'rxjs';
@@ -12,6 +12,10 @@ import { SoireeService } from '@core/services/soiree.service';
 import { TicketImageService } from '@core/services/ticket-image.service';
 import { CategorieTicket, ReservationResponse, SoireeEvent, TicketAvecQr } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
+import {
+  creerBeneficiairesArray, indexDoublon, preremplirPremierBeneficiaire, synchroniserBeneficiaires,
+  versBeneficiairesRequest, PATTERN_TELEPHONE,
+} from '@core/utils/beneficiaires.util';
 import { TopbarComponent } from '@shared/components/topbar/topbar.component';
 import { StarMarkComponent } from '@shared/components/star-mark/star-mark.component';
 import { SiteHeaderComponent } from '@shared/components/site-header/site-header.component';
@@ -76,15 +80,34 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   formInfos!: FormGroup;
 
+  /** Dernière valeur connue de `nbPlaces` — sert à détecter la transition 1 → plusieurs places
+   *  (seul moment où la première ligne du fieldset est pré-remplie avec le téléphone principal). */
+  private nbPlacesPrecedent = 1;
+
   private sub = new Subscription();
 
   ngOnInit(): void {
     this.formInfos = this.fb.group({
       nomReservant:       ['', [Validators.required, Validators.minLength(3)]],
-      telephoneReservant: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{8,15}$/)]],
+      telephoneReservant: ['', [Validators.required, Validators.pattern(PATTERN_TELEPHONE)]],
       emailReservant:     ['', [Validators.email]],
       nbPlaces:           [1, [Validators.required, Validators.min(1), Validators.max(10)]],
+      // Un billet = une personne = un numéro : le tableau suit `nbPlaces` (lignes ajoutées/retirées
+      // en fin de liste, valeurs déjà saisies conservées). Masqué et désactivé pour 1 place (le
+      // téléphone principal en tient lieu), cf. synchroniserBeneficiaires.
+      beneficiaires:      creerBeneficiairesArray(this.fb, 1),
     });
+    this.sub.add(
+      this.formInfos.get('nbPlaces')!.valueChanges.subscribe(n => {
+        const nombre = Math.floor(Number(n));
+        const passeDe1APlusieurs = this.nbPlacesPrecedent === 1 && Number.isFinite(nombre) && nombre > 1;
+        synchroniserBeneficiaires(this.fb, this.beneficiaires, n);
+        if (passeDe1APlusieurs) {
+          preremplirPremierBeneficiaire(this.beneficiaires, this.formInfos.get('telephoneReservant')!.value);
+        }
+        if (Number.isFinite(nombre) && nombre >= 1) this.nbPlacesPrecedent = nombre;
+      })
+    );
 
     this.soireeId = this.route.snapshot.paramMap.get('soireeId');
 
@@ -116,6 +139,13 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  get beneficiaires(): FormArray { return this.formInfos.get('beneficiaires') as FormArray; }
+
+  /** Numéro (1-based) du billet précédent portant déjà ce numéro, ou 0 s'il est unique. */
+  doublonDe(i: number): number {
+    return indexDoublon(this.beneficiaires.controls.map(c => c.get('telephone')?.value), i) + 1;
+  }
 
   /** nbPlacesDisponibles = capacité totale, nbPlacesReservees = déjà réservées (CategorieTicketResponse backend). */
   placesRestantes(cat: CategorieTicket): number {
@@ -173,6 +203,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
       nomReservant:      infos.nomReservant,
       telephoneReservant: infos.telephoneReservant,
       emailReservant:    infos.emailReservant || undefined,
+      beneficiaires:     versBeneficiairesRequest(infos.telephoneReservant, this.beneficiaires, infos.nbPlaces),
     };
 
     this.sub.add(

@@ -68,8 +68,13 @@
               }
             </div>
             <div class="form-group">
-              <label>Téléphone *</label>
-              <input type="tel" formControlName="telephoneReservant" placeholder="+226 70 00 00 00" />
+              <label for="telephone-reservant">Ton téléphone (paiement) *</label>
+              <input id="telephone-reservant" type="tel" formControlName="telephoneReservant" placeholder="+226 70 00 00 00"
+                aria-describedby="telephone-reservant-aide" />
+              <p class="champ-aide" id="telephone-reservant-aide">
+                De préférence un numéro WhatsApp actif : la confirmation, les notifications de consommation
+                et le lien de vote y sont envoyés.
+              </p>
               @if (formInfos.get('telephoneReservant')?.invalid && formInfos.get('telephoneReservant')?.touched) {
                 <span class="form-error">
                   Numéro invalide.
@@ -83,7 +88,39 @@
             <div class="form-group">
               <label>Nombre de places * <small>(max {{ placesRestantes(categorieSelectionnee) }})</small></label>
               <input type="number" formControlName="nbPlaces" min="1" [max]="placesRestantes(categorieSelectionnee)" />
+              @if (beneficiaires.disabled) {
+                <p class="champ-aide">Ton téléphone ci-dessus servira aussi de numéro pour ce billet.</p>
+              }
             </div>
+            @if (!beneficiaires.disabled) {
+              <fieldset class="beneficiaires" formArrayName="beneficiaires">
+                <legend>Un numéro par billet *</legend>
+                <p class="beneficiaires__aide" id="beneficiaires-aide">
+                  Chaque billet est lié à un seul numéro : le lien de vote sera envoyé à ce numéro.
+                  De préférence un numéro WhatsApp actif, c'est par ce canal que partent la confirmation,
+                  les notifications de consommation et le lien de vote.
+                </p>
+                @for (b of beneficiaires.controls; track b; let i = $index) {
+                  <div class="beneficiaire" [formGroupName]="i">
+                    <p class="beneficiaire__titre">Billet {{ i + 1 }}/{{ beneficiaires.length }}</p>
+                    <div class="form-group">
+                      <label [for]="'benef-tel-' + i">Téléphone du billet {{ i + 1 }} *</label>
+                      <input [id]="'benef-tel-' + i" type="tel" inputmode="tel" autocomplete="off" formControlName="telephone"
+                        placeholder="+226 70 00 00 00"
+                        [attr.aria-invalid]="(b.get('telephone')?.invalid || doublonDe(i)) && b.get('telephone')?.touched ? 'true' : null"
+                        [attr.aria-describedby]="'beneficiaires-aide benef-err-' + i" />
+                      <span class="form-error" [id]="'benef-err-' + i" role="alert" aria-live="polite">
+                        @if (b.get('telephone')?.invalid && b.get('telephone')?.touched) {
+                          Numéro invalide (8 à 15 chiffres).
+                        } @else if (doublonDe(i) && (b.get('telephone')?.dirty || b.get('telephone')?.touched)) {
+                          Ce numéro est déjà utilisé pour le billet {{ doublonDe(i) }} — un numéro différent par billet.
+                        }
+                      </span>
+                    </div>
+                  </div>
+                }
+              </fieldset>
+            }
             <div class="montant-total">
               Total estimé : <strong>{{ montantTotal | number }} FCFA</strong>
             </div>
@@ -181,6 +218,9 @@
                 <img [src]="src" alt="QR Code billet {{ i + 1 }}" class="qr-img" />
               } @else {
                 <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+              }
+              @if (ticket.telephoneMasque) {
+                <p class="billet-tel">Billet lié au <strong>{{ ticket.telephoneMasque }}</strong></p>
               }
               <button type="button" class="btn btn--ghost btn--full"
                 [disabled]="!qrDataUrl(ticket.qrUuid) || billetEnCoursDeGeneration[ticket.ticketId]"

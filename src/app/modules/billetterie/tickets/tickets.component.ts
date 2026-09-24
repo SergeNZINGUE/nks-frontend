@@ -107,7 +107,7 @@ export class TicketsComponent implements OnDestroy {
       this.billetterieSvc.demanderOtp(telephone).subscribe({
         next: () => {
           this.isEnvoiOtp = false;
-          this.otpMessage = 'Code envoyé — saisis le code reçu par WhatsApp ou SMS.';
+          this.otpMessage = 'Si ce numéro a des billets, un code vient d\'être envoyé par WhatsApp ou SMS.';
           this.codeCtrl.reset();
           this.etape = 'verification';
         },
@@ -133,7 +133,7 @@ export class TicketsComponent implements OnDestroy {
       this.billetterieSvc.demanderOtp(telephone).subscribe({
         next: () => {
           this.isEnvoiOtp = false;
-          this.otpMessage = 'Nouveau code envoyé.';
+          this.otpMessage = 'Si ce numéro a des billets, un nouveau code vient d\'être envoyé.';
         },
         error: err => {
           this.isEnvoiOtp = false;

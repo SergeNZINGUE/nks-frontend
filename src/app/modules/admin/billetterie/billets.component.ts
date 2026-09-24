@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription, switchMap, catchError, of, finalize, forkJoin } from 'rxjs';
 
@@ -10,6 +10,13 @@ import { BilletterieService } from '@core/services/billetterie.service';
 import { Edition, SoireeEvent, CategorieTicket, Reservation, Page } from '@core/models';
 import { messageErreur } from '@core/utils/http-error.util';
 import { telechargerBlob } from '@core/utils/download.util';
+import {
+  creerBeneficiairesArray, indexDoublon, preremplirPremierBeneficiaire, synchroniserBeneficiaires,
+  versBeneficiairesRequest, PATTERN_TELEPHONE,
+} from '@core/utils/beneficiaires.util';
+
+/** Plafond de places par émission gratuite côté écran (un champ téléphone par place). */
+const MAX_PLACES_GRATUITES = 50;
 
 const MSG_BACKEND_CASSE =
   "Backend indisponible : LazyInitializationException connue sur Reservation.soiree/.paiement (LAZY sans @JsonIgnore). Correction en attente côté backend.";
@@ -91,8 +98,44 @@ const MSG_BACKEND_CASSE =
           </div>
           <div class="form__row">
             <div class="field"><label for="nom">Nom du bénéficiaire</label><input id="nom" type="text" formControlName="nom" maxlength="150" /></div>
-            <div class="field"><label for="telephone">Téléphone</label><input id="telephone" type="tel" formControlName="telephone" /></div>
+            <div class="field">
+              <label for="telephone">Téléphone du contact</label>
+              <input id="telephone" type="tel" formControlName="telephone" aria-describedby="telephone-aide" />
+              <p id="telephone-aide" class="field-hint">
+                De préférence un numéro WhatsApp actif : la confirmation, les notifications de consommation
+                et le lien de vote y sont envoyés.
+              </p>
+            </div>
           </div>
+          @if (beneficiaires.disabled) {
+            <p class="field-hint">Le téléphone du contact ci-dessus servira aussi de numéro pour ce billet.</p>
+          }
+          @if (!beneficiaires.disabled) {
+            <div formArrayName="beneficiaires" role="group" aria-labelledby="benef-titre">
+              <p id="benef-titre" class="field-hint" style="margin: 4px 0 8px;">
+                <strong>Un numéro par billet.</strong> Chaque billet est lié à un seul numéro : le lien de vote sera envoyé à ce numéro.
+                De préférence un numéro WhatsApp actif, c'est par ce canal que partent la confirmation,
+                les notifications de consommation et le lien de vote.
+              </p>
+              @for (b of beneficiaires.controls; track b; let i = $index) {
+                <div class="form__row" [formGroupName]="i">
+                  <div class="field">
+                    <label [for]="'benef-tel-' + i">Téléphone du billet {{ i + 1 }}</label>
+                    <input [id]="'benef-tel-' + i" type="tel" inputmode="tel" autocomplete="off" formControlName="telephone"
+                      [attr.aria-invalid]="(b.get('telephone')?.invalid || doublonDe(i)) && b.get('telephone')?.touched ? 'true' : null"
+                      [attr.aria-describedby]="'benef-err-' + i" />
+                    <span class="field-error" [id]="'benef-err-' + i" role="alert" aria-live="polite">
+                      @if (b.get('telephone')?.invalid && b.get('telephone')?.touched) {
+                        Numéro invalide (8 à 15 chiffres).
+                      } @else if (doublonDe(i) && (b.get('telephone')?.dirty || b.get('telephone')?.touched)) {
+                        Numéro déjà utilisé pour le billet {{ doublonDe(i) }}.
+                      }
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
           @if (erreurGratuit) {
             <div class="field-error" role="alert">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -174,17 +217,48 @@ export class BilletsComponent implements OnInit, OnDestroy {
 
   formGratuit = this.fb.nonNullable.group({
     categorieId: ['', Validators.required],
-    nbPlaces: [1, [Validators.required, Validators.min(1)]],
+    nbPlaces: [1, [Validators.required, Validators.min(1), Validators.max(MAX_PLACES_GRATUITES)]],
     nom: ['', Validators.required],
-    telephone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{8,15}$/)]],
+    telephone: ['', [Validators.required, Validators.pattern(PATTERN_TELEPHONE)]],
+    // Un billet = une personne = un numéro : le tableau suit `nbPlaces`.
+    beneficiaires: creerBeneficiairesArray(this.fb, 1, MAX_PLACES_GRATUITES),
   });
   erreurGratuit: string | null = null;
   emissionEnCours = false;
   messageGratuit: string | null = null;
 
+  /** Dernière valeur connue de `nbPlaces` — sert à détecter la transition 1 → plusieurs places
+   *  (seul moment où la première ligne du fieldset est pré-remplie avec le téléphone de contact). */
+  private nbPlacesPrecedent = 1;
+
   private sub = new Subscription();
 
+  get beneficiaires(): FormArray { return this.formGratuit.controls.beneficiaires; }
+
+  /** Numéro (1-based) du billet précédent portant déjà ce numéro, ou 0 s'il est unique. */
+  doublonDe(i: number): number {
+    return indexDoublon(this.beneficiaires.controls.map(c => c.get('telephone')?.value), i) + 1;
+  }
+
+  private reinitialiserFormGratuit(): void {
+    this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
+    synchroniserBeneficiaires(this.fb, this.beneficiaires, 1, MAX_PLACES_GRATUITES);
+    this.beneficiaires.reset();
+    this.nbPlacesPrecedent = 1;
+  }
+
   ngOnInit(): void {
+    this.sub.add(
+      this.formGratuit.controls.nbPlaces.valueChanges.subscribe(n => {
+        const nombre = Math.floor(Number(n));
+        const passeDe1APlusieurs = this.nbPlacesPrecedent === 1 && Number.isFinite(nombre) && nombre > 1;
+        synchroniserBeneficiaires(this.fb, this.beneficiaires, n, MAX_PLACES_GRATUITES);
+        if (passeDe1APlusieurs) {
+          preremplirPremierBeneficiaire(this.beneficiaires, this.formGratuit.controls.telephone.value);
+        }
+        if (Number.isFinite(nombre) && nombre >= 1) this.nbPlacesPrecedent = nombre;
+      })
+    );
     const soireeIdDepuisUrl = this.route.snapshot.queryParamMap.get('soireeId');
     this.sub.add(
       this.adminSvc.editions().pipe(
@@ -209,7 +283,7 @@ export class BilletsComponent implements OnInit, OnDestroy {
 
   selectionnerSoiree(id: string): void {
     this.soireeSelectionneeId = id;
-    this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
+    this.reinitialiserFormGratuit();
     this.erreurExportTickets = null;
     this.chargerReservations();
     this.sub.add(
@@ -241,13 +315,20 @@ export class BilletsComponent implements OnInit, OnDestroy {
     this.emissionEnCours = true;
     const v = this.formGratuit.getRawValue();
     this.sub.add(
-      this.billetterieSvc.ticketsGratuits({ soireeId: this.soireeSelectionneeId, ...v }).pipe(
+      this.billetterieSvc.ticketsGratuits({
+        soireeId: this.soireeSelectionneeId,
+        categorieId: v.categorieId,
+        nbPlaces: v.nbPlaces,
+        nom: v.nom,
+        telephone: v.telephone,
+        beneficiaires: versBeneficiairesRequest(v.telephone, this.beneficiaires, v.nbPlaces),
+      }).pipe(
         catchError(err => { this.erreurGratuit = messageErreur(err, 'Échec de l\'émission.'); return of(null); }),
         finalize(() => { this.emissionEnCours = false; })
       ).subscribe(reservation => {
         if (!reservation) return;
         this.reservations = [reservation, ...this.reservations];
-        this.formGratuit.reset({ categorieId: '', nbPlaces: 1, nom: '', telephone: '' });
+        this.reinitialiserFormGratuit();
         this.messageGratuit = `Ticket(s) émis pour ${reservation.nomReservant}.`;
       })
     );

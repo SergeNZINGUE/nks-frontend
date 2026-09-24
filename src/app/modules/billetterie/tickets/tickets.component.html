@@ -54,7 +54,7 @@
   @if (etape === 'verification') {
     <div class="recherche-tel">
       <label for="code" class="recherche-tel__label">
-        Code envoyé au {{ telephoneCtrl.value }} — saisis le code reçu par WhatsApp ou SMS
+        Si le numéro {{ telephoneCtrl.value }} a des billets, un code vient d'être envoyé — saisis-le ci-dessous
       </label>
       <div class="recherche-tel__row">
         <div class="recherche-tel__control">
@@ -186,6 +186,9 @@
                           <img [src]="src" alt="QR Code billet {{ i + 1 }}" class="qr-img" />
                         } @else {
                           <div class="qr-img qr-img--loading" aria-hidden="true"></div>
+                        }
+                        @if (ticket.telephoneMasque) {
+                          <p class="billet-tel">Billet lié au <strong>{{ ticket.telephoneMasque }}</strong></p>
                         }
                         <button type="button" class="btn btn--ghost btn--full"
                           [disabled]="!qrDataUrl(ticket.qrUuid) || billetEnCoursDeGeneration[ticket.ticketId]"

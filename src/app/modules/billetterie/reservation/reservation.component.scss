@@ -94,7 +94,23 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
   option { background: $surface; color: $text; }
   option:disabled { color: $muted; }
 }
-.form-error { font-size: 12px; color: t.$nks-error; }
+.form-error { font-size: 12px; color: t.$nks-error; &:empty { display: none; } }
+// Texte d'aide générique sous un champ (ex. recommandation WhatsApp) — même gabarit que .beneficiaires__aide.
+.champ-aide { margin: 2px 0 0; font-size: 12px; color: $muted; line-height: 1.4; }
+
+// ── Un numéro par billet (FormArray suivant nbPlaces)
+.beneficiaires {
+  border: 1px solid $border; border-radius: t.$radius-md; padding: 14px; margin: 0;
+  display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  legend { font-size: 13px; color: $gold; font-weight: 600; padding: 0 6px; }
+  &__aide { margin: 0; font-size: 12px; color: $muted; line-height: 1.4; }
+}
+.beneficiaire {
+  display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px dashed $border;
+  &:first-of-type { border-top: 0; padding-top: 0; }
+  &__titre { margin: 0; font-size: 12px; color: $gold; font-weight: 600; }
+  .form-group { margin-bottom: 0; }
+}
 
 // Apparition du formulaire dès qu'une catégorie est choisie — transform+opacity uniquement (scrollcraft).
 .res-form--reveal {
@@ -257,6 +273,8 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 }
 .qr-label { font-size: 12px; color: $muted; margin-bottom: 12px; }
 .qr-label__count { color: $gold; font-weight: 600; margin-left: 4px; }
+// Numéro masqué du bénéficiaire — affichage écran uniquement (jamais dans l'image téléchargée).
+.billet-section .billet-tel { font-size: 12px; color: $muted; margin: 0 0 12px; strong { color: $text; font-weight: 600; } }
 .qr-img {
   width: 180px; height: 180px; border-radius: t.$radius-md;
   border: 2px solid rgba($gold, 0.3); display: block; margin: 0 auto 10px;

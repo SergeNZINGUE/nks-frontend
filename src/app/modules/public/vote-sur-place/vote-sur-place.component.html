@@ -17,6 +17,13 @@
 
   @if (!isLoading && droit) {
 
+    @if (conflit) {
+      <div class="vsp-toast" role="alert">
+        <strong>Vote impossible</strong>
+        <span class="vsp-toast__msg">{{ conflit }}</span>
+      </div>
+    }
+
     @if (tousVotesUtilises) {
       <div class="vsp-confirmation">
         <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
@@ -33,7 +40,16 @@
       </div>
     }
 
-    @if (!tousVotesUtilises) {
+    @if (!tousVotesUtilises && appareilBloque) {
+      <div class="vsp-blocage" role="alert">
+        <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+        <h2>Vote impossible depuis ce téléphone</h2>
+        <p>{{ messageBlocage }}</p>
+        <p class="vsp-hint">Un même téléphone ne peut voter que pour un seul billet par soirée. Si tu as reçu plusieurs liens, utilise le téléphone de la personne concernée.</p>
+      </div>
+    }
+
+    @if (!tousVotesUtilises && !appareilBloque) {
       <p class="vsp-instructions">Bonjour {{ droit.nomSpectateur }}, choisis le candidat pour lequel tu souhaites voter :</p>
       <p class="vsp-hint">Il te reste {{ droit.nbVotesDisponibles }} vote(s) sur {{ droit.nbVotesTotal }}.</p>
 
@@ -65,13 +81,20 @@
         <span class="vsp-form-hint">Juste pour nos archives — ton vote n'en dépend pas.</span>
       </div>
 
-      <div class="vsp-candidats">
+      <div class="vsp-candidats" role="group" aria-label="Candidats disponibles pour ce vote">
         @for (c of droit.candidats; track c.id) {
           <button
             type="button"
             class="vsp-candidat"
             [class.vsp-candidat--selected]="candidatChoisi === c.id"
             (click)="choisir(c.id)">
+            <span class="avatar vsp-candidat__avatar" aria-hidden="true">
+              @if (photoValide(c)) {
+                <img [src]="c.photoUrl" alt="" (error)="onPhotoErreur(c.id)" />
+              } @else {
+                {{ initiales(c) }}
+              }
+            </span>
             <span class="vsp-candidat__nom">{{ nomCandidat(c) }}</span>
             <span class="vsp-candidat__code">{{ c.codeCandidat }}</span>
           </button>

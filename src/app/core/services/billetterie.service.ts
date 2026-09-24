@@ -5,6 +5,7 @@ import { environment } from '@env/environment';
 import {
   SoireeEvent,
   CategorieTicket,
+  BeneficiaireRequest,
   ReservationRequest,
   ReservationResponse,
   Reservation,
@@ -28,8 +29,11 @@ export interface TicketsGratuitsRequest {
   soireeId: string;
   categorieId: string;
   nom: string;
+  /** Contact du bénéficiaire principal / de l'émission — ne porte pas de billet. */
   telephone: string;
   nbPlaces: number;
+  /** Un élément par place : `beneficiaires.length === nbPlaces`. */
+  beneficiaires: BeneficiaireRequest[];
 }
 
 /**
@@ -162,10 +166,10 @@ export class BilletterieService {
   /**
    * GET /vote-sur-place/{soireeId}/{qrUuid} — VoteSurPlaceController.consulter() — public.
    * Retourne le statut du droit de vote (DISPONIBLE/UTILISE) et, si DISPONIBLE, la liste des
-   * candidats de cette soirée.
+   * candidats de cette soirée. `headers` : X-Appareil-Token / X-Appareil-Empreinte (cf. AppareilService).
    */
-  consulterDroitVote(soireeId: string, qrUuid: string): Observable<DroitVoteResponse> {
-    return this.http.get<DroitVoteResponse>(`${this.base}/vote-sur-place/${soireeId}/${qrUuid}`);
+  consulterDroitVote(soireeId: string, qrUuid: string, headers?: HttpHeaders): Observable<DroitVoteResponse> {
+    return this.http.get<DroitVoteResponse>(`${this.base}/vote-sur-place/${soireeId}/${qrUuid}`, { headers });
   }
 
   /**
@@ -179,14 +183,14 @@ export class BilletterieService {
     positionLatitude?: number;
     positionLongitude?: number;
     positionPrecisionM?: number;
-  }): Observable<DroitVoteResponse> {
+  }, headers?: HttpHeaders): Observable<DroitVoteResponse> {
     return this.http.post<DroitVoteResponse>(`${this.base}/vote-sur-place/${soireeId}/${qrUuid}/voter`, {
       candidatId,
       telephoneVotant: audit?.telephoneVotant || null,
       positionLatitude: audit?.positionLatitude ?? null,
       positionLongitude: audit?.positionLongitude ?? null,
       positionPrecisionM: audit?.positionPrecisionM ?? null,
-    });
+    }, { headers });
   }
 
   /**
