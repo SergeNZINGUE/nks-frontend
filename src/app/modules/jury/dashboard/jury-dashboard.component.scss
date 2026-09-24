@@ -263,6 +263,50 @@
   }
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: $sp-2 $sp-4;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: $font-body;
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: 40px;
+  transition: background 0.2s;
+  text-decoration: none;
+
+  &--warn {
+    background: rgba(230, 150, 30, 0.15);
+    color: #e6961e;
+    border-color: rgba(230, 150, 30, 0.3);
+    &:hover:not(:disabled) { background: rgba(230, 150, 30, 0.25); }
+  }
+
+  &--err {
+    background: rgba($nks-error, 0.15);
+    color: $nks-error;
+    border-color: rgba($nks-error, 0.3);
+    &:hover:not(:disabled) { background: rgba($nks-error, 0.25); }
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.badge-delib-ok {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba($nks-success, 0.15);
+  color: $nks-success;
+  border: 1px solid rgba($nks-success, 0.3);
+}
+
 .btn--ghost {
   display: inline-flex;
   align-items: center;

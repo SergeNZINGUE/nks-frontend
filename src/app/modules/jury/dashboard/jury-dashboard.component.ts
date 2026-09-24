@@ -7,11 +7,12 @@ import { JuryService, CandidatBrut, NoteJuryBrut, GrilleDeliberationResponse } f
 import { SoireeEvent } from '@core/models';
 import { KpiCardComponent } from '../../admin/shared/ui/kpi-card/kpi-card.component';
 import { GrilleDeliberationComponent } from '@shared/components/grille-deliberation/grille-deliberation.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { messageErreur } from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-jury-dashboard',
-  imports: [DatePipe, RouterModule, KpiCardComponent, GrilleDeliberationComponent],
+  imports: [DatePipe, RouterModule, KpiCardComponent, GrilleDeliberationComponent, ConfirmDialogComponent],
   template: `
 <div class="jury-page">
 
@@ -94,6 +95,24 @@ import { messageErreur } from '@core/utils/http-error.util';
           @if (erreurGrille) {
             <span class="field-hint" role="alert">{{ erreurGrille }}</span>
           }
+          @if (!soireeSelectionnee?.votesArretesLe && !soireeSelectionnee?.deliberationVerrouilee) {
+            <button type="button" class="btn btn--warn" [disabled]="arreterVotesEnCours" (click)="demandeArretVotes = true">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg>
+              {{ arreterVotesEnCours ? 'Arrêt…' : 'Arrêt des votes' }}
+            </button>
+          }
+          @if (soireeSelectionnee?.votesArretesLe && !soireeSelectionnee?.deliberationVerrouilee) {
+            <button type="button" class="btn btn--err" [disabled]="finDeliberationEnCours" (click)="demandeFinDeliberation = true">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              {{ finDeliberationEnCours ? 'Clôture…' : 'Fin délibération' }}
+            </button>
+          }
+          @if (soireeSelectionnee?.deliberationVerrouilee) {
+            <span class="badge-delib-ok">Délibération clôturée</span>
+          }
+          @if (messageAction) {
+            <span class="field-hint" role="status" aria-live="polite" style="display:block;width:100%;margin-top:4px;">{{ messageAction }}</span>
+          }
         </div>
         <div class="phase-banner__stats">
           <app-kpi-card label="Candidats" [value]="candidats.length" variant="gold">
@@ -171,6 +190,30 @@ import { messageErreur } from '@core/utils/http-error.util';
     }
   }
 
+  @if (demandeArretVotes) {
+    <app-confirm-dialog
+      titre="Arrêt des votes"
+      message="Figer la photo des votes (en ligne et sur place) pour la délibération ? Les votes seront capturés tels quels à cet instant. La grille de délibération affichera ces valeurs figées."
+      libelleConfirmer="Arrêter les votes"
+      [danger]="false"
+      [enCours]="arreterVotesEnCours"
+      [erreur]="erreurArretVotes"
+      (confirmed)="confirmerArretVotes()"
+      (cancelled)="demandeArretVotes = false; erreurArretVotes = null" />
+  }
+
+  @if (demandeFinDeliberation) {
+    <app-confirm-dialog
+      titre="Fin de délibération"
+      message="Clôturer la délibération ? Les notes jury seront verrouillées et les scores des candidats éliminés seront définitivement figés. Les qualifiés conservent leurs points pour la phase suivante. Action irréversible."
+      libelleConfirmer="Clôturer la délibération"
+      [danger]="true"
+      [enCours]="finDeliberationEnCours"
+      [erreur]="erreurFinDeliberation"
+      (confirmed)="confirmerFinDeliberation()"
+      (cancelled)="demandeFinDeliberation = false; erreurFinDeliberation = null" />
+  }
+
   @if (grille) {
     <app-grille-deliberation [grille]="grille" (fermer)="grille = null" />
   }
@@ -196,6 +239,16 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
   grille: GrilleDeliberationResponse | null = null;
   chargementGrille = false;
   erreurGrille: string | null = null;
+
+  demandeArretVotes = false;
+  arreterVotesEnCours = false;
+  erreurArretVotes: string | null = null;
+
+  demandeFinDeliberation = false;
+  finDeliberationEnCours = false;
+  erreurFinDeliberation: string | null = null;
+
+  messageAction: string | null = null;
 
   private sub = new Subscription();
 
@@ -224,6 +277,9 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
     this.candidats = [];
     this.notesMap.clear();
     this.isLoadingCandidats = true;
+    this.messageAction = null;
+    this.erreurArretVotes = null;
+    this.erreurFinDeliberation = null;
 
     // Charger candidats + mes notes en parallèle
     this.sub.add(
@@ -274,6 +330,47 @@ export class JuryDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/jury/noter', c.id], {
       queryParams: { soireeId: this.soireeSelectionnee.id },
     });
+  }
+
+  confirmerArretVotes(): void {
+    if (!this.soireeSelectionnee) return;
+    const id = this.soireeSelectionnee.id;
+    this.arreterVotesEnCours = true;
+    this.erreurArretVotes = null;
+    let echec = false;
+    this.sub.add(
+      this.jurySvc.arreterVotesSoiree(id).pipe(
+        catchError(err => { echec = true; this.erreurArretVotes = messageErreur(err, 'Échec de l\'arrêt des votes.'); return of(undefined); }),
+        finalize(() => { this.arreterVotesEnCours = false; })
+      ).subscribe(() => {
+        if (echec) return;
+        this.demandeArretVotes = false;
+        const now = new Date().toISOString();
+        this.soirees = this.soirees.map(s => s.id === id ? { ...s, votesArretesLe: now } : s);
+        this.soireeSelectionnee = { ...this.soireeSelectionnee!, votesArretesLe: now };
+        this.messageAction = 'Votes figés — la grille de délibération affiche désormais les scores au moment de l\'arrêt.';
+      })
+    );
+  }
+
+  confirmerFinDeliberation(): void {
+    if (!this.soireeSelectionnee) return;
+    const id = this.soireeSelectionnee.id;
+    this.finDeliberationEnCours = true;
+    this.erreurFinDeliberation = null;
+    let echec = false;
+    this.sub.add(
+      this.jurySvc.cloturerDeliberationSoiree(id).pipe(
+        catchError(err => { echec = true; this.erreurFinDeliberation = messageErreur(err, 'Échec de la clôture de délibération.'); return of(undefined); }),
+        finalize(() => { this.finDeliberationEnCours = false; })
+      ).subscribe(() => {
+        if (echec) return;
+        this.demandeFinDeliberation = false;
+        this.soirees = this.soirees.map(s => s.id === id ? { ...s, deliberationVerrouilee: true } : s);
+        this.soireeSelectionnee = { ...this.soireeSelectionnee!, deliberationVerrouilee: true };
+        this.messageAction = 'Délibération clôturée — notes jury verrouillées, scores éliminés figés définitivement.';
+      })
+    );
   }
 
   ouvrirGrilleDeliberation(): void {
