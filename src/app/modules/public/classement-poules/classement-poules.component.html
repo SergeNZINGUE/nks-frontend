@@ -119,6 +119,13 @@
                         <app-star-mark [size]="20" />
                       </div>
                     }
+                    @if (c.resultat && pVue.soiree?.statut === 'TERMINEE') {
+                      @if (c.resultat.statutQualification === 'ELIMINE') {
+                        <span class="poule-card__statut poule-card__statut--elimine">Éliminé</span>
+                      } @else {
+                        <span class="poule-card__statut poule-card__statut--qualifie">Qualifié</span>
+                      }
+                    }
                   </div>
 
                   <!-- Badge rang -->
@@ -141,12 +148,6 @@
 
                 <div class="poule-card__info">
                   <h3 class="poule-card__name">{{ c.candidat.prenom }} {{ c.candidat.nom }}</h3>
-                  @if (c.candidat.statutProfil === 'ELIMINE' && pVue.soiree?.statut === 'TERMINEE') {
-                    <span class="badge-elimine" aria-label="Candidat éliminé">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                      Éliminé
-                    </span>
-                  }
                   @if (c.resultat) {
                     <div class="poule-card__detail">
                       <span title="Votes en ligne">

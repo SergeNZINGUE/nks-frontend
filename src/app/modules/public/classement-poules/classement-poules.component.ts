@@ -187,7 +187,18 @@ export class ClassementPoulesComponent implements OnInit, OnDestroy {
     const map = new Map(resultats.map(r => [r.candidatId, r]));
     for (const pVue of this.poules) {
       pVue.candidats.forEach(c => c.resultat = map.get(c.candidat.id) ?? null);
+
+      // La révélation qualifié/éliminé n'intervient qu'à la clôture officielle
+      // de la soirée (cf. condition d'affichage du badge dans le template) —
+      // avant TERMINEE, l'ordre du classement ne doit rien laisser deviner et
+      // reste un tri pur par points.
+      const soireeTerminee = pVue.soiree?.statut === 'TERMINEE';
       pVue.candidats.sort((a, b) => {
+        if (soireeTerminee) {
+          const elimineA = a.resultat?.statutQualification === 'ELIMINE' ? 1 : 0;
+          const elimineB = b.resultat?.statutQualification === 'ELIMINE' ? 1 : 0;
+          if (elimineA !== elimineB) return elimineA - elimineB;
+        }
         const diff = (b.resultat?.totalPoints ?? 0) - (a.resultat?.totalPoints ?? 0);
         return diff !== 0 ? diff : a.candidat.codeCandidat.localeCompare(b.candidat.codeCandidat);
       });
