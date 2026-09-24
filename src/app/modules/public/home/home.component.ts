@@ -58,8 +58,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   compteARebourdLibelle: string | null = null;
   /** Faux tant qu'aucune échéance future n'existe : le bloc est alors masqué */
   compteARebourdActif = false;
+  /**
+   * Id de la soirée dont le décompte vient d'atteindre 0 — le bloc reste affiché
+   * (libellé « … — En cours ») mais sans les chiffres, tant que le sondage
+   * périodique (cf. demarrerPollingSoireeEnCours) n'a pas confirmé sa clôture.
+   * null hors de ce cas (autres échéances, ou aucune soirée en cours).
+   */
+  soireeEnCoursId: string | null = null;
 
   private subs = new Subscription();
+  /** Sondage dédié à la soirée en cours — isolé pour pouvoir l'arrêter sans toucher `subs`. */
+  private pollSoireeEnCoursSub = new Subscription();
 
   ngOnInit(): void {
     // courante() (et non enCours()) : en EN_PREPARATION aucune édition n'est
@@ -82,7 +91,15 @@ export class HomeComponent implements OnInit, OnDestroy {
         phaseActive: this.editionSvc.phaseActive(edition.id).pipe(catchError(() => of(null))),
       }).subscribe(({ candidats, soirees, classement, phaseActive }) => {
         this.candidats  = candidats?.content ?? [];
-        this.soirees    = soirees.slice(0, 2);
+        // "Soirées à venir" : mêmes critères que le décompte (armerCompteARebours)
+        // — non annulée, date future, triée par proximité — sinon une soirée déjà
+        // passée peut rester affichée simplement parce qu'elle arrive en tête de
+        // la réponse API brute.
+        const maintenant = Date.now();
+        this.soirees = soirees
+          .filter(s => s.statut !== 'ANNULEE' && s.statut !== 'TERMINEE' && new Date(s.dateHeure).getTime() > maintenant)
+          .sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime())
+          .slice(0, 2);
         this.classement = classement.slice(0, 5);
         this.voteActif  = phaseActive !== null;
         this.loading    = false;
@@ -103,7 +120,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.subs.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+    this.pollSoireeEnCoursSub.unsubscribe();
+  }
 
   initiales(c: CandidatPublicResponse): string {
     return this.candidatSvc.initiales(c);
@@ -150,6 +170,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   private armerCompteARebours(edition: Edition, soirees: SoireeEvent[]): void {
     const maintenant = Date.now();
     let cible: number | null = null;
+    // Renseigné uniquement quand la cible est la dateHeure d'une soirée précise :
+    // c'est ce qui déclenche le passage à l'état « en cours » + sondage dans
+    // startCountdown, plutôt que le rearmerApresEcheance générique.
+    let soireeCible: SoireeEvent | null = null;
 
     if (!this.voteActif && this.inscriptionsOuvertes && edition.dateFinInscriptions) {
       cible = new Date(edition.dateFinInscriptions).getTime();
@@ -165,6 +189,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       if (prochaine) {
         cible = new Date(prochaine.dateHeure).getTime();
+        soireeCible = prochaine;
         this.compteARebourdLibelle = `Prochaine soirée — ${prochaine.nom}`;
       } else if (new Date(edition.dateDebutCompetition).getTime() > maintenant) {
         cible = new Date(edition.dateDebutCompetition).getTime();
@@ -180,11 +205,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.soireeEnCoursId = null;
     this.compteARebourdActif = true;
-    this.startCountdown(cible);
+    this.startCountdown(cible, soireeCible);
   }
 
-  private startCountdown(target: number): void {
+  private startCountdown(target: number, soireeCible: SoireeEvent | null = null): void {
     // interval(1000) ne déclenche ni requête HTTP ni événement DOM : sans tick()
     // manuel ici, le countdown se met à jour en mémoire mais l'écran reste figé
     // jusqu'au prochain clic ailleurs sur la page (même bug que documenté dans
@@ -194,9 +220,17 @@ export class HomeComponent implements OnInit, OnDestroy {
       const diff = target - Date.now();
       if (diff <= 0) {
         this.countdown = { jours: 0, heures: 0, minutes: 0, secondes: 0 };
-        this.compteARebourdActif = false;   // l'échéance vient de passer
         sub?.unsubscribe();
-        this.rearmerApresEcheance();
+        if (soireeCible) {
+          // La cible était la dateHeure d'une soirée précise : elle vient
+          // probablement de démarrer, pas forcément de se terminer — on
+          // affiche « en cours » et on sonde le serveur plutôt que de
+          // rearmer aveuglément sur les données déjà en cache.
+          this.passerEnCoursPourSoiree(soireeCible);
+        } else {
+          this.compteARebourdActif = false;   // l'échéance vient de passer
+          this.rearmerApresEcheance();
+        }
         return;
       }
       this.countdown = {
@@ -211,6 +245,57 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * La soirée décomptée vient d'atteindre sa dateHeure : le bloc reste affiché
+   * (libellé « <nom> — En cours », chiffres masqués côté template) le temps
+   * qu'un sondage périodique confirme sa clôture réelle côté serveur.
+   */
+  private passerEnCoursPourSoiree(soiree: SoireeEvent): void {
+    this.soireeEnCoursId = soiree.id;
+    this.compteARebourdLibelle = `${soiree.nom} — En cours`;
+    this.demarrerPollingSoireeEnCours(soiree.id);
+  }
+
+  /**
+   * Sondage dédié, même pattern que classement-poules.component.ts
+   * (interval + startWith(0) + switchMap, erreurs absorbées par tentative) :
+   * réinterroge la liste des soirées jusqu'à ce que CETTE soirée précise
+   * (par id) passe TERMINEE ou ait ses résultats publiés, puis rearme le
+   * décompte sur les données fraîches — sans que l'utilisateur recharge.
+   */
+  private demarrerPollingSoireeEnCours(soireeId: string): void {
+    this.pollSoireeEnCoursSub.unsubscribe();
+    this.pollSoireeEnCoursSub = new Subscription();
+    if (!this.edition) return;
+    const edition = this.edition;
+
+    const poll = interval(environment.pollIntervalMs).pipe(
+      startWith(0),
+      switchMap(() => this.soireeSvc.lister(edition.id).pipe(catchError(() => of([] as SoireeEvent[])))),
+    ).subscribe(soirees => {
+      const cible = soirees.find(s => s.id === soireeId);
+      const cloturee = !!cible && (cible.statut === 'TERMINEE' || cible.resultatsPublies);
+      if (!cloturee) return;
+
+      this.pollSoireeEnCoursSub.unsubscribe();
+      this.pollSoireeEnCoursSub = new Subscription();
+
+      // Même filtre que le chargement initial (cf. ngOnInit) : la carte
+      // "Soirées à venir" ne doit pas continuer d'afficher une soirée qui
+      // vient de se terminer, sans attendre un rechargement de page.
+      const maintenant = Date.now();
+      this.soirees = soirees
+        .filter(s => s.statut !== 'ANNULEE' && s.statut !== 'TERMINEE' && new Date(s.dateHeure).getTime() > maintenant)
+        .sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime())
+        .slice(0, 2);
+
+      this.soireeEnCoursId = null;
+      this.rearmerApresEcheance(soirees);
+      this.appRef.tick();
+    });
+    this.pollSoireeEnCoursSub.add(poll);
+  }
+
+  /**
    * Une échéance vient de passer (fin des candidatures, ouverture de la
    * compétition...). L'ancien code laissait simplement le bloc countdown
    * disparaître : plus aucun palier n'était réarmé et `voteActif` — qui vient
@@ -218,12 +303,12 @@ export class HomeComponent implements OnInit, OnDestroy {
    * seul. On revérifie donc l'état réel côté API et on rearme le prochain
    * palier pertinent, sans attendre un rechargement de page.
    */
-  private rearmerApresEcheance(): void {
+  private rearmerApresEcheance(soireesFraiches?: SoireeEvent[]): void {
     if (!this.edition) return;
     const edition = this.edition;
     this.editionSvc.phaseActive(edition.id).pipe(catchError(() => of(null))).subscribe(phase => {
       this.voteActif = phase !== null;
-      this.armerCompteARebours(edition, this.soirees);
+      this.armerCompteARebours(edition, soireesFraiches ?? this.soirees);
       this.appRef.tick();
     });
   }

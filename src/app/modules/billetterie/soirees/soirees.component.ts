@@ -36,13 +36,28 @@ export class SoireesComponent implements OnInit, OnDestroy {
         if (data === null) {
           this.erreur = 'Impossible de charger les soirées. Vérifie ta connexion.';
         } else {
-          this.soirees = data;
+          this.soirees = this.trierSoirees(data);
         }
       })
     );
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  /**
+   * Soirées à venir (PLANIFIEE/EN_COURS) d'abord, triées par proximité — même
+   * logique que la home — puis les soirées TERMINEE/ANNULEE ensuite, sans les
+   * masquer : chaque statut garde son action propre (cf. template).
+   */
+  private trierSoirees(soirees: SoireeEvent[]): SoireeEvent[] {
+    const aVenir = (s: SoireeEvent) => s.statut === 'PLANIFIEE' || s.statut === 'EN_COURS';
+    return [...soirees].sort((a, b) => {
+      const aAVenir = aVenir(a);
+      const bAVenir = aVenir(b);
+      if (aAVenir !== bAVenir) return aAVenir ? -1 : 1;
+      return new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime();
+    });
+  }
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {

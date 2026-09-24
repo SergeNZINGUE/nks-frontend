@@ -65,7 +65,9 @@
             @if (s.statut !== 'PLANIFIEE' && s.statut !== 'EN_COURS' && s.statut !== 'TERMINEE') {
               <span class="btn btn--disabled">Réservations fermées</span>
             }
-            <a routerLink="/billetterie/mes-tickets" class="btn btn--ghost">Mes tickets</a>
+            @if (s.statut === 'PLANIFIEE' || s.statut === 'EN_COURS') {
+              <a routerLink="/billetterie/mes-tickets" class="btn btn--ghost">Mes tickets</a>
+            }
           </div>
         </article>
       }

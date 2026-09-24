@@ -231,6 +231,36 @@ $bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
     align-self: flex-start;
     margin-top: 2px;
   }
+
+  // Remplace les blocs jours/heures/minutes/secondes quand la soirée décomptée
+  // vient de démarrer (cf. soireeEnCoursId) — le décompte chiffré n'a plus de sens.
+  &__en-cours {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-2;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: $nks-gold;
+  }
+
+  &__pastille {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $nks-gold;
+    animation: compteur-pastille-pulse 1.8s ease-out infinite;
+
+    @media (prefers-reduced-motion: reduce) { animation: none; }
+  }
+}
+
+@keyframes compteur-pastille-pulse {
+  0%   { opacity: 1;   transform: scale(1); }
+  50%  { opacity: 0.4; transform: scale(0.75); }
+  100% { opacity: 1;   transform: scale(1); }
 }
 
 // ═══ BLOCS DE SECTION ════════════════════════════════════════════════════════

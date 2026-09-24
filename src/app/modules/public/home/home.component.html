@@ -76,27 +76,34 @@
         @if (compteARebourdActif) {
           <aside class="compteur">
             <p class="compteur__label">{{ compteARebourdLibelle }}</p>
-            <div class="compteur__blocs">
-              <div class="compteur__bloc">
-                <span class="compteur__valeur">{{ countdown.jours | number:'2.0-0' }}</span>
-                <span class="compteur__unite">JOURS</span>
+            @if (soireeEnCoursId) {
+              <p class="compteur__en-cours" role="status">
+                <span class="compteur__pastille" aria-hidden="true"></span>
+                La soirée bat son plein
+              </p>
+            } @else {
+              <div class="compteur__blocs">
+                <div class="compteur__bloc">
+                  <span class="compteur__valeur">{{ countdown.jours | number:'2.0-0' }}</span>
+                  <span class="compteur__unite">JOURS</span>
+                </div>
+                <span class="compteur__sep" aria-hidden="true">:</span>
+                <div class="compteur__bloc">
+                  <span class="compteur__valeur">{{ countdown.heures | number:'2.0-0' }}</span>
+                  <span class="compteur__unite">HRS</span>
+                </div>
+                <span class="compteur__sep" aria-hidden="true">:</span>
+                <div class="compteur__bloc">
+                  <span class="compteur__valeur">{{ countdown.minutes | number:'2.0-0' }}</span>
+                  <span class="compteur__unite">MINS</span>
+                </div>
+                <span class="compteur__sep" aria-hidden="true">:</span>
+                <div class="compteur__bloc">
+                  <span class="compteur__valeur">{{ countdown.secondes | number:'2.0-0' }}</span>
+                  <span class="compteur__unite">SECS</span>
+                </div>
               </div>
-              <span class="compteur__sep" aria-hidden="true">:</span>
-              <div class="compteur__bloc">
-                <span class="compteur__valeur">{{ countdown.heures | number:'2.0-0' }}</span>
-                <span class="compteur__unite">HRS</span>
-              </div>
-              <span class="compteur__sep" aria-hidden="true">:</span>
-              <div class="compteur__bloc">
-                <span class="compteur__valeur">{{ countdown.minutes | number:'2.0-0' }}</span>
-                <span class="compteur__unite">MINS</span>
-              </div>
-              <span class="compteur__sep" aria-hidden="true">:</span>
-              <div class="compteur__bloc">
-                <span class="compteur__valeur">{{ countdown.secondes | number:'2.0-0' }}</span>
-                <span class="compteur__unite">SECS</span>
-              </div>
-            </div>
+            }
           </aside>
         }
       </div>
