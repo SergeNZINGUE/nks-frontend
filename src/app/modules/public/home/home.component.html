@@ -74,13 +74,60 @@
         </div>
         <!-- Colonne droite : compte à rebours -->
         @if (compteARebourdActif) {
-          <aside class="compteur">
+          <aside class="compteur" [class.compteur--scene]="soireeEnCoursId && candidatsSpotlight.length > 0">
             <p class="compteur__label">{{ compteARebourdLibelle }}</p>
             @if (soireeEnCoursId) {
-              <p class="compteur__en-cours" role="status">
-                <span class="compteur__pastille" aria-hidden="true"></span>
-                La soirée bat son plein
-              </p>
+              <div class="compteur__en-cours" role="status">
+                @if (candidatsSpotlight.length > 0) {
+                  <!-- "Scène" : les 4 candidats de la soirée, mis en lumière à tour de
+                       rôle — purement décoratif (aria-hidden), le statut "en cours" est
+                       déjà porté par role="status" + le texte plus bas. -->
+                  <!-- Le nombre de candidats varie selon la phase (2 à 8) : le cycle "sous le
+                       projecteur" se règle via des variables CSS (--spotlight-count/-index)
+                       plutôt que des délais figés pour 4, pour rester correct quel que soit N. -->
+                  <div class="compteur__scene" [style.--spotlight-count]="candidatsSpotlight.length" aria-hidden="true">
+                    @for (c of candidatsSpotlight; track c.id; let i = $index) {
+                      <div class="compteur__chanteur" [style.--spotlight-index]="i">
+                        <div class="compteur__avatar">
+                          @if (photoSpotlightValide(c)) {
+                            <img [src]="c.photoUrl" [alt]="c.prenom" (error)="onPhotoSpotlightErreur(c.id)" />
+                          } @else {
+                            <span class="compteur__avatar-initiales">{{ initiales(c) }}</span>
+                          }
+                          <span class="compteur__micro">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="18" y2="22"/></svg>
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <!-- Public suggéré en silhouette, purement atmosphérique — têtes/épaules
+                       en contre-jour devant une lueur de rampe, quelques bras levés (jamais
+                       tous à la fois) évoquant la salle qui vibre, jamais de vraies personnes/photos. -->
+                  <div class="compteur__public" aria-hidden="true">
+                    <span class="compteur__public-lueur"></span>
+                    <div class="compteur__public-tetes">
+                      @for (i of [0,1,2,3,4,5,6]; track i) {
+                        <span
+                          class="compteur__tete"
+                          [style.--tete-idx]="i"
+                          [class.compteur__tete--bras-leve]="i === 1 || i === 5"
+                          [class.compteur__tete--bras-leve-gauche]="i === 3"
+                        ></span>
+                      }
+                    </div>
+                  </div>
+                }
+                <div class="compteur__en-cours-ligne">
+                  <span class="compteur__egaliseur" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                  </span>
+                  <span class="compteur__en-cours-texte">
+                    <span class="compteur__badge-direct">En direct</span>
+                    La soirée bat son plein
+                  </span>
+                </div>
+              </div>
             } @else {
               <div class="compteur__blocs">
                 <div class="compteur__bloc">

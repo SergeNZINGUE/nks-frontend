@@ -182,6 +182,31 @@ $bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
 
   @media (min-width: $bascule) { padding: $sp-8 $sp-6; }
 
+  // Uniquement pendant la scène des 4 candidats (pas le simple égaliseur, ni le décompte
+  // chiffré) : la carte s'agrandit et son fond disparaît pour laisser voir le champ
+  // d'étoiles derrière (app-star-field, rendu dans la même section hero) — un
+  // text-shadow remplace le fond plein pour garder le texte lisible sur un ciel chargé.
+  &--scene {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    max-width: 460px;
+    padding: $sp-8 $sp-5 $sp-6;
+
+    @media (min-width: $bascule) { max-width: 540px; padding: $sp-10 $sp-6 $sp-6; }
+
+    .compteur__label,
+    .compteur__en-cours-texte,
+    .compteur__badge-direct {
+      text-shadow: 0 2px 14px rgba(#000, 0.85), 0 0 4px rgba(#000, 0.9);
+    }
+
+    .compteur__avatar { width: 62px; height: 62px; }
+    @media (min-width: $bascule) {
+      .compteur__avatar { width: 72px; height: 72px; }
+    }
+  }
+
   &__label {
     font-size: 11px;
     font-weight: 700;
@@ -234,33 +259,295 @@ $bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
 
   // Remplace les blocs jours/heures/minutes/secondes quand la soirée décomptée
   // vient de démarrer (cf. soireeEnCoursId) — le décompte chiffré n'a plus de sens.
+  // La "scène" (photos des 4 candidats + micro) évoque le karaoké en direct ; l'égaliseur
+  // reste affiché même sans elle (cf. compteur__scene, conditionné à exactement 4 candidats
+  // résolus côté TS — sinon ce bloc seul suffit à porter l'idée de "en cours").
   &__en-cours {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-3;
+    margin: 0;
+  }
+
+  &__en-cours-ligne {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: $sp-2;
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: $nks-gold;
+    gap: $sp-3;
   }
 
-  &__pastille {
-    width: 8px;
-    height: 8px;
+  // Rangée de candidats (2 à 8 selon la phase — demi-finale incluse) — un seul à la fois
+  // "sous le projecteur" (échelle + lueur dorée), les autres en retrait. Le cycle dure
+  // 1,6s par candidat et se décale via --spotlight-count/--spotlight-index (posées en
+  // ligne, cf. template) plutôt que des délais nth-child figés pour 4 — transform + opacity
+  // uniquement (+ filter, avec parcimonie), jamais plus de 3 propriétés animées ensemble.
+  &__scene {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $sp-3;
+  }
+
+  &__avatar {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, $nks-bg-surface, $nks-bg-card 60%, rgba($nks-gold, 0.18));
+    border: 2px solid rgba($nks-gold, 0.3);
+    animation-name: compteur-spotlight;
+    animation-duration: calc(var(--spotlight-count, 4) * 1.6s);
+    animation-delay: calc(var(--spotlight-index, 0) * -1.6s);
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    &-initiales {
+      font-family: $font-title;
+      font-weight: 700;
+      font-size: 14px;
+      color: $nks-gold;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+
+  // Sans le cycle animé, fige au moins le premier candidat "sous le projecteur" — le
+  // mouvement réduit ne doit pas rendre la mise en avant totalement illisible.
+  @media (prefers-reduced-motion: reduce) {
+    &__chanteur:first-child .compteur__avatar {
+      opacity: 1;
+      border-color: $nks-gold;
+    }
+  }
+
+  &__micro {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: $nks-gold;
-    animation: compteur-pastille-pulse 1.8s ease-out infinite;
+    color: #17140a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid $nks-bg-card;
 
-    @media (prefers-reduced-motion: reduce) { animation: none; }
+    svg { width: 10px; height: 10px; }
+  }
+
+  // Public suggéré, en flou, sous la rangée de candidats — jamais de vraies personnes,
+  // juste une texture qui évoque une salle sans détourner l'attention des candidats.
+  &__public {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 34px;
+    margin-top: $sp-1;
+  }
+
+  // Lueur de rampe : simule une lumière de scène qui remonte depuis le sol et
+  // détache les têtes du fond (starfield ou carte) au lieu de les y fondre.
+  &__public-lueur {
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 20px;
+    background: radial-gradient(ellipse at center, rgba($nks-gold, 0.4), transparent 75%);
+    filter: blur(6px);
+    pointer-events: none;
+  }
+
+  // Conteneur dédié aux têtes : la lueur ci-dessus est en position absolute (hors flux)
+  // mais reste un enfant DOM de .compteur__public — sans ce conteneur séparé, elle
+  // fausserait les sélecteurs nth-child ci-dessous (comptée comme 1er enfant).
+  &__public-tetes {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  // Têtes + amorce d'épaules en contre-jour : forme sombre cernée d'un fin liseré
+  // doré (lumière de scène par-derrière), jamais un dégradé qui se fond dans le fond.
+  //
+  // Balancement façon "public qui groove" : la position/échelle de base (--tete-y/-scale,
+  // posées par nth-child) est lue DANS les keyframes plutôt que fixée en `transform` statique,
+  // pour pouvoir l'animer sans que l'animation n'écrase cette base. Décalage par tête via
+  // --tete-idx (posé en ligne dans le template) — jamais toutes synchronisées, sinon l'effet
+  // ressemble à un métronome plutôt qu'à une salle vivante. transform + opacity uniquement,
+  // prefers-reduced-motion toujours respecté.
+  &__tete {
+    position: relative;
+    width: 29px;
+    height: 29px;
+    margin-left: -10px;
+    border-radius: 50%;
+    background: rgba(8, 9, 17, 0.92);
+    box-shadow: 0 -1.5px 0 rgba($nks-gold, 0.55), 0 0 7px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
+    --tete-y: 0px;
+    --tete-scale: 1;
+    transform: translateY(var(--tete-y)) scale(var(--tete-scale));
+    animation: compteur-foule-balance 2.1s ease-in-out infinite;
+    animation-delay: calc(var(--tete-idx, 0) * -0.27s);
+
+    &:first-child { margin-left: 0; }
+    &:nth-child(odd) { --tete-y: 5px; --tete-scale: 0.82; }
+    &:nth-child(3n) { --tete-y: -1px; --tete-scale: 1.1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+
+    // Bras levé : même traitement en contre-jour que la tête (forme sombre + liseré
+    // doré), sur une minorité de silhouettes seulement et de côtés alternés, pour
+    // suggérer une salle qui vibre plutôt qu'un motif mécanique répété à l'identique.
+    // Le bras s'agite (rotation) pour soutenir le candidat sous le projecteur ; la main
+    // suit d'un léger mouvement propre, synchronisé sur le même tempo.
+    &--bras-leve,
+    &--bras-leve-gauche {
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        background: rgba(8, 9, 17, 0.92);
+        box-shadow: 0 -1px 0 rgba($nks-gold, 0.5);
+      }
+
+      &::before {
+        width: 4px;
+        height: 15px;
+        border-radius: 3px;
+        top: -11px;
+        transform-origin: bottom center;
+        animation: compteur-bras-balance 1.3s ease-in-out infinite;
+        animation-delay: calc(var(--tete-idx, 0) * -0.27s);
+      }
+
+      &::after {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        top: -17px;
+        animation: compteur-main-balance 1.3s ease-in-out infinite;
+        animation-delay: calc(var(--tete-idx, 0) * -0.27s);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        &::before,
+        &::after { animation: none; }
+      }
+    }
+
+    &--bras-leve {
+      &::before { right: 3px; --bras-angle: 20deg; transform: rotate(var(--bras-angle)); }
+      &::after { right: -1px; }
+    }
+
+    &--bras-leve-gauche {
+      &::before { left: 3px; --bras-angle: -20deg; transform: rotate(var(--bras-angle)); }
+      &::after { left: -1px; }
+    }
+  }
+
+  &__egaliseur {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 22px;
+    flex-shrink: 0;
+
+    span {
+      width: 3px;
+      height: 100%;
+      border-radius: 2px;
+      background: $nks-gold;
+      transform-origin: bottom;
+      animation: compteur-egaliseur 1.1s ease-in-out infinite;
+
+      &:nth-child(1) { animation-delay: -0.9s; }
+      &:nth-child(2) { animation-delay: -0.5s; }
+      &:nth-child(3) { animation-delay: -0.7s; }
+      &:nth-child(4) { animation-delay: -0.2s; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      span { animation: none; transform: scaleY(0.55); }
+    }
+  }
+
+  &__en-cours-texte {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $nks-text-secondary;
+  }
+
+  &__badge-direct {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px 10px 10px 3px;
+    background: color-mix(in oklch, $nks-gold 16%, transparent);
+    border: 1px solid color-mix(in oklch, $nks-gold 45%, transparent);
+    color: $nks-gold;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 }
 
-@keyframes compteur-pastille-pulse {
-  0%   { opacity: 1;   transform: scale(1); }
-  50%  { opacity: 0.4; transform: scale(0.75); }
-  100% { opacity: 1;   transform: scale(1); }
+@keyframes compteur-egaliseur {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.75; }
+  50%      { transform: scaleY(1);    opacity: 1; }
+}
+
+// Chaque avatar est "sous le projecteur" pendant les 20 premiers % de SA propre timeline
+// (durée totale = --spotlight-count × 1,6s, décalage = --spotlight-index × 1,6s), puis en
+// retrait pour le reste — round-robin sans aucun minuteur JS, correct quel que soit N.
+@keyframes compteur-spotlight {
+  0%, 20%  { transform: scale(1.12); opacity: 1;   border-color: $nks-gold; filter: drop-shadow(0 0 8px rgba($nks-gold, 0.6)); }
+  30%, 95% { transform: scale(0.9);  opacity: 0.5;  border-color: rgba($nks-gold, 0.3); filter: none; }
+  100%     { transform: scale(1.12); opacity: 1;   border-color: $nks-gold; filter: drop-shadow(0 0 8px rgba($nks-gold, 0.6)); }
+}
+
+// Léger bob vertical (+ l'échelle de base propre à chaque tête, lue via --tete-y/-scale)
+// pour suggérer le public qui groove sur la musique — jamais d'amplitude assez grande
+// pour distraire du candidat sous le projecteur.
+@keyframes compteur-foule-balance {
+  0%, 100% { transform: translateY(var(--tete-y, 0px)) scale(var(--tete-scale, 1)); }
+  50%      { transform: translateY(calc(var(--tete-y, 0px) - 3px)) scale(var(--tete-scale, 1)); }
+}
+
+// Le bras oscille de ±9° autour de son angle de base (--bras-angle, différent selon le
+// côté) — un geste de soutien qui revient, pas une rotation complète.
+@keyframes compteur-bras-balance {
+  0%, 100% { transform: rotate(calc(var(--bras-angle) - 9deg)); }
+  50%      { transform: rotate(calc(var(--bras-angle) + 9deg)); }
+}
+
+// La main suit d'un petit mouvement propre (translation, pas rotation puisqu'un cercle ne
+// montre pas sa rotation) — assez pour paraître liée au bras, sans calcul de cinématique exact.
+@keyframes compteur-main-balance {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
 }
 
 // ═══ BLOCS DE SECTION ════════════════════════════════════════════════════════

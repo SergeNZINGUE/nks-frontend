@@ -4,7 +4,9 @@ import { EditionService } from '@core/services/edition.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { SoireeService } from '@core/services/soiree.service';
 import { ClassementService } from '@core/services/classement.service';
-import { Edition, CandidatPublicResponse, SoireeEvent, Classement } from '@core/models';
+import { PouleDuoService } from '@core/services/poule-duo.service';
+import { MediaService } from '@core/services/media.service';
+import { Edition, CandidatPublicResponse, SoireeEvent, Classement, PouleResponse } from '@core/models';
 import { environment } from '@env/environment';
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
 import { RouterLink } from '@angular/router';
@@ -42,6 +44,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   private candidatSvc = inject(CandidatService);
   private soireeSvc = inject(SoireeService);
   private classementSvc = inject(ClassementService);
+  private pouleSvc = inject(PouleDuoService);
+  private mediaSvc = inject(MediaService);
   private appRef = inject(ApplicationRef);
 
   edition: Edition | null = null;
@@ -65,6 +69,14 @@ export class HomeComponent implements OnInit, OnDestroy {
    * null hors de ce cas (autres échéances, ou aucune soirée en cours).
    */
   soireeEnCoursId: string | null = null;
+  /** Id de la phase active — nécessaire pour retrouver la poule (donc les candidats) de la
+   *  soirée en cours (GET /poules/phase/{id} n'existe pas par soirée directement). */
+  private phaseActiveId: string | null = null;
+  /** Les 4 candidats de la soirée en cours, pour l'animation « scène » du bloc décompte —
+   *  vide tant qu'ils n'ont pas été résolus, ou si la soirée n'a pas exactement 4 candidats
+   *  affectés (le template retombe alors sur l'égaliseur seul). */
+  candidatsSpotlight: CandidatPublicResponse[] = [];
+  private photoSpotlightEnErreur = new Set<string>();
 
   private subs = new Subscription();
   /** Sondage dédié à la soirée en cours — isolé pour pouvoir l'arrêter sans toucher `subs`. */
@@ -102,6 +114,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           .slice(0, 2);
         this.classement = classement.slice(0, 5);
         this.voteActif  = phaseActive !== null;
+        this.phaseActiveId = phaseActive?.id ?? null;
         this.loading    = false;
         // Le décompte dépend des soirées : on l'arme une fois celles-ci reçues
         this.armerCompteARebours(edition, soirees);
@@ -183,8 +196,27 @@ export class HomeComponent implements OnInit, OnDestroy {
       cible = new Date(edition.dateDebutInscriptions).getTime();
       this.compteARebourdLibelle = 'Ouverture des candidatures';
     } else {
+      // Une soirée dont l'heure est déjà passée mais qui n'est ni ANNULEE ni TERMINEE
+      // est déjà "en cours" — à détecter ICI, pas seulement via startCountdown(), qui ne
+      // capture le passage à zéro QUE si l'onglet est resté ouvert en continu depuis
+      // avant. Sans ce contrôle, un premier chargement (ou un rechargement) pendant une
+      // soirée réellement en cours ne montrait jamais la scène : la soirée n'était ni
+      // "prochaine" (sa date est passée) ni détectée comme en cours par ailleurs.
+      const dejaEnCours = soirees
+        .filter(s => s.statut !== 'ANNULEE' && s.statut !== 'TERMINEE' && new Date(s.dateHeure).getTime() <= maintenant)
+        .sort((a, b) => new Date(b.dateHeure).getTime() - new Date(a.dateHeure).getTime())[0];
+
+      if (dejaEnCours) {
+        this.compteARebourdActif = true;
+        this.passerEnCoursPourSoiree(dejaEnCours);
+        return;
+      }
+
+      // Bug corrigé : une soirée déjà TERMINEE mais dont la dateHeure reste dans le futur
+      // (cas réel : statut changé manuellement avant l'heure prévue) passait ce filtre —
+      // seule ANNULEE était exclue. Même exclusion que le filtre d'affichage plus bas.
       const prochaine = soirees
-        .filter(s => s.statut !== 'ANNULEE' && new Date(s.dateHeure).getTime() > maintenant)
+        .filter(s => s.statut !== 'ANNULEE' && s.statut !== 'TERMINEE' && new Date(s.dateHeure).getTime() > maintenant)
         .sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime())[0];
 
       if (prochaine) {
@@ -206,6 +238,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     this.soireeEnCoursId = null;
+    this.candidatsSpotlight = [];
     this.compteARebourdActif = true;
     this.startCountdown(cible, soireeCible);
   }
@@ -252,7 +285,56 @@ export class HomeComponent implements OnInit, OnDestroy {
   private passerEnCoursPourSoiree(soiree: SoireeEvent): void {
     this.soireeEnCoursId = soiree.id;
     this.compteARebourdLibelle = `${soiree.nom} — En cours`;
+    this.candidatsSpotlight = [];
+    this.chargerCandidatsSpotlight(soiree.id);
     this.demarrerPollingSoireeEnCours(soiree.id);
+  }
+
+  /**
+   * Résout les candidats affectés à la soirée en cours, pour l'animation « scène » du bloc
+   * décompte — même chemin de données que classement-poules.component.ts (poules de la phase
+   * active, filtrées par soireeId, candidats de la poule trouvée), puisqu'il n'existe pas de
+   * route publique "candidats par soirée" directe. Best-effort : n'importe quel échec laisse
+   * simplement `candidatsSpotlight` vide, le template retombe alors sur l'égaliseur seul.
+   *
+   * Nombre de candidats volontairement non figé à 4 : une demi-finale peut en réunir plus
+   * ou moins selon les qualifications. `SPOTLIGHT_MAX` protège juste la mise en page contre
+   * une poule anormalement chargée ; en-dessous de `SPOTLIGHT_MIN`, la "scène" perd son sens
+   * et le template retombe sur l'égaliseur seul.
+   */
+  private static readonly SPOTLIGHT_MIN = 2;
+  private static readonly SPOTLIGHT_MAX = 8;
+
+  private chargerCandidatsSpotlight(soireeId: string): void {
+    if (!this.phaseActiveId) return;
+    const phaseId = this.phaseActiveId;
+    this.pouleSvc.poulesPhase(phaseId).pipe(catchError(() => of([] as PouleResponse[]))).subscribe(poules => {
+      const poule = poules.find(p => p.soireeId === soireeId);
+      if (!poule) return;
+      this.pouleSvc.candidatsPoule(poule.id).pipe(catchError(() => of([]))).subscribe(affectations => {
+        const candidats = affectations.map(a => a.candidat).slice(0, HomeComponent.SPOTLIGHT_MAX);
+        if (candidats.length < HomeComponent.SPOTLIGHT_MIN) return;
+        this.candidatsSpotlight = candidats;
+        this.chargerPhotosSpotlight(candidats);
+      });
+    });
+  }
+
+  private chargerPhotosSpotlight(candidats: CandidatPublicResponse[]): void {
+    forkJoin(
+      candidats.map(c => this.mediaSvc.mediasCandidat(c.id).pipe(catchError(() => of([]))))
+    ).subscribe(mediasParCandidat => {
+      mediasParCandidat.forEach((medias, i) => candidats[i].photoUrl = this.mediaSvc.photoProfilUrl(medias));
+      this.appRef.tick();
+    });
+  }
+
+  photoSpotlightValide(c: CandidatPublicResponse): boolean {
+    return !!c.photoUrl && !this.photoSpotlightEnErreur.has(c.id);
+  }
+
+  onPhotoSpotlightErreur(candidatId: string): void {
+    this.photoSpotlightEnErreur.add(candidatId);
   }
 
   /**
@@ -289,6 +371,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         .slice(0, 2);
 
       this.soireeEnCoursId = null;
+      this.candidatsSpotlight = [];
       this.rearmerApresEcheance(soirees);
       this.appRef.tick();
     });
@@ -308,6 +391,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     const edition = this.edition;
     this.editionSvc.phaseActive(edition.id).pipe(catchError(() => of(null))).subscribe(phase => {
       this.voteActif = phase !== null;
+      this.phaseActiveId = phase?.id ?? null;
       this.armerCompteARebours(edition, soireesFraiches ?? this.soirees);
       this.appRef.tick();
     });
