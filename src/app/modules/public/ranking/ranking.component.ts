@@ -81,7 +81,7 @@ export class RankingComponent implements OnInit, OnDestroy {
         startWith(0),
         switchMap(() => this.classementSvc.global().pipe(catchError(() => of(null)))),
       ).subscribe(c => {
-        if (c) { this.classement = c; this.lastUpdate = new Date(); }
+        if (c) { this.classement = this.trierEliminesApresQualifies(c); this.lastUpdate = new Date(); }
         this.loading = false;
       });
       this.sub.add(poll);
@@ -89,6 +89,22 @@ export class RankingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  /**
+   * Un candidat éliminé ne doit plus jamais devancer un candidat encore en lice, quel que
+   * soit son total de points cumulés — cette page affiche déjà le statut ÉLIMINÉ sans
+   * condition (contrairement à classement-poules.component.ts, où la révélation attend la
+   * clôture de la soirée), donc pas de garde équivalente ici : seul l'ordre manquait.
+   * Le classement global renvoyé par le backend n'est pas garanti pré-trié dans cet ordre.
+   */
+  private trierEliminesApresQualifies(classement: Classement[]): Classement[] {
+    return [...classement].sort((a, b) => {
+      const elimineA = a.statutProfil === 'ELIMINE' ? 1 : 0;
+      const elimineB = b.statutProfil === 'ELIMINE' ? 1 : 0;
+      if (elimineA !== elimineB) return elimineA - elimineB;
+      return b.totalPointsCumules - a.totalPointsCumules;
+    });
+  }
 
   /** Résout la photo de profil de chaque candidat en parallèle (best-effort, silencieux si l'appel échoue). */
   private chargerPhotos(candidats: CandidatPublicResponse[]): void {
