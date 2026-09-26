@@ -6,7 +6,8 @@ import { SoireeService } from '@core/services/soiree.service';
 import { ClassementService } from '@core/services/classement.service';
 import { PouleDuoService } from '@core/services/poule-duo.service';
 import { MediaService } from '@core/services/media.service';
-import { Edition, CandidatPublicResponse, SoireeEvent, Classement, PouleResponse } from '@core/models';
+import { MomentEvenementService } from '@core/services/moment-evenement.service';
+import { Edition, CandidatPublicResponse, SoireeEvent, Classement, PouleResponse, MomentEvenement } from '@core/models';
 import { environment } from '@env/environment';
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
 import { RouterLink } from '@angular/router';
@@ -46,12 +47,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   private classementSvc = inject(ClassementService);
   private pouleSvc = inject(PouleDuoService);
   private mediaSvc = inject(MediaService);
+  private momentSvc = inject(MomentEvenementService);
   private appRef = inject(ApplicationRef);
 
   edition: Edition | null = null;
   candidats: CandidatPublicResponse[] = [];
   soirees: SoireeEvent[] = [];
   classement: Classement[] = [];
+  moments: MomentEvenement[] = [];
+  momentActif = 0;
+  videoEnCoursIndex: number | null = null;
   loading = true;
   countdown: Countdown = { jours: 0, heures: 0, minutes: 0, secondes: 0 };
 
@@ -83,6 +88,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   private pollSoireeEnCoursSub = new Subscription();
 
   ngOnInit(): void {
+    this.momentSvc.listerPublic(0, 5).pipe(catchError(() => of(null))).subscribe(page => {
+      if (!page?.content.length) return;
+      this.moments = page.content;
+      if (this.moments.length > 1) this.demarrerCarousel();
+    });
+
     // courante() (et non enCours()) : en EN_PREPARATION aucune édition n'est
     // EN_COURS, mais l'accueil doit quand même connaître l'édition à venir
     // pour ne pas afficher un CTA "Voter" hors sol (cf. voteActif ci-dessous).
@@ -395,5 +406,33 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.armerCompteARebours(edition, soireesFraiches ?? this.soirees);
       this.appRef.tick();
     });
+  }
+
+  creditMoment(m: MomentEvenement): string {
+    return this.momentSvc.credit(m);
+  }
+
+  prochainMoment(): void {
+    this.momentActif = (this.momentActif + 1) % this.moments.length;
+    this.videoEnCoursIndex = null;
+  }
+
+  precedentMoment(): void {
+    this.momentActif = (this.momentActif - 1 + this.moments.length) % this.moments.length;
+    this.videoEnCoursIndex = null;
+  }
+
+  allerAuMoment(i: number): void {
+    this.momentActif = i;
+    this.videoEnCoursIndex = null;
+  }
+
+  private demarrerCarousel(): void {
+    const sub = interval(5000).subscribe(() => {
+      this.momentActif = (this.momentActif + 1) % this.moments.length;
+      this.videoEnCoursIndex = null;
+      this.appRef.tick();
+    });
+    this.subs.add(sub);
   }
 }

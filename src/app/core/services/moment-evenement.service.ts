@@ -75,6 +75,10 @@ export class MomentEvenementService {
     return this.http.put<MomentEvenement>(`${this.api}/admin/moments-evenement/${id}/mettre-a-la-une`, {});
   }
 
+  supprimerAdmin(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/moments-evenement/${id}`);
+  }
+
   /**
    * Résout le libellé de crédit affiché sur une carte — candidatsTagues (photo de
    * groupe, admin uniquement) prime sur candidatUploadeurCode (envoi candidat), qui

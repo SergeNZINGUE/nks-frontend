@@ -155,14 +155,73 @@
         }
       </div>
     </section>
+    <!-- ═══ MOMENTS FORTS — carrousel des derniers médias publiés ═══ -->
+    @if (moments.length) {
+      <section class="moments-forts">
+        <div class="moments-forts__inner">
+          <div class="moments-forts__entete">
+            <h2 class="moments-forts__titre">Moments forts</h2>
+            <a routerLink="/galerie" class="bloc__lien">Tout voir →</a>
+          </div>
+          <div class="carousel">
+            <div class="carousel__piste" [style.transform]="'translateX(-' + (momentActif * 100) + '%)'">
+              @for (m of moments; track m.id; let i = $index) {
+                <div class="carousel__slide">
+                  @if (m.type === 'VIDEO') {
+                    <video class="carousel__media"
+                      [attr.src]="i === momentActif ? m.urlStockage : null"
+                      playsinline preload="metadata"
+                      (play)="videoEnCoursIndex = i"
+                      (pause)="videoEnCoursIndex = null"
+                      (ended)="videoEnCoursIndex = null"
+                      #carouselVid></video>
+                    @if (videoEnCoursIndex !== i) {
+                      <button class="carousel__play-btn" (click)="carouselVid.play()" aria-label="Lire la vidéo">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3 19 12 5 21V3Z"/></svg>
+                      </button>
+                    }
+                  } @else {
+                    <img class="carousel__media" [src]="m.urlStockage" [alt]="m.legende ?? ''" loading="lazy" />
+                  }
+                  <span class="carousel__credit">
+                    <svg class="carousel__credit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    {{ creditMoment(m) }}
+                  </span>
+                  @if (m.legende) {
+                    <p class="carousel__legende">{{ m.legende }}</p>
+                  }
+                </div>
+              }
+            </div>
+            @if (moments.length > 1) {
+              <button class="carousel__nav carousel__nav--prev" (click)="precedentMoment()" aria-label="Précédent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button class="carousel__nav carousel__nav--next" (click)="prochainMoment()" aria-label="Suivant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            }
+          </div>
+          @if (moments.length > 1) {
+            <div class="carousel__dots">
+              @for (m of moments; track m.id; let i = $index) {
+                <button
+                  class="carousel__dot"
+                  [class.carousel__dot--actif]="i === momentActif"
+                  (click)="allerAuMoment(i)"
+                  [attr.aria-label]="'Moment ' + (i + 1)"
+                ></button>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
+
     <!-- ORGANISATEUR + PARTENAIRES — app-partners-strip gère déjà les deux en interne
          (bandeau défilant, cf. son propre template) : rien à ajouter ici. -->
     <app-partners-strip organisateurLogo="assets/logos/la-terrasse.png"
       organisateurNom="La Terrasse" />
-    <!-- PHOTOS DE LA COMPÉTITION — demande client (vocal 15/08/2026) -->
-    @if (edition) {
-      <app-competition-gallery [editionId]="edition.id" />
-    }
     <div class="home__contenu">
       <!-- ═══ À LA UNE — le mieux classé en avant, le reste en rangée ═══ -->
       @if (classement.length) {
@@ -264,6 +323,10 @@
         }
       </div>
     </div>
+    <!-- PHOTOS DE LA COMPÉTITION — demande client (vocal 15/08/2026) -->
+    @if (edition) {
+      <app-competition-gallery [editionId]="edition.id" />
+    }
   }
 
   <app-site-footer />

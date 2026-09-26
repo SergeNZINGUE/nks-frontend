@@ -96,7 +96,49 @@ interface FichierEnAttente {
     </div>
   }
 
+  @if (!chargement && publies.length > 0) {
+    <p class="section-label">Médias publiés</p>
+    <div class="mod-list">
+      @for (m of publies; track m.id) {
+        <div class="mod-row">
+          <div class="mod-row__photo">
+            @if (m.type === 'VIDEO') {
+              <video [src]="m.urlStockage" preload="metadata" muted></video>
+            } @else {
+              <img [src]="m.urlStockage" alt="" />
+            }
+          </div>
+          <div class="mod-row__meta">
+            <div class="mod-row__name">{{ creditMoment(m) }}</div>
+            <div class="mod-row__sub">{{ m.type === 'VIDEO' ? 'Vidéo' : 'Photo' }} · {{ m.dateUpload | date:'d MMM, HH:mm' }}</div>
+          </div>
+          <div class="mod-row__actions">
+            <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirSuppression(m)">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
 </div>
+
+<!-- MODAL DE SUPPRESSION — confirmation avant suppression définitive -->
+@if (suppressionCible) {
+  <app-modal titre="Supprimer ce média" (fermer)="fermerSuppression()">
+    <p class="modal-subtitle">
+      Cette action est <strong>irréversible</strong>. Le média sera définitivement retiré de la galerie publique.
+    </p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn--ghost" (click)="fermerSuppression()">Annuler</button>
+      <button type="button" class="btn btn--danger" [disabled]="suppressionEnCours" (click)="confirmerSuppression()">
+        {{ suppressionEnCours ? 'Suppression…' : 'Supprimer définitivement' }}
+      </button>
+    </div>
+  </app-modal>
+}
 
 <!-- MODAL DE REJET — motif obligatoire, jamais un rejet en un clic -->
 @if (rejetCible) {
@@ -193,6 +235,11 @@ export class ModerationMediasComponent implements OnInit, OnDestroy {
   chargement = true;
   erreur: string | null = null;
   enAttente: MomentEvenement[] = [];
+  publies: MomentEvenement[] = [];
+
+  // ── Modal de suppression ──
+  suppressionCible: MomentEvenement | null = null;
+  suppressionEnCours = false;
 
   private editionId: string | null = null;
 
@@ -227,10 +274,14 @@ export class ModerationMediasComponent implements OnInit, OnDestroy {
     this.chargement = true;
     this.erreur = null;
     this.sub.add(
-      this.momentSvc.listerEnAttente().pipe(catchError(() => of(null))).subscribe(res => {
+      forkJoin({
+        attente: this.momentSvc.listerEnAttente().pipe(catchError(() => of(null))),
+        publies: this.momentSvc.listerPublic(0, 50).pipe(catchError(() => of(null))),
+      }).subscribe(({ attente, publies }) => {
         this.chargement = false;
-        if (res === null) { this.erreur = 'Impossible de charger les envois en attente.'; return; }
-        this.enAttente = res;
+        if (attente === null) { this.erreur = 'Impossible de charger les envois en attente.'; return; }
+        this.enAttente = attente;
+        this.publies = publies?.content ?? [];
       })
     );
   }
@@ -271,6 +322,32 @@ export class ModerationMediasComponent implements OnInit, OnDestroy {
         if (!res) return;
         this.enAttente = this.enAttente.filter(x => x.id !== cible.id);
         this.fermerRejet();
+      })
+    );
+  }
+
+  creditMoment(m: MomentEvenement): string {
+    return this.momentSvc.credit(m);
+  }
+
+  ouvrirSuppression(m: MomentEvenement): void {
+    this.suppressionCible = m;
+    this.suppressionEnCours = false;
+  }
+
+  fermerSuppression(): void {
+    this.suppressionCible = null;
+    this.suppressionEnCours = false;
+  }
+
+  confirmerSuppression(): void {
+    if (!this.suppressionCible || this.suppressionEnCours) return;
+    this.suppressionEnCours = true;
+    const cible = this.suppressionCible;
+    this.sub.add(
+      this.momentSvc.supprimerAdmin(cible.id).pipe(catchError(() => of(null))).subscribe(() => {
+        this.publies = this.publies.filter(x => x.id !== cible.id);
+        this.fermerSuppression();
       })
     );
   }

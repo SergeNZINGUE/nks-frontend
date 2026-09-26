@@ -830,3 +830,75 @@ $bascule: 900px;   // au-delà : nav horizontale et grilles multi-colonnes
   flex-shrink: 0;
   vertical-align: -3px;
 }
+
+// ═══ MOMENTS FORTS — carrousel ════════════════════════════════════════════════
+.moments-forts {
+  padding: $sp-2 $sp-4 $sp-6;
+  @media (min-width: $bascule) { padding-inline: $sp-6; }
+
+  &__inner { width: 100%; max-width: $largeur-max; margin-inline: auto; }
+  &__entete { display: flex; align-items: baseline; justify-content: space-between; gap: $sp-4; margin-bottom: $sp-4; }
+  &__titre { font-family: $font-body; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: $nks-gold; margin: 0; }
+}
+
+.carousel {
+  position: relative; border-radius: $radius-lg; overflow: hidden;
+  aspect-ratio: 16 / 9; background: $nks-bg-card;
+  border: 1px solid rgba($nks-gold, 0.2); box-shadow: $shadow-glow-gold;
+  @media (min-width: $bascule) { aspect-ratio: 21 / 8; }
+}
+
+.carousel__piste {
+  display: flex; height: 100%;
+  transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.carousel__slide { flex: 0 0 100%; width: 100%; height: 100%; position: relative; }
+
+.carousel__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.carousel__play-btn {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.28); border: none; cursor: pointer;
+  transition: background $dur-fast $ease-out;
+  &:hover { background: rgba(0, 0, 0, 0.42); }
+  svg { width: 52px; height: 52px; padding: 16px; border-radius: 50%; color: #fff; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(4px); }
+}
+
+.carousel__credit {
+  position: absolute; top: $sp-3; left: $sp-3; z-index: 2;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: $nks-gold;
+  background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px);
+  border: 1px solid rgba($nks-gold, 0.3); border-radius: $radius-full; padding: 3px 10px;
+  &-icon { width: 12px; height: 12px; flex-shrink: 0; }
+}
+
+.carousel__legende {
+  position: absolute; inset: auto 0 0; margin: 0; padding: $sp-6 $sp-4 $sp-3;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.8), transparent);
+  font-size: 13px; color: $nks-text; line-height: 1.4;
+}
+
+.carousel__nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+  border: 1px solid rgba($nks-gold, 0.3); color: $nks-text;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: background $dur-fast $ease-out, border-color $dur-fast $ease-out;
+  &:hover { background: rgba(0, 0, 0, 0.78); border-color: $nks-gold; }
+  svg { width: 16px; height: 16px; }
+  &--prev { left: $sp-3; }
+  &--next { right: $sp-3; }
+}
+
+.carousel__dots { display: flex; justify-content: center; gap: $sp-2; margin-top: $sp-3; }
+
+.carousel__dot {
+  width: 7px; height: 7px; border-radius: 50%; border: none; padding: 0;
+  background: rgba($nks-text, 0.25); cursor: pointer;
+  transition: background $dur-fast $ease-out, transform $dur-fast $ease-out;
+  &--actif { background: $nks-gold; transform: scale(1.4); }
+}

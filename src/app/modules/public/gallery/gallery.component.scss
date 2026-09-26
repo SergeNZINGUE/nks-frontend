@@ -316,19 +316,24 @@
 }
 
 .moments-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   grid-auto-rows: 8px; gap: $sp-3; padding: 0 $sp-4;
   @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; padding-inline: $sp-10; gap: $sp-4; }
 }
 .moment-card {
-  position: relative; border-radius: $radius-md; overflow: hidden; grid-row-end: span 26;
+  position: relative; border-radius: $radius-md; overflow: hidden; grid-row-end: span 36;
   background: $nks-bg-card; border: 1px solid rgba(255, 255, 255, .06);
   transition: transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out, border-color $dur-fast $ease-out;
 
   &:hover { transform: translateY(-3px); box-shadow: $shadow-gold; border-color: rgba($nks-gold, .4); }
 
-  &:nth-child(3n) { grid-row-end: span 32; }
-  &:nth-child(5n) { grid-row-end: span 22; }
+  &:nth-child(3n) { grid-row-end: span 44; }
+  &:nth-child(5n) { grid-row-end: span 30; }
+
+  @media (min-width: 900px) {
+    grid-row-end: span 38;
+    &:nth-child(3n), &:nth-child(5n) { grid-row-end: span 38; }
+  }
 }
 .moment-card__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .moment-card__sheen {
