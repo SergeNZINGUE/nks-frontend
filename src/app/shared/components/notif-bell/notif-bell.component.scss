@@ -1,0 +1,105 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.notif-bell { position: relative; }
+
+.notif-bell__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid $border-hairline;
+  background: rgba(255, 255, 255, .04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $nks-text-secondary;
+  position: relative;
+  cursor: pointer;
+  transition: border-color $dur-fast $ease-out, color $dur-fast $ease-out;
+
+  &:hover { border-color: rgba($nks-gold, .4); color: $nks-gold-light; }
+  svg { width: 16px; height: 16px; }
+}
+
+.notif-bell__dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $nks-error;
+  border: 2px solid $surface-1;
+}
+
+.notif-bell__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  max-width: calc(100vw - #{$sp-8});
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 30;
+  background: $surface-2;
+  border: 1px solid $border-hairline;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  padding: $sp-2;
+}
+
+.notif-bell__title {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $nks-text-secondary;
+  margin: 0;
+  padding: $sp-2 $sp-3 $sp-1;
+}
+
+.notif-bell__vide {
+  font-size: 12.5px;
+  color: $nks-text-secondary;
+  margin: 0;
+  padding: $sp-3;
+  text-align: center;
+}
+
+.notif-item {
+  display: flex;
+  gap: $sp-2;
+  align-items: flex-start;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-sm;
+  color: $nks-text;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.4;
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, .045); }
+}
+
+.notif-item__point {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.notif-item--non-lu .notif-item__point { background: $nks-gold; }
+
+.notif-item__time {
+  display: block;
+  font-size: 10.5px;
+  color: $nks-text-secondary;
+  margin-top: 2px;
+}

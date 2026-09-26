@@ -53,6 +53,11 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./votes/votes.component').then(c => c.VotesComponent),
       },
       {
+        path: 'moderation-medias',
+        loadComponent: () =>
+          import('./moderation-medias/moderation-medias.component').then(c => c.ModerationMediasComponent),
+      },
+      {
         path: 'soirees',
         loadComponent: () => import('./billetterie/soirees.component').then(c => c.SoireesComponent),
       },

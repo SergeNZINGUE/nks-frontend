@@ -8,6 +8,7 @@ import { AuthService } from '@core/services/auth.service';
 import { CandidatureService } from '@core/services/candidature.service';
 import { messageErreur } from '@core/utils/http-error.util';
 import { ModalComponent } from '../../admin/shared/ui/modal/modal.component';
+import { NotifBellComponent } from '@shared/components/notif-bell/notif-bell.component';
 import { CANDIDAT_NAV } from './candidat-nav.config';
 
 /**
@@ -21,7 +22,7 @@ import { CANDIDAT_NAV } from './candidat-nav.config';
  */
 @Component({
   selector: 'app-candidat-shell',
-  imports: [RouterModule, NgTemplateOutlet, ReactiveFormsModule, ModalComponent],
+  imports: [RouterModule, NgTemplateOutlet, ReactiveFormsModule, ModalComponent, NotifBellComponent],
   template: `
 <div class="shell">
 
@@ -72,6 +73,7 @@ import { CANDIDAT_NAV } from './candidat-nav.config';
         <span>Mon espace</span>
       </a>
       <span class="shell__topbar-spacer"></span>
+      <app-notif-bell />
       <button type="button" class="shell__account" (click)="ouvrirModalMdp()" aria-label="Changer le mot de passe">
         <span class="shell__account-avatar" aria-hidden="true">{{ initiales() }}</span>
       </button>

@@ -535,3 +535,44 @@ export interface Page<T> {
   number: number;  // page courante (0-based)
   size: number;
 }
+
+// ─── "Moments de l'événement" — bf.laterrasse.nks.dto.moment.* ────────────────
+export type TypeMoment = 'PHOTO' | 'VIDEO';
+
+/** bf.laterrasse.nks.dto.moment.CandidatCreditResponse */
+export interface CandidatCredit {
+  id: string;
+  codeCandidat: string;
+  prenom: string;
+  nom: string;
+}
+
+/**
+ * bf.laterrasse.nks.dto.moment.MomentEvenementResponse — résolution du crédit affiché
+ * laissée au frontend : candidatsTagues non vide → tous les noms ; sinon
+ * candidatUploadeurCode → ce nom ; sinon "Équipe NKS" (cf. moment.utils.ts).
+ */
+export interface MomentEvenement {
+  id: string;
+  type: TypeMoment;
+  urlStockage: string;
+  legende: string | null;
+  enVedette: boolean;
+  statut: 'EN_ATTENTE' | 'VALIDE' | 'MASQUE';
+  motifRejet: string | null;
+  dateUpload: string;
+  soireeId: string | null;
+  soireeNom: string | null;
+  candidatUploadeurId: string | null;
+  candidatUploadeurCode: string | null;
+  candidatsTagues: CandidatCredit[];
+}
+
+/** bf.laterrasse.nks.dto.notification.NotificationResponse */
+export interface NotificationInApp {
+  id: string;
+  type: string;
+  corpsMessage: string;
+  lu: boolean;
+  dateCreation: string;
+}

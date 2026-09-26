@@ -6,8 +6,13 @@ import { Subscription, catchError, filter, finalize, of, startWith } from 'rxjs'
 
 import { AuthService } from '@core/services/auth.service';
 import { ModalComponent } from '../shared/ui/modal/modal.component';
+import { NotifBellComponent } from '@shared/components/notif-bell/notif-bell.component';
+import { MomentEvenementService } from '@core/services/moment-evenement.service';
 import { messageErreur } from '@core/utils/http-error.util';
 import { ADMIN_NAV, AdminNavItem } from './admin-nav.config';
+
+/** Route de la modération médias — seul item de sidebar à porter un badge de compteur pour l'instant. */
+const ROUTE_MODERATION_MEDIAS = '/back-office/moderation-medias';
 
 /** Libellé FR affiché pour le rôle courant — priorité au rôle le plus élevé si plusieurs. */
 const ROLE_LABELS: Record<string, string> = {
@@ -29,7 +34,7 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
  */
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterModule, NgTemplateOutlet, ReactiveFormsModule, ModalComponent],
+  imports: [RouterModule, NgTemplateOutlet, ReactiveFormsModule, ModalComponent, NotifBellComponent],
   template: `
 <div class="shell" [class.shell--sidebar-ouverte]="sidebarOuverte" [class.shell--sidebar-repliee]="sidebarRepliee">
 
@@ -67,6 +72,9 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
               <span class="sidebar__item-label">{{ item.label }}</span>
               @if (item.statut === 'soon') {
                 <span class="sidebar__item-tag">bientôt</span>
+              }
+              @if (item.route === routeModerationMedias && momentsEnAttente > 0) {
+                <span class="sidebar__item-badge">{{ momentsEnAttente }}</span>
               }
             </a>
             }
@@ -114,6 +122,8 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
       }
 
       <div class="shell__topbar-spacer"></div>
+
+      <app-notif-bell />
 
       <button type="button" class="shell__logout-btn" title="Déconnexion" aria-label="Déconnexion" (click)="logout()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
@@ -176,6 +186,9 @@ const SIDEBAR_COLLAPSE_KEY = 'nks_admin_sidebar_repliee';
     @case ('settings') {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
     }
+    @case ('image') {
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+    }
   }
 </ng-template>
 
@@ -228,12 +241,17 @@ export class AdminShellComponent implements OnInit, OnDestroy {
   protected authSvc = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private momentSvc = inject(MomentEvenementService);
   private sub = new Subscription();
 
   nav = ADMIN_NAV;
   sidebarOuverte = false;
   sidebarRepliee = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1';
   fil: string[] = [];
+
+  readonly routeModerationMedias = ROUTE_MODERATION_MEDIAS;
+  /** Badge de sidebar "Modération médias" — chargé une fois à l'entrée du back-office, pas une carte dans la page (cf. maquette de proposition). */
+  momentsEnAttente = 0;
 
   modalMdpOuvert = false;
   isChangingPassword = false;
@@ -269,6 +287,15 @@ export class AdminShellComponent implements OnInit, OnDestroy {
         this.fil = match ? [match.groupe, match.label] : [];
       })
     );
+
+    // Réservé aux rôles qui ont réellement accès à /admin/moments-evenement/en-attente/nombre
+    // côté backend — évite un 403 systématique dans la console pour les autres rôles
+    // qui partagent cette même coquille (ex. agent d'accueil).
+    if (this.authSvc.hasRole('ADMIN', 'SUPER_ADMIN', 'ORGANISATEUR')) {
+      this.sub.add(
+        this.momentSvc.compterEnAttente().pipe(catchError(() => of(0))).subscribe(n => { this.momentsEnAttente = n; })
+      );
+    }
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }

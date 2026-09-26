@@ -139,3 +139,90 @@ $text: t.$nks-text; $muted: t.$nks-text-secondary; $gold: t.$nks-gold;
 @media (min-width: 900px) {
   .page-header, .videos-list, .empty-state, .upload-card { max-width: 720px; margin-inline: auto; }
 }
+
+// ── Onglets "Ma prestation" / "Souvenirs de l'événement" ──────────────────────
+.onglets {
+  display: flex; gap: 24px; margin: 4px 16px 4px; border-bottom: 1px solid $border;
+
+  @media (min-width: 900px) { max-width: 720px; margin-inline: auto; margin-top: 4px; }
+}
+.onglets__item {
+  background: none; border: none; padding: 10px 2px 12px; font-size: 14px; font-weight: 700;
+  color: $muted; position: relative; cursor: pointer; display: flex; align-items: center; gap: 7px;
+
+  &--actif {
+    color: $text;
+    &::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+      background: t.$nks-gradient-gold; border-radius: 2px; box-shadow: 0 0 10px rgba($gold, .6);
+    }
+  }
+}
+.onglets__compteur {
+  font-size: 10.5px; font-weight: 800; color: $gold; background: rgba($gold, .12);
+  border: 1px solid rgba($gold, .3); border-radius: t.$radius-full; padding: 1px 7px;
+}
+
+// ── Souvenirs de l'événement ───────────────────────────────────────────────────
+.moment-upload-card { margin: 16px 16px 0; @media (min-width: 900px) { max-width: 720px; margin-inline: auto; } }
+
+.dropzone {
+  border: 1.5px dashed rgba($gold, .4); border-radius: t.$radius-lg;
+  background: linear-gradient(180deg, rgba($gold, .05) 0%, transparent 60%), $surface;
+  padding: 28px 20px; text-align: center;
+  transition: border-color t.$dur-fast t.$ease-out;
+  &:hover { border-color: $gold; }
+}
+.dropzone__icon {
+  width: 46px; height: 46px; margin: 0 auto 14px; border-radius: 50%;
+  background: t.$nks-gradient-gold; display: flex; align-items: center; justify-content: center;
+  box-shadow: t.$shadow-gold;
+  svg { width: 22px; height: 22px; color: t.$nks-bg-primary; }
+}
+.dropzone__title { font-size: 14.5px; font-weight: 700; color: $text; margin: 0 0 6px; }
+.dropzone__hint { font-size: 12px; color: $muted; margin: 0 0 18px; line-height: 1.6; }
+.dropzone__btn {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px; border: none; background: t.$nks-gradient-gold;
+  color: t.$nks-bg-primary; font-size: 13px; font-weight: 800; padding: 10px 22px; border-radius: t.$radius-full;
+  box-shadow: t.$shadow-gold; cursor: pointer;
+  transition: transform t.$dur-fast t.$ease-out, box-shadow t.$dur-fast t.$ease-out;
+  &:hover { transform: translateY(-1px); box-shadow: t.$shadow-glow-gold; }
+  &--loading { cursor: wait; opacity: .85; }
+  svg { width: 15px; height: 15px; }
+  input[type="file"] { position: absolute; inset: 0; opacity: 0; }
+}
+
+.moments-grid {
+  padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px;
+  @media (min-width: 900px) { max-width: 720px; margin-inline: auto; }
+}
+.moment-card {
+  position: relative; border-radius: t.$radius-md; overflow: hidden; aspect-ratio: 4/5;
+  background: t.$nks-bg-card; border: 1px solid $border;
+}
+.moment-card__photo {
+  position: absolute; inset: 0;
+  img, video { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+.moment-card__play {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  svg {
+    width: 34px; height: 34px; padding: 10px; border-radius: 50%; color: #fff;
+    background: rgba(0, 0, 0, .45); backdrop-filter: blur(3px);
+  }
+}
+.moment-card__statut {
+  position: absolute; top: 7px; left: 7px;
+}
+.moment-card__retirer {
+  position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; border-radius: 50%; border: none;
+  background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); color: $text;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  svg { width: 12px; height: 12px; }
+}
+.moment-card__motif {
+  position: absolute; inset: auto 0 0; margin: 0; padding: 6px 8px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, .85), transparent);
+  color: $text; font-size: 10.5px; line-height: 1.4;
+}

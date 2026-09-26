@@ -1,0 +1,108 @@
+@use 'tokens' as *;
+
+:host { display: block; }
+
+.page {
+  min-height: 100dvh;
+  background: $nks-bg-primary;
+  color: $nks-text;
+  font-family: $font-body;
+  padding-bottom: $sp-12;
+}
+
+.page-header {
+  padding: $sp-4 $sp-4 0;
+  max-width: 960px;
+  margin-inline: auto;
+
+  &__title { font-family: $font-title; font-size: 22px; margin: 0 0 4px; }
+  &__subtitle { font-size: 13px; color: $nks-text-secondary; margin: 0; max-width: 520px; }
+}
+
+.toolbar { padding: $sp-4; max-width: 960px; margin-inline: auto; }
+
+.section-label {
+  font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: $nks-gold; margin: $sp-2 0 $sp-3; padding: 0 $sp-4;
+  max-width: 960px; margin-inline: auto;
+}
+
+.skeleton-wrapper { padding: $sp-4; display: flex; flex-direction: column; gap: $sp-3; max-width: 960px; margin-inline: auto; }
+.skeleton {
+  height: 72px; background: linear-gradient(90deg, $nks-bg-surface 25%, $nks-bg-card 50%, $nks-bg-surface 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: $radius-md;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.empty-state { text-align: center; padding: $sp-12 $sp-5; color: $nks-text-secondary; }
+
+.icon { width: 14px; height: 14px; flex-shrink: 0; }
+
+.mod-list { padding: 0 $sp-4; display: flex; flex-direction: column; gap: $sp-3; max-width: 960px; margin-inline: auto; }
+.mod-row {
+  display: flex; align-items: center; gap: $sp-3; padding: $sp-3; border-radius: $radius-md;
+  background: $nks-bg-surface; border: 1px solid $nks-border; flex-wrap: wrap;
+}
+.mod-row__photo {
+  width: 56px; height: 56px; border-radius: $radius-sm; flex-shrink: 0; overflow: hidden;
+  background: $nks-bg-card;
+  img, video { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+.mod-row__meta { flex: 1; min-width: 160px; }
+.mod-row__name { font-size: 13px; font-weight: 700; color: $nks-text; }
+.mod-row__sub { font-size: 11.5px; color: $nks-text-secondary; }
+.mod-row__actions { display: flex; gap: $sp-2; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+
+// ── Contenu des modals (structure fournie par app-modal, cf. modal.component) ──
+.modal-subtitle { font-size: 12.5px; color: $nks-text-secondary; margin: 0 0 $sp-4; line-height: 1.5;
+  strong { color: $nks-gold-light; }
+}
+label { display: block; font-size: 11.5px; font-weight: 700; color: $nks-text-secondary; margin: $sp-3 0 6px; }
+.requis { color: $nks-error; }
+textarea, select {
+  width: 100%; background: $nks-bg-surface; border: 1px solid $nks-border; color: $nks-text;
+  font-size: 13px; padding: 9px 10px; border-radius: $radius-sm; font-family: inherit;
+}
+.hint { font-size: 11.5px; color: $nks-text-secondary; margin: 4px 0 0; }
+.hint--droite { text-align: right; margin-top: 2px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: $sp-3; margin-top: $sp-5; }
+
+.upload-erreur {
+  font-size: 13px; color: $nks-error; background: rgba($nks-error, .1); border: 1px solid rgba($nks-error, .3);
+  border-radius: $radius-sm; padding: $sp-2 $sp-3; margin-bottom: $sp-3;
+}
+
+.dropzone {
+  border: 1.5px dashed rgba($nks-gold, .4); border-radius: $radius-lg;
+  background: linear-gradient(180deg, rgba($nks-gold, .05) 0%, transparent 60%), $nks-bg-surface;
+  padding: $sp-6 $sp-4; text-align: center; margin-bottom: $sp-3;
+}
+.dropzone__title { font-size: 14px; font-weight: 700; color: $nks-text; margin: 0 0 6px; }
+.dropzone__hint { font-size: 12px; color: $nks-text-secondary; margin: 0 0 $sp-4; line-height: 1.6; }
+
+.fichiers-chips { display: flex; flex-wrap: wrap; gap: $sp-2; margin-bottom: $sp-3; }
+.chip-fichier {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  background: $nks-bg-surface; border: 1px solid $nks-border; border-radius: $radius-full;
+  padding: 5px 6px 5px 10px; font-size: 11.5px; color: $nks-text;
+
+  button { border: none; background: rgba(255, 255, 255, .08); border-radius: 50%; width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center; color: $nks-text-secondary; flex-shrink: 0; cursor: pointer;
+    svg { width: 9px; height: 9px; }
+  }
+}
+
+.candidat-picker {
+  max-height: 160px; overflow-y: auto; border: 1px solid $nks-border; border-radius: $radius-sm;
+  background: $nks-bg-surface; padding: 4px; margin-bottom: 6px;
+}
+.candidat-picker__item {
+  display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: $radius-sm;
+  font-size: 12.5px; font-weight: 400; color: $nks-text; cursor: pointer; margin: 0;
+  &:hover { background: rgba(255, 255, 255, .04); }
+  input { accent-color: $nks-gold; width: 14px; height: 14px; flex-shrink: 0; }
+}
+
+@media (min-width: 900px) {
+  .mod-row__actions { flex-shrink: 0; }
+}

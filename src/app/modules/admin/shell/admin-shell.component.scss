@@ -214,6 +214,36 @@
   .shell--sidebar-repliee & { display: none; }
 }
 
+// Badge de compteur "Modération médias" — en fin de ligne (jamais sur l'icône, cf.
+// itération de la maquette de proposition), pulse tant qu'il reste des envois en
+// attente pour attirer l'œil (demande explicite utilisateur) ; coupé par
+// prefers-reduced-motion via la règle globale de src/styles/global.scss.
+.sidebar__item-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: $radius-full;
+  background: linear-gradient(135deg, $nks-gold-light, $nks-warning);
+  color: #1a1405;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  animation: sidebar-badge-pulse 1.8s ease-in-out infinite;
+
+  .shell--sidebar-repliee & { display: none; }
+}
+
+@keyframes sidebar-badge-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba($nks-warning, .55), 0 2px 6px rgba(0, 0, 0, .35); }
+  50%      { transform: scale(1.18); box-shadow: 0 0 0 5px rgba($nks-warning, 0), 0 2px 6px rgba(0, 0, 0, .35); }
+}
+
 .sidebar__footer {
   padding: $sp-3;
   border-top: 1px solid $border-hairline;

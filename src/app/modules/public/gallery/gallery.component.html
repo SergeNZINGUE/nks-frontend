@@ -2,7 +2,18 @@
 
 <div class="page gallery">
 
-  <app-topbar title="Galerie des candidats" backLink="/" backLabel="Retour à l'accueil" />
+  <app-topbar title="Galerie" backLink="/" backLabel="Retour à l'accueil" />
+
+  <!-- ONGLETS -->
+  <div class="gallery__tabs" role="tablist">
+    <button type="button" class="gallery__tab" [class.gallery__tab--actif]="onglet === 'candidats'" (click)="changerOnglet('candidats')">Candidats</button>
+    <button type="button" class="gallery__tab" [class.gallery__tab--actif]="onglet === 'evenement'" (click)="changerOnglet('evenement')">
+      Moments de l'événement
+      @if (moments.length > 0) { <span class="gallery__tab-compteur">{{ moments.length }}</span> }
+    </button>
+  </div>
+
+  @if (onglet === 'candidats') {
 
   <!-- FILTRES -->
   <div class="gallery__filters">
@@ -105,6 +116,106 @@
   <!-- MODALE DE VOTE -->
   @if (candidatVote && phaseActiveId) {
     <app-vote-modal [candidat]="candidatVote" [phaseId]="phaseActiveId" (closed)="fermerVote()" />
+  }
+
+  } @else {
+
+  <!-- ═══ MOMENTS DE L'ÉVÉNEMENT ═══ -->
+  @if (momentsLoading) {
+    <div class="gallery__grid" role="status" aria-label="Chargement des moments">
+      @for (_ of [1,2,3,4]; track _) {
+        <div class="skeleton" style="height:180px; border-radius:12px;" aria-hidden="true"></div>
+      }
+    </div>
+  }
+
+  @if (!momentsLoading && momentsErreur) {
+    <div class="gallery__erreur" role="alert">
+      <p>{{ momentsErreur }}</p>
+      <button type="button" class="btn btn--ghost" (click)="chargerMoments()">Réessayer</button>
+    </div>
+  }
+
+  @if (!momentsLoading && !momentsErreur && moments.length === 0) {
+    <div class="gallery__erreur">
+      <p>Aucun moment publié pour l'instant.</p>
+    </div>
+  }
+
+  @if (!momentsLoading && !momentsErreur && moments.length > 0) {
+
+    <!-- À LA UNE -->
+    @if (momentVedette; as vedette) {
+      <div class="moments-hero">
+        @if (vedette.type === 'VIDEO') {
+          <video class="moments-hero__media" [src]="vedette.urlStockage" preload="metadata" muted></video>
+        } @else {
+          <img class="moments-hero__media" [src]="vedette.urlStockage" [alt]="vedette.legende || 'Moment à la une'" />
+        }
+        <div class="moments-hero__scrim"></div>
+        <div class="moments-hero__content">
+          @if (vedette.enVedette) {
+            <span class="moments-hero__tag">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4Z"/></svg>
+              À la une
+            </span>
+          }
+          @if (vedette.legende) { <h2>{{ vedette.legende }}</h2> }
+          <p class="moments-hero__credit">
+            @if (estCreditEquipe(vedette)) {
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4Z"/></svg>
+            }
+            {{ creditMoment(vedette) }}
+          </p>
+        </div>
+      </div>
+    }
+
+    <!-- DÉFILÉ DES DERNIERS AJOUTS -->
+    @if (momentsRecents.length > 1) {
+      <p class="stories-label">Derniers ajouts</p>
+      <div class="stories-rail">
+        @for (m of momentsRecents; track m.id) {
+          <div class="story">
+            <span class="story__ring" [class.story__ring--team]="estCreditEquipe(m)">
+              <span class="story__avatar">
+                @if (estCreditEquipe(m)) {
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4Z"/></svg>
+                } @else {
+                  {{ creditMoment(m) }}
+                }
+              </span>
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- GRILLE MASONRY -->
+    <div class="moments-grid">
+      @for (m of moments; track m.id) {
+        <div class="moment-card">
+          @if (m.type === 'VIDEO') {
+            <video class="moment-card__photo" [src]="m.urlStockage" preload="metadata" muted></video>
+            <span class="moment-card__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+          } @else {
+            <img class="moment-card__photo" [src]="m.urlStockage" [alt]="m.legende || 'Moment de l\'événement'" loading="lazy" />
+          }
+          <div class="moment-card__sheen"></div>
+          <div class="moment-card__overlay">
+            <span class="moment-card__code">
+              @if (estCreditEquipe(m)) {
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4Z"/></svg>
+              }
+              {{ creditMoment(m) }}
+            </span>
+            <span class="moment-card__name">{{ m.legende || (m.type === 'VIDEO' ? 'Vidéo souvenir' : 'Photo souvenir') }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
   }
 
   <app-site-footer />

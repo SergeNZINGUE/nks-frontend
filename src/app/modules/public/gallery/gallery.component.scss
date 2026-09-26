@@ -239,3 +239,122 @@
 @media (min-width: 1280px) {
   .gallery__grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+// ── Onglets "Candidats" / "Moments de l'événement" ─────────────────────────────
+.gallery__tabs {
+  display: flex; gap: $sp-6; padding: 0 $sp-4; margin-bottom: $sp-3;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; padding-inline: $sp-10; }
+}
+.gallery__tab {
+  background: none; border: none; padding: 10px 2px 12px; font-size: 14px; font-weight: 700;
+  color: $nks-text-secondary; position: relative; cursor: pointer; display: flex; align-items: center; gap: 7px;
+
+  &--actif {
+    color: $nks-text;
+    &::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+      background: $nks-gradient-gold; border-radius: 2px; box-shadow: 0 0 10px rgba($nks-gold, .6);
+    }
+  }
+}
+.gallery__tab-compteur {
+  font-size: 10.5px; font-weight: 800; color: $nks-gold; background: rgba($nks-gold, .12);
+  border: 1px solid rgba($nks-gold, .3); border-radius: $radius-full; padding: 1px 7px;
+}
+
+// ── Moments de l'événement ─────────────────────────────────────────────────────
+.moments-hero {
+  position: relative; border-radius: $radius-lg; overflow: hidden;
+  aspect-ratio: 16/9; margin: 0 $sp-4 $sp-5; isolation: isolate;
+  border: 1px solid rgba($nks-gold, .35); box-shadow: $shadow-glow-gold;
+  background: $nks-bg-card;
+
+  @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; margin-bottom: $sp-6; aspect-ratio: 21/7; }
+}
+.moments-hero__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.moments-hero__scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(8, 8, 18, .92) 0%, rgba(8, 8, 18, .35) 45%, transparent 70%),
+              linear-gradient(180deg, rgba(8, 8, 18, .45) 0%, transparent 30%);
+}
+.moments-hero__content { position: absolute; left: 0; right: 0; bottom: 0; padding: $sp-5;
+  h2 { font-family: $font-title; color: $nks-text; margin: 0 0 $sp-2; font-size: clamp(1.1rem, 1rem + 1vw, 1.6rem); line-height: 1.2; text-shadow: 0 2px 16px rgba(0, 0, 0, .6); }
+}
+.moments-hero__tag {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .08em; text-transform: uppercase; color: #1a1405; background: $nks-gradient-gold;
+  padding: 5px 12px; border-radius: $radius-full; margin-bottom: $sp-3; box-shadow: $shadow-gold;
+  svg { width: 12px; height: 12px; }
+}
+.moments-hero__credit {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: $nks-text-secondary; margin: 0;
+  svg { width: 13px; height: 13px; color: $nks-gold-light; }
+}
+
+.stories-label {
+  font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: $nks-text-secondary; margin: 0 0 $sp-3; padding: 0 $sp-4;
+  @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; padding-inline: $sp-10; }
+}
+.stories-rail {
+  display: flex; gap: $sp-4; overflow-x: auto; padding: 2px $sp-4 $sp-4; scrollbar-width: thin;
+  @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; padding-inline: $sp-10; }
+}
+.story { flex-shrink: 0; }
+.story__ring {
+  width: 58px; height: 58px; border-radius: 50%; padding: 2.5px; background: $nks-gradient-gold;
+  display: flex; align-items: center; justify-content: center;
+
+  &--team { background: linear-gradient(135deg, #fff 0%, $nks-gold-light 55%, $nks-gold 100%); }
+}
+.story__avatar {
+  width: 100%; height: 100%; border-radius: 50%; background: $nks-bg-card;
+  border: 3px solid $nks-bg-surface; display: flex; align-items: center; justify-content: center;
+  font-family: $font-title; font-weight: 700; color: $nks-gold-light; font-size: 11px; overflow: hidden;
+  svg { width: 18px; height: 18px; }
+}
+
+.moments-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-auto-rows: 8px; gap: $sp-3; padding: 0 $sp-4;
+  @media (min-width: 900px) { max-width: 1280px; margin-inline: auto; padding-inline: $sp-10; gap: $sp-4; }
+}
+.moment-card {
+  position: relative; border-radius: $radius-md; overflow: hidden; grid-row-end: span 26;
+  background: $nks-bg-card; border: 1px solid rgba(255, 255, 255, .06);
+  transition: transform $dur-fast $ease-out, box-shadow $dur-fast $ease-out, border-color $dur-fast $ease-out;
+
+  &:hover { transform: translateY(-3px); box-shadow: $shadow-gold; border-color: rgba($nks-gold, .4); }
+
+  &:nth-child(3n) { grid-row-end: span 32; }
+  &:nth-child(5n) { grid-row-end: span 22; }
+}
+.moment-card__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.moment-card__sheen {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, transparent 45%);
+}
+.moment-card__play {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  svg {
+    width: 16px; height: 16px; padding: 14px; border-radius: 50%; color: $nks-gold-light;
+    background: rgba(26, 26, 46, .55); backdrop-filter: blur(6px); border: 1.5px solid rgba($nks-gold, .65);
+  }
+}
+.moment-card__overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: $sp-3; background: linear-gradient(0deg, rgba(10, 10, 20, .85) 0%, rgba(10, 10, 20, .15) 55%, transparent 75%);
+  opacity: 0; transition: opacity $dur-fast $ease-out;
+}
+.moment-card:hover .moment-card__overlay,
+.moment-card:focus-within .moment-card__overlay { opacity: 1; }
+.moment-card__code {
+  display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 800;
+  color: $nks-gold-light; letter-spacing: .04em;
+  svg { width: 12px; height: 12px; flex-shrink: 0; }
+}
+.moment-card__name {
+  font-size: 12.5px; color: $nks-text; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}

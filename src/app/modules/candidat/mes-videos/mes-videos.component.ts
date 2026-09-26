@@ -6,9 +6,10 @@ import { Subscription, forkJoin, switchMap, catchError, of } from 'rxjs';
 
 import { VideoService } from '@core/services/video.service';
 import { MediaService } from '@core/services/media.service';
+import { MomentEvenementService } from '@core/services/moment-evenement.service';
 import { CandidatService } from '@core/services/candidat.service';
 import { EditionService } from '@core/services/edition.service';
-import { Video, StatutVideo, Phase } from '@core/models';
+import { Video, StatutVideo, Phase, MomentEvenement, TypeMoment } from '@core/models';
 import { BadgeComponent, BadgeVariant } from '../../admin/shared/ui/badge/badge.component';
 
 // Même contrainte qu'à l'inscription (CdC §3.1.1) — appliquée ici uniquement côté client :
@@ -17,6 +18,14 @@ import { BadgeComponent, BadgeVariant } from '../../admin/shared/ui/badge/badge.
 const VIDEO_MAX_OCTETS = 100 * 1024 * 1024; // 100 Mo — même limite qu'à l'inscription
 const VIDEO_DUREE_MIN_S = 45;
 const VIDEO_DUREE_MAX_S = 60;
+
+// "Souvenirs de l'événement" — mêmes plafonds globaux que le reste du site
+// (MediaProperties côté backend), volontairement SANS contrainte de durée : ce n'est
+// pas une prestation notée par le jury, juste un souvenir de la soirée.
+const MOMENT_PHOTO_MAX_OCTETS = 5 * 1024 * 1024; // 5 Mo
+const MOMENT_VIDEO_MAX_OCTETS = 100 * 1024 * 1024; // 100 Mo
+
+type Onglet = 'prestation' | 'evenement';
 
 @Component({
   selector: 'app-mes-videos',
@@ -28,8 +37,11 @@ const VIDEO_DUREE_MAX_S = 60;
 export class MesVideosComponent implements OnInit, OnDestroy {
   private videoSvc = inject(VideoService);
   private mediaSvc = inject(MediaService);
+  private momentSvc = inject(MomentEvenementService);
   private candidatSvc = inject(CandidatService);
   private editionSvc = inject(EditionService);
+
+  onglet: Onglet = 'prestation';
 
   isLoading = true;
   videos: Video[] = [];
@@ -44,6 +56,11 @@ export class MesVideosComponent implements OnInit, OnDestroy {
 
   readonly VIDEO_DUREE_MIN_S = VIDEO_DUREE_MIN_S;
   readonly VIDEO_DUREE_MAX_S = VIDEO_DUREE_MAX_S;
+
+  // ── "Souvenirs de l'événement" ──────────────────────────────────────────────
+  mesMoments: MomentEvenement[] = [];
+  isMomentUploading = false;
+  momentUploadErreur: string | null = null;
 
   private sub = new Subscription();
 
@@ -75,9 +92,13 @@ export class MesVideosComponent implements OnInit, OnDestroy {
         this.phaseCible = res.phases.find(p => p.statut === 'EN_COURS' && p.nom !== 'PRESELECTION') ?? null;
       })
     );
+
+    this.chargerMesMoments();
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
+
+  changerOnglet(o: Onglet): void { this.onglet = o; }
 
   statutLabel(s: StatutVideo): string {
     const map: Record<StatutVideo, string> = {
@@ -189,6 +210,86 @@ export class MesVideosComponent implements OnInit, OnDestroy {
         if (!video) return;
         this.videos = [...this.videos.filter(v => v.phaseId !== this.phaseCible!.id), video];
         this.titreChanson = '';
+      })
+    );
+  }
+
+  // ── "Souvenirs de l'événement" ──────────────────────────────────────────────
+
+  private chargerMesMoments(): void {
+    this.sub.add(
+      this.momentSvc.mesEnvois().pipe(catchError(() => of([]))).subscribe(moments => {
+        this.mesMoments = moments;
+      })
+    );
+  }
+
+  statutMomentLabel(m: MomentEvenement): string {
+    if (m.statut === 'VALIDE') return 'Publié';
+    if (m.statut === 'MASQUE') return 'Rejeté';
+    return 'En attente';
+  }
+
+  statutMomentVariant(m: MomentEvenement): BadgeVariant {
+    if (m.statut === 'VALIDE') return 'success';
+    if (m.statut === 'MASQUE') return 'error';
+    return 'warning';
+  }
+
+  onFichierMomentChoisi(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.momentUploadErreur = null;
+    const estVideo = file.type === 'video/mp4';
+    const estPhoto = file.type === 'image/jpeg' || file.type === 'image/png';
+
+    if (!estVideo && !estPhoto) {
+      this.momentUploadErreur = 'Format invalide — JPG/PNG pour une photo, MP4 pour une vidéo.';
+      input.value = '';
+      return;
+    }
+    const max = estVideo ? MOMENT_VIDEO_MAX_OCTETS : MOMENT_PHOTO_MAX_OCTETS;
+    if (file.size > max) {
+      this.momentUploadErreur = `Fichier trop lourd — maximum ${max / 1024 / 1024} Mo (fichier : ${(file.size / 1024 / 1024).toFixed(1)} Mo).`;
+      input.value = '';
+      return;
+    }
+
+    this.lancerUploadMoment(file, estVideo ? 'VIDEO' : 'PHOTO');
+    input.value = '';
+  }
+
+  private lancerUploadMoment(file: File, type: TypeMoment): void {
+    this.isMomentUploading = true;
+    this.momentUploadErreur = null;
+
+    const upload$ = type === 'VIDEO'
+      ? this.mediaSvc.uploadVideo(file, 'VIDEO_EVENEMENT')
+      : this.mediaSvc.uploadPhoto(file, 'PHOTO_EVENEMENT');
+
+    this.sub.add(
+      upload$.pipe(
+        switchMap(result => this.momentSvc.ajouterCandidat(type, result.publicId, result.url, result.tailleOctets)),
+        catchError(() => {
+          this.momentUploadErreur = "Échec de l'envoi. Réessaie.";
+          return of(null);
+        })
+      ).subscribe(moment => {
+        this.isMomentUploading = false;
+        if (!moment) return;
+        this.mesMoments = [moment, ...this.mesMoments];
+      })
+    );
+  }
+
+  /** Uniquement possible tant que le statut est EN_ATTENTE — contrôlé aussi côté backend. */
+  retirerMoment(m: MomentEvenement): void {
+    if (m.statut !== 'EN_ATTENTE') return;
+    this.sub.add(
+      this.momentSvc.retirer(m.id).pipe(catchError(() => of(undefined))).subscribe(() => {
+        this.mesMoments = this.mesMoments.filter(mm => mm.id !== m.id);
       })
     );
   }

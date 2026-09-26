@@ -12,7 +12,7 @@ import { Role } from '@core/auth/rbac';
 export type AdminIconKey =
   | 'dashboard' | 'calendar' | 'trophy' | 'users' | 'trending-up'
   | 'clipboard' | 'mic' | 'vote' | 'music' | 'ticket'
-  | 'briefcase' | 'megaphone' | 'credit-card' | 'user' | 'shield' | 'settings';
+  | 'briefcase' | 'megaphone' | 'credit-card' | 'user' | 'shield' | 'settings' | 'image';
 
 export interface AdminNavItem {
   label: string;
@@ -61,6 +61,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       // ORGANISATEUR exclu : création d'un membre du jury (AdminController) reste ADMIN/SUPER_ADMIN.
       { label: 'Jury',          route: '/back-office/jury',         icon: 'mic',       statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN'] },
       { label: 'Votes',         route: '/back-office/votes',        icon: 'vote',      statut: 'ready' },
+      // "Moments de l'événement" — modération des envois candidats + ajout direct
+      // admin/organisateur. Même trio de rôles que Résultats & classement.
+      { label: 'Modération médias', route: '/back-office/moderation-medias', icon: 'image', statut: 'ready', roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANISATEUR'] },
     ],
   },
   {

@@ -4,7 +4,8 @@ import { CandidatService } from '@core/services/candidat.service';
 import { EditionService } from '@core/services/edition.service';
 import { MediaService } from '@core/services/media.service';
 import { ClassementService } from '@core/services/classement.service';
-import { CandidatPublicResponse, StatutProfilCandidat } from '@core/models';
+import { MomentEvenementService } from '@core/services/moment-evenement.service';
+import { CandidatPublicResponse, MomentEvenement, StatutProfilCandidat } from '@core/models';
 import { SiteHeaderComponent } from '../../../shared/components/site-header/site-header.component';
 import { TopbarComponent } from '../../../shared/components/topbar/topbar.component';
 
@@ -34,7 +35,16 @@ export class GalleryComponent implements OnInit {
   private editionSvc = inject(EditionService);
   private mediaSvc = inject(MediaService);
   private classementSvc = inject(ClassementService);
+  private momentSvc = inject(MomentEvenementService);
   private cdr = inject(ChangeDetectorRef);
+
+  onglet: 'candidats' | 'evenement' = 'candidats';
+
+  // ── Moments de l'événement ──────────────────────────────────────────────────
+  moments: MomentEvenement[] = [];
+  momentsLoading = false;
+  momentsErreur: string | null = null;
+  private momentsCharges = false;
 
   candidats: CandidatPublicResponse[] = [];
   loading = true;
@@ -167,5 +177,44 @@ export class GalleryComponent implements OnInit {
   fermerVote(): void {
     this.candidatVote = null;
     this.cdr.detectChanges();
+  }
+
+  // ── Moments de l'événement ──────────────────────────────────────────────────
+
+  changerOnglet(o: 'candidats' | 'evenement'): void {
+    this.onglet = o;
+    if (o === 'evenement' && !this.momentsCharges) {
+      this.chargerMoments();
+    }
+  }
+
+  chargerMoments(): void {
+    this.momentsCharges = true;
+    this.momentsLoading = true;
+    this.momentsErreur = null;
+    this.momentSvc.listerPublic(0, 48).pipe(catchError(() => of(null))).subscribe(res => {
+      this.momentsLoading = false;
+      if (res === null) { this.momentsErreur = 'Impossible de charger les moments.'; return; }
+      this.moments = res.content;
+      this.cdr.detectChanges();
+    });
+  }
+
+  /** Le moment mis en avant par l'équipe (enVedette), sinon le plus récent — jamais rien si la liste est vide. */
+  get momentVedette(): MomentEvenement | null {
+    return this.moments.find(m => m.enVedette) ?? this.moments[0] ?? null;
+  }
+
+  /** Les 8 plus récents, en tête de liste (déjà triés par date décroissante côté backend). */
+  get momentsRecents(): MomentEvenement[] {
+    return this.moments.slice(0, 8);
+  }
+
+  creditMoment(m: MomentEvenement): string {
+    return this.momentSvc.credit(m);
+  }
+
+  estCreditEquipe(m: MomentEvenement): boolean {
+    return this.momentSvc.estCreditEquipe(m);
   }
 }
